@@ -3,6 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Google tag (gtag.js) — G-VE54QFHZKD
+     Only runs on cleverherd.com (not previews or local tests).
+     Page views are sent per in-page route (#/...), with member IDs, search terms
+     and URL query strings (e.g. ?email=, ?code=) stripped so no personal data reaches Google. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  (function(){
+    if (!/(^|\.)cleverherd\.com$/.test(location.hostname)) return;
+    var s = document.createElement('script'); s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=G-VE54QFHZKD';
+    document.head.appendChild(s);
+    gtag('js', new Date());
+    gtag('config', 'G-VE54QFHZKD', {send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false});
+    var clean = function(){
+      var h = location.hash.split('?')[0]
+        .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ':id')
+        .replace(/^(#\/search\/).+/, '$1:query')
+        .replace(/^(#\/messages\/)[^\/]+/, '$1:id');
+      return location.origin + location.pathname + h;
+    };
+    var last = '';
+    var pv = function(){ var u = clean(); if (u === last) return; last = u; gtag('event', 'page_view', {page_location: u, page_title: document.title}); };
+    addEventListener('load', function(){ setTimeout(pv, 300); });
+    addEventListener('hashchange', function(){ setTimeout(pv, 300); });
+  })();
+</script>
+
 <title>Cleverherd — Independent minds. Collective momentum.</title>
 <meta name="description" content="Cleverherd is a new community where professionals, entrepreneurs and backers team up to find work, form teams and build new ideas together. Join the founding community.">
 <link rel="canonical" href="https://cleverherd.com/">
@@ -1244,7 +1272,8 @@ main:focus{outline:none}
       <li><b>Profile data you choose to add:</b> name, title, location, bio, skills, interests, availability and links.</li>
       <li><b>Content you create:</b> messages, ideas, comments, opportunities, applications, team tasks, leads, contribution records and reports.</li>
       <li><b>Business inquiries:</b> company, contact name, work email, website and project details submitted through our form.</li>
-      <li><b>Technical data:</b> basic logs kept by our hosting and database providers for security and reliability. We don’t use advertising trackers.</li>
+      <li><b>Technical data:</b> basic logs kept by our hosting and database providers for security and reliability.</li>
+      <li><b>Analytics:</b> we use Google Analytics to understand how people find and use Cleverherd (pages visited, approximate location, device and browser). It uses cookies. We don’t send your name, email, messages, search terms or member IDs to Google, and advertising features are turned off.</li>
     </ul>
     <h2>How we use it</h2>
     <ul>
@@ -1262,7 +1291,7 @@ main:focus{outline:none}
       <li>Admins can see account emails, business inquiries and reports in order to run and moderate the service.</li>
     </ul>
     <h2>Service providers</h2>
-    <p>We use Supabase (database and authentication) and a static website host. These providers process data on our behalf. <i>[List providers, data locations and transfer safeguards — to be confirmed.]</i></p>
+    <p>We use Supabase (database and authentication), GitHub Pages (website hosting), Resend (account emails), ImprovMX (email forwarding) and Google Analytics (site analytics). These providers process data on our behalf. <i>[List providers, data locations and transfer safeguards — to be confirmed.]</i></p>
     <h2>Your choices and rights</h2>
     <ul>
       <li>Edit your profile and privacy settings at any time.</li>

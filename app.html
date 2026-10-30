@@ -3,6 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Google tag (gtag.js) — G-VE54QFHZKD
+     Only runs on cleverherd.com (not previews or local tests).
+     Page views are sent per in-page route (#/...), with member IDs, search terms
+     and URL query strings (e.g. ?email=, ?code=) stripped so no personal data reaches Google. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  (function(){
+    if (!/(^|\.)cleverherd\.com$/.test(location.hostname)) return;
+    var s = document.createElement('script'); s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=G-VE54QFHZKD';
+    document.head.appendChild(s);
+    gtag('js', new Date());
+    gtag('config', 'G-VE54QFHZKD', {send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false});
+    var clean = function(){
+      var h = location.hash.split('?')[0]
+        .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ':id')
+        .replace(/^(#\/search\/).+/, '$1:query')
+        .replace(/^(#\/messages\/)[^\/]+/, '$1:id');
+      return location.origin + location.pathname + h;
+    };
+    var last = '';
+    var pv = function(){ var u = clean(); if (u === last) return; last = u; gtag('event', 'page_view', {page_location: u, page_title: document.title}); };
+    addEventListener('load', function(){ setTimeout(pv, 300); });
+    addEventListener('hashchange', function(){ setTimeout(pv, 300); });
+  })();
+</script>
+
 <title>Cleverherd</title>
 <meta name="theme-color" content="#162927">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDYuMzcyIiBoZWlnaHQ9IjQyOC4zMDciIHZpZXdCb3g9IjAgMCA0MDYuMzcyIDQyOC4zMDciPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0zNTQ2LjcgLTY2NS4yMDYpIj48cGF0aCBkPSJNODQ0Ljk2Niw0MzIuODA3YzExMi4yODYsMCwxOTIuNzM4LTkwLjI5MiwxOTIuNzM4LTIxNC4xNTNTOTYwLjcyNCw0LjUsODQ0LjM4Nyw0LjVjLTk4Ljk3NCwwLTE3NS4zNzQsNjYuNTYxLTE3NS4zNzQsMTU3LjQzMlYzOTIuODdjMCwyMy43MzEsMTguNTIxLDM5LjkzNyw0NS43MjUsMzkuOTM3Wm0tODQuNS03Mi45MjhWMTYxLjkzMmMwLTQ4LjYxOSwzNy4wNDItODQuNSw4NC41LTg0LjUsNjAuMTk0LDAsMTAwLjEzMiw1OS42MTYsMTAwLjEzMiwxNDEuOCwwLDgxLjAzMS0zOS4zNTgsMTQwLjY0Ny05My43NjUsMTQwLjY0N1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI4NzcuNjg3IDY2MC43MDYpIiBmaWxsPSIjMTEyYjI5Ii8+PHBhdGggZD0iTTM3LjcwNiwwQTM3LjcwNiwzNy43MDYsMCwxLDEsMCwzNy43MDYsMzcuNzA2LDM3LjcwNiwwLDAsMSwzNy43MDYsMFoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM2OTIuNDY2IDc5MS43ODkpIiBmaWxsPSIjMTEyYjI5Ii8+PHBhdGggZD0iTTMzLjM5LDUuNjQyYTEwLjc3MywxMC43NzMsMCwwLDEsMTguOTQ1LDBMODQuNDEsNjQuODU3YTEwLjc3MywxMC43NzMsMCwwLDEtOS40NzMsMTUuOUgxMC43ODhhMTAuNzczLDEwLjc3MywwLDAsMS05LjQ3My0xNS45WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzgzNS4zNDggNzgzLjA0OSkgcm90YXRlKC00NSkiIGZpbGw9IiMxMTJiMjkiLz48L2c+PC9zdmc+">
