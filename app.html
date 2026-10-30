@@ -556,6 +556,16 @@ a.stat{text-decoration:none;transition:border-color .2s}a.stat:hover{border-colo
 .init-banner>*,.init-hero>*{min-width:0}
 .init-hero .pill,.init-banner .pill{white-space:normal;line-height:1.4}
 @media (max-width:900px){.init-banner,.init-hero{grid-template-columns:minmax(0,1fr)}}
+/* paid projects */
+.next-step{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:20px;border-color:var(--sand)}
+.next-step .grow{flex:1;min-width:220px}
+.budget-bar{height:10px;border-radius:99px;background:var(--bone);overflow:hidden;margin:16px 0 6px}
+.budget-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--forest),var(--sage))}
+.alloc-prev{display:flex;justify-content:space-between;align-items:center;background:var(--paper);border-radius:12px;padding:12px 14px}
+.alloc-prev b{font-family:var(--h);font-size:20px}
+b.neg{color:#8a2f1f}
+.ms-card .deliv{border-top:1px solid var(--line);padding-top:6px;margin-bottom:10px}
+.tbl td small.muted{font-size:12px}
 
 </style>
 </head>
@@ -699,7 +709,7 @@ var SB = null, SESSION = null, MYID = null, loading = false, lastSync = 0;
 
 function emptyState(){
   return {me:{name:'', title:'', location:'', showLocation:true, bio:'', intro:'', skills:[], interests:[], looking:[], hours:'', arrangement:'', portfolio:'', listed:true, onboarded:false, isAdmin:false, email:''},
-    intent:'find', members:[], connections:{}, connRows:{}, threads:{}, unread:{}, opps:[], applications:{}, received:{}, saved:{}, teams:[], ideas:[], following:{}, offers:{}, pledges:{}, endorsements:[], activity:[], referrals:0, admin:null};
+    intent:'find', members:[], connections:{}, connRows:{}, threads:{}, unread:{}, opps:[], applications:{}, received:{}, saved:{}, teams:[], ideas:[], following:{}, offers:{}, pledges:{}, endorsements:[], activity:[], referrals:0, admin:null, projects:[], settings:null, payoutAccount:null, myPayouts:[], credits:[], feedbackPublic:[]};
 }
 
 /* ---------- Lookups ---------- */
@@ -746,7 +756,7 @@ function teamInvites(){ return S.teams.filter(function(t){ return myStatus(t) ==
 function incomingRequests(){ return Object.keys(S.connections).filter(function(k){ return S.connections[k] === 'incoming'; }); }
 function joinRequests(){ var out = []; S.teams.forEach(function(t){ if (isLead(t) && myStatus(t) === 'active') t.members.forEach(function(m){ if (m.status === 'requested') out.push({team:t, m:m}); }); }); return out; }
 function newApplicants(){ var out = []; Object.keys(S.received).forEach(function(k){ S.received[k].forEach(function(a){ if (a.status === 'submitted') out.push({opp:opp(k), a:a}); }); }); return out.filter(function(x){ return x.opp; }); }
-function attentionCount(){ return incomingRequests().length + teamInvites().length + joinRequests().length + newApplicants().length; }
+function attentionCount(){ return incomingRequests().length + teamInvites().length + joinRequests().length + newApplicants().length + commerceAttention().length; }
 function completeness(){
   var m = S.me, pts = 0;
   [m.name, m.title, m.location, m.bio, m.intro, m.portfolio].forEach(function(x){ if (x) pts++; });
@@ -968,6 +978,7 @@ async function loadLive(){
   s.opps.filter(function(o){ return o.status === 'published'; }).forEach(function(o){ act.push({at:o.created, t:'New opportunity: <b>' + esc(o.title) + '</b>', href:'#/opportunities/' + o.id}); });
   s.ideas.forEach(function(i){ if (i.kind === 'idea') act.push({at:i.created, t:'New idea in Labs: <b>' + esc(i.title) + '</b>', href:'#/labs/' + i.id}); i.updates.forEach(function(u){ if (s.following[i.id] || i.kind === 'initiative') act.push({at:u.d, t:'Update in <b>' + esc(i.title) + '</b>', href:'#/labs/' + i.id + '/updates'}); }); });
   s.activity = act.filter(function(a){ return a.at; }).sort(function(a, b){ return new Date(b.at) - new Date(a.at); }).slice(0, 8);
+  await loadCommerce(s);
   S = s; lastSync = Date.now();
 }
 
@@ -1111,6 +1122,7 @@ function shell(active, inner){
     return '<a href="#/' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '"' + (active === n[0] ? ' aria-current="page"' : '') + '>' + icon(n[2]) + '<span>' + n[1] + '</span>' + badge + '</a>';
   }).join('');
   var extra = [['messages', 'Messages', 'chat', u], ['tools', 'Toolkit', 'tool', 0], ['invite', 'Invite people', 'heart', 0]].concat(S.me.isAdmin ? [['admin', 'Admin', 'shield', S.admin && S.admin.stats ? (S.admin.stats.inquiries_new + S.admin.stats.opps_pending + S.admin.stats.reports_open) : 0]] : []);
+  if (showEarnings()) extra.splice(1, 0, ['earnings', 'Earnings', 'coin', 0]);
   var banner = LIVE ? '' : '<div class="demo-bar" role="note"><b>Preview</b><span>Sample people, projects and listings — nothing here is real.<span class="hide-sm"> Changes stay in this browser.</span></span>' + (CONFIG.supabaseUrl ? '<a href="' + appUrl() + '#/signup">Create a real account</a>' : '') + '<button data-act="reset">Reset preview</button></div>';
   return '<a class="skip" href="#content">Skip to content</a><div class="shell">' +
     '<aside class="side"><a class="brand" href="#/home"><img src="' + LOGO_LIGHT + '" alt="Cleverherd home"></a>' +
@@ -1244,6 +1256,7 @@ function attentionCard(){
   teamInvites().forEach(function(t){ var me = t.members.find(function(m){ return m.id === 'me'; }); items.push('<div class="row"><span class="type-dot">' + icon('grid') + '</span><div class="grow"><b>Invitation to ' + esc(t.name) + '</b><div class="small muted">Role: ' + esc(me.role || 'Contributor') + ' · ' + esc(t.kind) + '</div></div><button class="btn btn-ink btn-sm" data-act="accept-invite" data-id="' + t.id + '">Accept</button><button class="btn btn-ghost btn-sm" data-act="leave-team" data-id="' + t.id + '" data-msg="Invitation declined">Decline</button></div>'); });
   joinRequests().forEach(function(x){ var p = P(x.m.id); items.push('<div class="row">' + av(p, 'sm') + '<div class="grow"><b>' + esc(p.name) + '</b><div class="small muted">asked to join ' + esc(x.team.name) + '</div></div><button class="btn btn-ink btn-sm" data-act="approve" data-team="' + x.team.id + '" data-id="' + x.m.id + '">Approve</button><button class="btn btn-ghost btn-sm" data-act="remove-member" data-team="' + x.team.id + '" data-id="' + x.m.id + '">Decline</button></div>'); });
   newApplicants().forEach(function(x){ var p = P(x.a.applicant); items.push('<a class="row row-link" href="#/opportunities/' + x.opp.id + '">' + av(p, 'sm') + '<div class="grow"><b>' + esc(p.name) + ' applied</b><div class="small muted">' + esc(x.opp.title) + '</div></div><span class="pill sd">Review</span></a>'); });
+  commerceAttention().forEach(function(h){ items.push(h); });
   if (!items.length) return '';
   return '<section class="card attn"><div class="card-h"><h3>Needs your attention</h3><span class="pill sd">' + items.length + '</span></div>' + items.join('') + '</section>';
 }
@@ -1342,7 +1355,7 @@ function pMember(id){
     '<div class="split"><div class="stack">' +
       '<section class="card prose">' + (m.intro ? '<p class="lead-intro">“' + esc(m.intro) + '”</p>' : '') + '<h4>About</h4><p>' + esc(m.bio || 'No bio yet.') + '</p><h4>Skills</h4>' + tags(m.skills, hits) + '<h4>Interests</h4>' + tags(m.interests) + '<h4>Open to</h4>' + tags(m.open) +
         (m.portfolio ? '<h4>Work</h4><p><a class="link" href="' + esc(/^https?:\/\//.test(m.portfolio) ? m.portfolio : 'https://' + m.portfolio) + '" target="_blank" rel="noopener nofollow ugc">' + esc(m.portfolio) + ' ↗</a></p>' : '') + '</section>' +
-      '<section class="card"><div class="card-h"><h3>Recommendations</h3><button class="btn btn-line btn-sm" data-act="endorse" data-id="' + m.id + '">' + icon('star') + 'Recommend</button></div>' + (recs.length ? recs.map(function(e){ var f = P(e.from); return '<div class="row" style="align-items:flex-start">' + av(f, 'sm') + '<div class="grow"><div class="small muted">' + esc(e.from === 'me' ? 'You' : f.name) + ' recommends for <b>' + esc(e.skill) + '</b></div>' + (e.note ? '<p style="margin-top:4px">' + esc(e.note) + '</p>' : '') + '</div>' + (e.from === 'me' ? '<button class="link-btn" data-act="unendorse" data-id="' + e.id + '">Remove</button>' : '') + '</div>'; }).join('') : '<p class="small muted">No recommendations yet. Worked with ' + esc(first(m.name)) + '? Recommend a skill.</p>') + '</section>' +
+      creditsSection(m.id) + '<section class="card"><div class="card-h"><h3>Recommendations</h3><button class="btn btn-line btn-sm" data-act="endorse" data-id="' + m.id + '">' + icon('star') + 'Recommend</button></div>' + (recs.length ? recs.map(function(e){ var f = P(e.from); return '<div class="row" style="align-items:flex-start">' + av(f, 'sm') + '<div class="grow"><div class="small muted">' + esc(e.from === 'me' ? 'You' : f.name) + ' recommends for <b>' + esc(e.skill) + '</b></div>' + (e.note ? '<p style="margin-top:4px">' + esc(e.note) + '</p>' : '') + '</div>' + (e.from === 'me' ? '<button class="link-btn" data-act="unendorse" data-id="' + e.id + '">Remove</button>' : '') + '</div>'; }).join('') : '<p class="small muted">No recommendations yet. Worked with ' + esc(first(m.name)) + '? Recommend a skill.</p>') + '</section>' +
       (theirIdeas.length || theirTeams.length ? '<section class="card"><div class="card-h"><h3>Projects</h3></div>' + theirIdeas.map(function(i){ return '<a class="row row-link" href="#/labs/' + i.id + '"><span class="type-dot t-startup">' + icon('flask') + '</span><div class="grow"><b>' + esc(i.title) + '</b><div class="small muted">Founder · ' + esc(i.stage) + '</div></div></a>'; }).join('') + theirTeams.filter(function(t){ return t.visibility === 'public' || myStatus(t) === 'active'; }).map(function(t){ var r = t.members.find(function(x){ return x.id === id; }); return '<a class="row row-link" href="#/teams/' + t.id + '"><span class="type-dot">' + icon('grid') + '</span><div class="grow"><b>' + esc(t.name) + '</b><div class="small muted">' + esc(r.role || t.kind) + '</div></div></a>'; }).join('') + '</section>' : '') +
     '</div><div class="stack"><section class="combo"><span class="eyebrow" style="color:var(--sand)">You + ' + esc(first(m.name)) + '</span><h3 style="margin:10px 0 6px;font-size:20px">' + (covered.length ? 'Together you cover ' + esc(covered.join(', ')) + '.' : 'A new combination.') + '</h3><p class="small muted" style="margin-bottom:14px">Combined skills</p>' +
       '<div class="tags">' + combined.slice(0, 10).map(function(s){ return '<span class="tag">' + esc(s) + '</span>'; }).join('') + missing.map(function(r){ return '<span class="tag miss">Missing: ' + esc(r) + '</span>'; }).join('') + '</div>' +
@@ -1397,7 +1410,7 @@ function pOpp(id){
     '<div class="split"><div class="stack"><section class="card"><div class="meta-line">' + typeDot(o.type) + '<span class="eyebrow">' + TYPE[o.type].label + '</span><span class="small muted">Posted ' + esc(ago(o.created)) + '</span>' + sampleTag() + '</div>' +
       '<h1 style="font-size:clamp(24px,2.8vw,32px);margin:14px 0 14px">' + esc(o.title) + '</h1>' + statusNote + '<div class="prose"><p style="white-space:pre-line">' + esc(o.desc || 'No description provided.') + '</p><h4>Skills needed</h4>' + tags(o.skills, hits) +
       (o.team ? '<h4>Team fit</h4><p>This work suits a small team. Apply with one of your teams, or apply alone and team up with other applicants.</p>' : '') + '</div></section>' +
-      applicants + '<section class="card"><div class="card-h"><h3>Posted by</h3></div>' + poster + '</section></div>' +
+      applicants + oppProjectBlock(o) + '<section class="card"><div class="card-h"><h3>Posted by</h3></div>' + poster + '</section></div>' +
     '<div class="stack"><section class="card"><div class="comp-box comp-' + o.compType + '"><span class="eyebrow">Compensation</span><b>' + esc(comp.label) + '</b>' + (o.comp ? '<span>' + esc(o.comp) + '</span>' : '') + '<small>' + esc(comp.note) + '</small></div>' +
       '<div class="kv"><div><span>Commitment</span><b>' + esc(o.commit || '—') + '</b></div><div><span>Arrangement</span><b>' + esc(o.where || '—') + '</b></div><div><span>Your match</span><b>' + hits.length + ' of ' + o.skills.length + ' skills</b></div></div>' +
       '<div class="cta-stack">' + cta + (o.status === 'published' && !o.mine ? '<button class="btn btn-line btn-full" data-act="save" data-id="' + o.id + '">' + icon('bookmark') + (S.saved[o.id] ? 'Saved' : 'Save for later') + '</button>' : '') + (o.status === 'published' ? '<button class="btn btn-line btn-full" data-act="share-opp" data-id="' + o.id + '">' + icon('share') + 'Share with a member</button>' : '') + '</div></section>' +
@@ -1443,8 +1456,11 @@ function pTeam(id, tab){
   tab = tab || 'board';
   var lead = isLead(t), isVenture = t.kind === 'Venture', mems = activeMembers(t);
   var tabs = [['board', 'Board'], ['milestones', 'Milestones'], ['leads', 'Leads (' + t.leads.length + ')'], ['contributions', 'Contributions']].concat(isVenture ? [['ownership', 'Ownership']] : []).concat([['members', 'Members (' + mems.length + ')']]);
+  if (commerceOn() && (teamProjects(t).length || (lead && t.kind !== 'Workstream'))) tabs.splice(1, 0, ['projects', 'Paid projects' + (teamProjects(t).length ? ' (' + teamProjects(t).length + ')' : '')]);
   var body = '';
-  if (tab === 'board') {
+  if (tab === 'projects') {
+    body = teamProjectsTab(t);
+  } else if (tab === 'board') {
     var cols = [['todo', 'To do'], ['doing', 'In progress'], ['done', 'Done']];
     body = (t.tasks.length ? '' : '<p class="note" style="margin-bottom:14px">No tasks yet. Break the work into small steps and give each one an owner.</p>') + '<div class="kanban">' + cols.map(function(c, ci){ var ks = t.tasks.filter(function(k){ return k.s === c[0]; });
       return '<div class="col"><h4><span>' + c[1] + '</span><span>' + ks.length + '</span></h4>' + ks.map(function(k){ return '<div class="task"><p>' + esc(k.t) + '</p><div class="tf">' + (k.o ? av(P(k.o), 'sm') : '<span class="small muted">Unassigned</span>') + '<div class="mv"><button data-act="task-move" data-team="' + t.id + '" data-id="' + k.id + '" data-dir="-1" aria-label="Move ' + esc(k.t) + ' left"' + (ci === 0 ? ' disabled' : '') + '>' + icon('left') + '</button><button data-act="task-move" data-team="' + t.id + '" data-id="' + k.id + '" data-dir="1" aria-label="Move ' + esc(k.t) + ' right"' + (ci === 2 ? ' disabled' : '') + '>' + icon('right') + '</button><button data-act="task-del" data-team="' + t.id + '" data-id="' + k.id + '" aria-label="Delete ' + esc(k.t) + '">' + icon('x') + '</button></div></div></div>'; }).join('') + '</div>'; }).join('') + '</div>' +
@@ -1457,7 +1473,7 @@ function pTeam(id, tab){
     body = '<div class="ph" style="margin-bottom:16px"><div><p style="margin:0">Track prospective clients the team is pursuing — from first idea to signed project. ' + (won ? '<b>' + won + ' won.</b>' : '') + '</p></div><button class="btn btn-ink btn-sm" data-act="lead-edit" data-team="' + t.id + '">' + icon('plus') + 'Add a lead</button></div>' +
       (t.leads.length ? '<div class="pipeline">' + LEAD_STAGES.map(function(s){ var ls = t.leads.filter(function(l){ return l.stage === s; }); return '<div class="pcol"><h4>' + s + ' <span>' + ls.length + '</span></h4>' + ls.map(function(l){ return '<button class="lead" data-act="lead-edit" data-team="' + t.id + '" data-id="' + l.id + '"><b>' + esc(l.company) + '</b>' + (l.need ? '<span>' + esc(l.need) + '</span>' : '') + (l.next ? '<small>Next: ' + esc(l.next) + '</small>' : '') + '<em>' + (l.owner ? esc(nameOf(l.owner)) : 'Unassigned') + (l.value ? ' · ' + esc(l.value) : '') + '</em></button>'; }).join('') + '</div>'; }).join('') + '</div>' :
         emptyBox('No leads yet', 'Add businesses that might need what your team does. Use the <a class="link" href="#/tools/outreach">outreach templates</a> to start conversations.', '<button class="btn btn-ink btn-sm" data-act="lead-edit" data-team="' + t.id + '">Add the first lead</button>')) +
-      '<p class="note" style="margin-top:16px">Only add business contact details people have made public or shared with you. Don’t add personal phone numbers or home addresses.</p>';
+      wonLeadsBlock(t) + '<p class="note" style="margin-top:16px">Only add business contact details people have made public or shared with you. Don’t add personal phone numbers or home addresses.</p>';
   } else if (tab === 'contributions') {
     body = '<div class="split"><section class="card"><div class="card-h"><h3>Contribution record</h3><span class="small muted">' + t.contributions.length + ' entries</span></div>' + (t.contributions.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Member</th><th>Type</th><th>What</th><th class="r">Amount</th><th class="r">Date</th></tr></thead><tbody>' +
       t.contributions.map(function(c){ return '<tr><td><div class="person">' + av(P(c.m), 'sm') + '<span>' + esc(nameOf(c.m)) + '</span></div></td><td><span class="pill ln">' + esc(c.type) + '</span></td><td>' + esc(c.desc) + '</td><td class="r">' + esc(c.amt || '—') + '</td><td class="r small muted">' + esc(fmtDate(c.d)) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<p class="small muted">Nothing recorded yet.</p>') + '</section>' +
@@ -1481,7 +1497,7 @@ function pTeam(id, tab){
   }
   return '<a class="back" href="#/teams">' + icon('left') + 'Teams</a>' +
     '<div class="hero-card"><div class="grow"><div class="meta-line"><span class="pill ' + (isVenture ? 'sd' : t.kind === 'Workstream' ? 'ok' : '') + '">' + esc(t.kind) + '</span><span class="small muted">' + esc(t.status) + ' · ' + (t.visibility === 'public' ? 'Public' : 'Private') + '</span>' + sampleTag() + '</div><h1 style="margin-top:10px">' + esc(t.name) + '</h1><p class="muted" style="margin-top:4px">' + esc(t.project) + '</p></div>' +
-      '<div class="actions"><div class="avs">' + mems.slice(0, 6).map(function(m){ return av(P(m.id)); }).join('') + '</div>' + (t.idea ? '<a class="btn btn-line btn-sm" href="#/labs/' + t.idea + '">' + (t.kind === 'Workstream' ? 'Initiative page' : 'Labs page') + '</a>' : '') + '</div></div>' +
+      '<div class="actions"><div class="avs">' + mems.slice(0, 6).map(function(m){ return av(P(m.id)); }).join('') + '</div>' + (commerceOn() && lead && t.kind !== 'Workstream' ? '<button class="btn btn-ink btn-sm" data-act="project-new" data-team="' + t.id + '">' + icon('coin') + 'Set up a paid project</button>' : '') + (t.idea ? '<a class="btn btn-line btn-sm" href="#/labs/' + t.idea + '">' + (t.kind === 'Workstream' ? 'Initiative page' : 'Labs page') + '</a>' : '') + '</div></div>' +
     '<div class="tabs" role="tablist">' + tabs.map(function(x){ return '<a href="#/teams/' + t.id + '/' + x[0] + '" role="tab" aria-selected="' + (tab === x[0]) + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</a>'; }).join('') + '</div>' + body;
 }
 
@@ -1663,7 +1679,7 @@ function pProfile(edit){
   var c = completeness(), tips = profileTips(), recs = S.endorsements.filter(function(e){ return e.to === 'me'; });
   return '<div class="hero-card">' + av(p, 'lg') + '<div class="grow"><h1>' + esc(m.name) + '</h1><p class="muted" style="margin-top:4px">' + esc(m.title || 'Add a title') + '</p><p class="small muted meta-icons">' + (m.location ? '<span>' + icon('pin') + ' ' + esc(m.location) + (m.showLocation ? '' : ' (hidden from others)') + '</span>' : '') + (m.hours ? '<span>' + icon('clock') + ' ' + esc(m.hours) + '</span>' : '') + (!m.listed ? '<span>' + icon('lock') + ' Not listed in directory</span>' : '') + '</p></div><div class="actions"><a class="btn btn-ink" href="#/profile/edit">Edit profile</a><a class="btn btn-line" href="#/settings">Privacy & settings</a></div></div>' +
     '<div class="split"><div class="stack"><section class="card prose">' + (m.intro ? '<p class="lead-intro">“' + esc(m.intro) + '”</p>' : '') + '<h4>About</h4><p>' + esc(m.bio || 'Add a short bio so people know what you do.') + '</p><h4>Skills</h4>' + tags(m.skills) + '<h4>Interests</h4>' + tags(m.interests) + '<h4>Looking for</h4>' + tags(m.looking) + '<h4>Roles you cover</h4>' + tags(rolesOf(m.skills)) + (m.portfolio ? '<h4>Work</h4><p>' + esc(m.portfolio) + '</p>' : '') + '</section>' +
-      '<section class="card"><div class="card-h"><h3>Recommendations you’ve received</h3></div>' + (recs.length ? recs.map(function(e){ var f = P(e.from); return '<div class="row" style="align-items:flex-start">' + av(f, 'sm') + '<div class="grow"><div class="small muted">' + esc(f.name) + ' · <b>' + esc(e.skill) + '</b></div>' + (e.note ? '<p style="margin-top:4px">' + esc(e.note) + '</p>' : '') + '</div></div>'; }).join('') : '<p class="small muted">None yet. They come from people you’ve worked with.</p>') + '</section></div>' +
+      creditsSection('me') + '<section class="card"><div class="card-h"><h3>Recommendations you’ve received</h3></div>' + (recs.length ? recs.map(function(e){ var f = P(e.from); return '<div class="row" style="align-items:flex-start">' + av(f, 'sm') + '<div class="grow"><div class="small muted">' + esc(f.name) + ' · <b>' + esc(e.skill) + '</b></div>' + (e.note ? '<p style="margin-top:4px">' + esc(e.note) + '</p>' : '') + '</div></div>'; }).join('') : '<p class="small muted">None yet. They come from people you’ve worked with.</p>') + '</section></div>' +
     '<div class="stack"><section class="card"><div class="card-h"><h3>Profile strength</h3><span class="small muted">' + c + '%</span></div><div class="bar"><i style="width:' + c + '%"></i></div>' + (tips.length ? '<ul class="tips">' + tips.slice(0, 4).map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : '<p class="small muted" style="margin-top:10px">Looking great.</p>') + '</section>' +
       '<section class="card"><div class="kv"><div><span>Arrangement</span><b>' + esc(m.arrangement || '—') + '</b></div><div><span>Teams</span><b>' + myTeams().length + '</b></div><div><span>Ideas shared</span><b>' + S.ideas.filter(function(i){ return i.owner === 'me'; }).length + '</b></div><div><span>People you’ve invited</span><b>' + (S.referrals || 0) + '</b></div></div></section></div></div>';
 }
@@ -1818,9 +1834,11 @@ function pAdmin(){
   var pendingOpps = S.opps.filter(function(o){ return o.status === 'pending'; });
   var openReports = (A.reports || []).filter(function(r){ return r.status === 'open'; });
   var newInq = (A.inquiries || []).filter(function(r){ return r.status === 'new'; });
-  var tabs = [['overview', 'Overview'], ['inquiries', 'Business inquiries (' + newInq.length + ')'], ['listings', 'Listing review (' + pendingOpps.length + ')'], ['reports', 'Reports (' + openReports.length + ')'], ['members', 'Members'], ['initiative', 'Initiative']];
+  var tabs = [['overview', 'Overview'], ['inquiries', 'Business inquiries (' + newInq.length + ')'], ['listings', 'Listing review (' + pendingOpps.length + ')'], ['reports', 'Reports (' + openReports.length + ')'], ['members', 'Members'], ['initiative', 'Initiative']].concat(commerceOn() ? [['payments', 'Payments']] : []);
   var body;
-  if (tab === 'inquiries') {
+  if (tab === 'payments') {
+    body = adminPayments();
+  } else if (tab === 'inquiries') {
     body = (A.inquiries || []).length ? '<div class="stack">' + A.inquiries.map(function(x){ return '<section class="card"><div class="card-h"><div><h3>' + esc(x.company) + '</h3><p class="small muted">' + esc(x.name) + ' · <a class="link" href="mailto:' + esc(x.email) + '?subject=' + encodeURIComponent('Your Cleverherd project inquiry') + '">' + esc(x.email) + '</a> · ' + esc(fmtDate(x.created)) + (x.website ? ' · ' + esc(x.website) : '') + '</p></div><span class="pill ' + (x.status === 'new' ? 'sd' : 'ln') + '">' + esc(x.status) + '</span></div>' +
       '<p style="white-space:pre-line">' + esc(x.description || '—') + '</p><div class="meta-line" style="margin:12px 0">' + tags(x.needs) + (x.budget ? '<span class="pill ln">' + esc(x.budget) + '</span>' : '') + (x.timeline ? '<span class="pill ln">' + esc(x.timeline) + '</span>' : '') + '</div>' +
       '<form class="add-task" data-form="inquiry" data-id="' + x.id + '"><select class="sel" name="status" aria-label="Status">' + options(['new', 'contacted', 'qualified', 'converted', 'closed'], x.status) + '</select><input class="in" name="notes" value="' + esc(x.notes || '') + '" placeholder="Internal notes" maxlength="2000" aria-label="Notes"><button class="btn btn-ink" type="submit">Save</button><button type="button" class="btn btn-line" data-act="inquiry-to-opp" data-id="' + x.id + '">Draft listing</button></form></section>'; }).join('') + '</div>' : emptyBox('No inquiries yet', 'Business inquiries from the website’s “Submit a project” form appear here.');
@@ -1910,6 +1928,8 @@ function render(){
     case 'invite': html = pInvite(); title = 'Invite people'; break;
     case 'tools': html = parts[1] === 'validate' ? pToolValidate() : parts[1] === 'proposal' ? pToolProposal() : parts[1] === 'outreach' ? pToolOutreach() : parts[1] === 'team-builder' ? pToolTeam() : pTools(); title = 'Toolkit'; break;
     case 'admin': html = pAdmin(); title = 'Admin'; break;
+    case 'projects': html = pProject(parts[1], parts[2]); title = 'Paid project'; active = 'teams'; break;
+    case 'earnings': html = pEarnings(); title = 'Earnings'; active = 'earnings'; break;
     case 'search': html = pSearch(decodeURIComponent(parts[1] || '')); title = 'Search'; break;
     default: html = notFound(); active = '';
   }
@@ -2341,6 +2361,517 @@ function startSync(){
 }
 function onVisible(){ if (document.visibilityState === 'visible' && Date.now() - lastSync > 30000) quietRefresh(); }
 function stopSync(){ if (syncTimer) clearInterval(syncTimer); syncTimer = null; if (channel && SB) { try { SB.removeChannel(channel); } catch (e) {} } channel = null; document.removeEventListener('visibilitychange', onVisible); }
+
+/* =====================================================================
+   Paid projects: budget → proposal → client approval → milestones →
+   invoices → payouts → completed work on profiles.
+   Shown only when relevant (progressive disclosure). Live mode only.
+   Database rules in supabase/payments.sql enforce every permission.
+   ===================================================================== */
+var PSTATUS = {
+  draft: ['Draft', 'ln'], budget_agreed: ['Budget agreed', ''], proposal_sent: ['With client', 'sd'], changes_requested: ['Changes requested', 'sd'],
+  approved: ['Approved — awaiting payment', 'sd'], active: ['In progress', 'ok'], completed: ['Completed', 'dk'], cancelled: ['Cancelled', 'ln']
+};
+var PLANS = {upfront: 'Full payment up front', deposit_balance: 'Deposit, then balance on completion', milestones: 'Pay per milestone on approval'};
+var METHODS = {fixed: 'Fixed amount', percent: '% of team budget', hourly: 'Hourly (estimate)', milestone: 'Fixed amount at a milestone', commission: 'Sales / referral commission (% of price)'};
+var INV_STATUS = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'sd'], void: ['Void', 'ln'], refunded: ['Refunded', 'ln'], partially_refunded: ['Partly refunded', 'ln'], disputed: ['Disputed', 'sd']};
+var PO_STATUS = {eligible: ['Ready to release', 'sd'], processing: ['Processing', ''], paid: ['Sent', 'ok'], failed: ['Failed', 'sd'], on_hold: ['On hold', 'ln'], reversed: ['Reversed', 'ln']};
+var MS_STATUS = {planned: ['Planned', 'ln'], in_progress: ['In progress', ''], submitted: ['With client for review', 'sd'], revision_requested: ['Revision requested', 'sd'], approved: ['Approved', 'ok']};
+
+function cents$(c){ c = Math.round(Number(c) || 0); return (c < 0 ? '−$' : '$') + (Math.abs(c) / 100).toLocaleString('en-US', {minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2}); }
+function toCents(v){ var n = parseFloat(String(v || '').replace(/[$,\s]/g, '')); return isFinite(n) ? Math.round(n * 100) : 0; }
+function dollars(c){ return c ? String(Math.round(c) / 100) : ''; }
+function proj(id){ return (S.projects || []).find(function(p){ return p.id === id; }); }
+function teamProjects(t){ return (S.projects || []).filter(function(p){ return p.teamId === t.id; }); }
+function projTeam(pr){ return team(pr.teamId) || {name: 'Team', members: []}; }
+function isProjLead(pr){ var t = team(pr.teamId); return !!(t && isLead(t)) || S.me.isAdmin; }
+function editable(pr){ return pr.status === 'draft' || pr.status === 'changes_requested'; }
+function myAllocs(pr){ return pr.allocs.filter(function(a){ return a.member === 'me'; }); }
+function commerceOn(){ return LIVE && !!S.settings; }
+function testMode(){ return !S.settings || S.settings.payments_mode !== 'live'; }
+function clientUrl(token){ return appUrl().replace(/app\.html$/, '') + 'client.html#t=' + token; }
+function pill(map, key){ var v = map[key] || [key, 'ln']; return '<span class="pill ' + v[1] + '">' + esc(v[0]) + '</span>'; }
+
+function budgetOf(pr){
+  var s = S.settings || {processing_pct: 2.9, processing_fixed_cents: 30};
+  var nPay = pr.plan === 'upfront' ? 1 : pr.plan === 'deposit_balance' ? ((pr.depositPct === 0 || pr.depositPct === 100) ? 1 : 2) : Math.max(1, pr.milestones.filter(function(m){ return m.amount > 0; }).length);
+  var fee = Math.round(pr.total * pr.feePct / 100);
+  var proc = pr.total ? Math.round(pr.total * Number(s.processing_pct) / 100) + Number(s.processing_fixed_cents) * nPay : 0;
+  var net = Math.max(0, pr.total - fee - proc);
+  var alloc = pr.allocs.reduce(function(t, a){ return t + a.value; }, 0);
+  return {total: pr.total, fee: fee, proc: proc, net: net, alloc: alloc, left: net - alloc, nPay: nPay};
+}
+function allocPreview(pr, f){
+  var b = budgetOf(pr);
+  switch (f.method) {
+    case 'fixed': case 'milestone': return toCents(f.fixed);
+    case 'percent': return Math.round(b.net * (parseFloat(f.percent) || 0) / 100);
+    case 'commission': return Math.round(pr.total * (parseFloat(f.percent) || 0) / 100);
+    case 'hourly': return Math.round(toCents(f.rate) * (parseFloat(f.hours) || 0));
+  }
+  return 0;
+}
+function allocDetail(a){
+  switch (a.method) {
+    case 'fixed': return 'Fixed';
+    case 'milestone': var m = a.milestone; return 'At milestone: ' + (m ? m.title : '—');
+    case 'percent': return a.percent + '% of team budget';
+    case 'commission': return a.percent + '% commission';
+    case 'hourly': return cents$(a.rate) + '/hr × ' + a.hours + ' hrs (estimate)';
+  }
+  return a.method;
+}
+
+/* ---------- Data ---------- */
+async function loadCommerce(s){
+  s.projects = []; s.settings = null; s.payoutAccount = null; s.myPayouts = []; s.credits = []; s.feedbackPublic = [];
+  try {
+    var r = await Promise.all([
+      q(SB.from('platform_settings').select('*').maybeSingle()),
+      q(SB.from('projects').select('*').order('created_at', {ascending: false})),
+      q(SB.from('project_milestones').select('*').order('position', {ascending: true})),
+      q(SB.from('project_allocations').select('*').order('created_at', {ascending: true})),
+      q(SB.from('project_deliverables').select('*').order('created_at', {ascending: true})),
+      q(SB.from('project_proposals').select('*').order('version', {ascending: false})),
+      q(SB.from('project_invoices').select('*').order('issued_at', {ascending: true})),
+      q(SB.from('project_payouts').select('*').order('created_at', {ascending: true})),
+      q(SB.from('payout_accounts').select('*').eq('member', MYID).maybeSingle()),
+      q(SB.from('project_messages').select('*').order('created_at', {ascending: true})),
+      q(SB.from('project_events').select('*').order('created_at', {ascending: false}).limit(400)),
+      q(SB.from('project_credits').select('*').order('created_at', {ascending: false})),
+      q(SB.from('project_feedback').select('*'))
+    ]);
+  } catch (e) { console.warn('Paid projects unavailable:', e && e.message); return; }
+  s.settings = r[0];
+  var by = function(rows, p){ return rows.filter(function(x){ return x.project_id === p; }); };
+  s.projects = r[1].map(function(p){
+    var ms = by(r[2], p.id).map(function(m){ return {id: m.id, title: m.title, description: m.description, due: m.due_date, amount: +m.amount_cents, status: m.status, submittedAt: m.submitted_at, approvedAt: m.approved_at, approvedBy: m.approved_by, revisionNote: m.revision_note, position: m.position,
+      deliverables: r[4].filter(function(d){ return d.milestone_id === m.id; }).map(function(d){ return {id: d.id, title: d.title, url: d.url, note: d.note, by: M(d.submitted_by), at: d.created_at}; })}; });
+    var allocs = by(r[3], p.id).map(function(a){ return {id: a.id, member: a.member ? M(a.member) : null, role: a.role, method: a.method, fixed: +a.fixed_cents, percent: +a.percent, rate: +a.hourly_rate_cents, hours: +a.hours, milestoneId: a.milestone_id, milestone: ms.find(function(m){ return m.id === a.milestone_id; }), value: +a.value_cents, acceptedAt: a.accepted_at}; });
+    return {id: p.id, teamId: p.team_id, opportunityId: p.opportunity_id, initiative: p.for_initiative, title: p.title, summary: p.summary,
+      clientName: p.client_name, clientCompany: p.client_company, clientEmail: p.client_email, type: p.project_type, feePct: +p.fee_pct,
+      currency: p.currency, total: +p.total_cents, plan: p.payment_plan, depositPct: +p.deposit_pct, scope: p.scope, timeline: p.timeline,
+      terms: p.terms, validUntil: p.valid_until, status: p.status, createdBy: M(p.created_by), createdAt: p.created_at, lockedAt: p.budget_locked_at,
+      approvedAt: p.approved_at, completedAt: p.completed_at, milestones: ms, allocs: allocs,
+      proposals: by(r[5], p.id), invoices: by(r[6], p.id).map(function(i){ return {id: i.id, number: i.number, kind: i.kind, description: i.description, amount: +i.amount_cents, status: i.status, issuedAt: i.issued_at, due: i.due_date, paidAt: i.paid_at, refunded: +i.amount_refunded_cents, method: i.method, note: i.note, intent: i.stripe_payment_intent}; }),
+      payouts: by(r[7], p.id).map(function(o){ return {id: o.id, member: o.member ? M(o.member) : null, role: o.role, amount: +o.amount_cents, status: o.status, note: o.note, paidAt: o.paid_at, transfer: o.stripe_transfer_id}; }),
+      messages: by(r[9], p.id).map(function(m){ return {fromClient: m.from_client, by: m.author ? M(m.author) : null, name: m.client_name, body: m.body, at: m.created_at}; }),
+      events: by(r[10], p.id), feedback: r[12].find(function(f){ return f.project_id === p.id; }) || null};
+  });
+  s.payoutAccount = r[8];
+  s.myPayouts = r[7].filter(function(o){ return o.member === MYID; }).map(function(o){ return {id: o.id, projectId: o.project_id, role: o.role, amount: +o.amount_cents, status: o.status, note: o.note, paidAt: o.paid_at, createdAt: o.created_at}; });
+  s.credits = r[11].map(function(c){ return {id: c.id, projectId: c.project_id, member: M(c.member), role: c.role, title: c.title, team: c.team_name, skills: c.skills || [], public: c.public, at: c.created_at}; });
+  s.feedbackPublic = r[12];
+}
+
+async function payFn(action, body){
+  var key = CONFIG.supabaseAnonKey, h = {'Content-Type': 'application/json', apikey: key};
+  h.Authorization = 'Bearer ' + ((SESSION && SESSION.access_token) || key);
+  var r = await fetch(CONFIG.supabaseUrl + '/functions/v1/payments', {method: 'POST', headers: h, body: JSON.stringify(Object.assign({action: action}, body || {}))});
+  var j = await r.json().catch(function(){ return {}; });
+  if (!r.ok) throw new Error(j.error || 'The payment service is unavailable right now.');
+  return j;
+}
+var papi = {
+  create: function(f){ return SB.from('projects').insert(f).select().single().then(chk); },
+  update: function(id, f){ return SB.from('projects').update(f).eq('id', id).then(chk); },
+  addMilestone: function(f){ return SB.from('project_milestones').insert(f).then(chk); },
+  updateMilestone: function(id, f){ return SB.from('project_milestones').update(f).eq('id', id).then(chk); },
+  deleteMilestone: function(id){ return SB.from('project_milestones').delete().eq('id', id).then(chk); },
+  saveAlloc: function(id, f){ return (id ? SB.from('project_allocations').update(f).eq('id', id) : SB.from('project_allocations').insert(f)).then(chk); },
+  deleteAlloc: function(id){ return SB.from('project_allocations').delete().eq('id', id).then(chk); },
+  rpc: function(name, args){ return SB.rpc(name, args).then(chk); },
+  deliverable: function(f){ return SB.from('project_deliverables').insert(f).then(chk); },
+  deleteDeliverable: function(id){ return SB.from('project_deliverables').delete().eq('id', id).then(chk); },
+  message: function(p, body){ return SB.from('project_messages').insert({project_id: p, author: MYID, body: body}).then(chk); },
+  credit: function(id, pub){ return SB.from('project_credits').update({public: pub}).eq('id', id).then(chk); },
+  settings: function(f){ return SB.from('platform_settings').update(f).eq('id', 1).then(chk); }
+};
+
+/* ---------- Attention items & navigation ---------- */
+function commerceAttention(){
+  if (!commerceOn()) return [];
+  var out = [];
+  S.projects.forEach(function(pr){
+    if (editable(pr)) myAllocs(pr).filter(function(a){ return !a.acceptedAt; }).forEach(function(a){
+      out.push('<a class="row row-link" href="#/projects/' + pr.id + '/budget"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Review your share: ' + cents$(a.value) + '</b><div class="small muted">' + esc(pr.title) + ' · ' + esc(a.role || METHODS[a.method]) + '</div></div><span class="pill sd">Accept</span></a>');
+    });
+    if (isProjLead(pr) && pr.status === 'changes_requested') out.push('<a class="row row-link" href="#/projects/' + pr.id + '/proposal"><span class="type-dot t-paid">' + icon('brief') + '</span><div class="grow"><b>Client requested changes</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="pill sd">Review</span></a>');
+    pr.milestones.filter(function(m){ return m.status === 'revision_requested'; }).forEach(function(m){
+      out.push('<a class="row row-link" href="#/projects/' + pr.id + '/milestones"><span class="type-dot">' + icon('target') + '</span><div class="grow"><b>Revision requested: ' + esc(m.title) + '</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="pill sd">Open</span></a>');
+    });
+    if (isProjLead(pr) && pr.payouts.some(function(o){ return o.status === 'eligible'; }) && S.settings.payments_enabled) out.push('<a class="row row-link" href="#/projects/' + pr.id + '/payments"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Payouts ready to release</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="pill sd">Release</span></a>');
+  });
+  var waiting = S.myPayouts.filter(function(o){ return o.status === 'eligible'; });
+  if (waiting.length && !(S.payoutAccount && S.payoutAccount.payouts_enabled)) out.push('<a class="row row-link" href="#/earnings"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Set up payouts to receive ' + cents$(waiting.reduce(function(t, o){ return t + o.amount; }, 0)) + '</b><div class="small muted">Takes a few minutes with Stripe</div></div><span class="pill sd">Set up</span></a>');
+  return out;
+}
+function showEarnings(){ return commerceOn() && (S.myPayouts.length || S.payoutAccount || S.projects.some(function(p){ return myAllocs(p).length; }) || S.credits.some(function(c){ return c.member === 'me'; })); }
+
+/* ---------- Team integration ---------- */
+function teamProjectsTab(t){
+  var ps = teamProjects(t), lead = isLead(t);
+  return '<div class="ph" style="margin-bottom:16px"><div><p style="margin:0">Paid work this team is quoting or delivering. Budgets are agreed by everyone involved before a proposal goes to the client.</p></div>' + (lead ? '<button class="btn btn-ink btn-sm" data-act="project-new" data-team="' + t.id + '">' + icon('plus') + 'New paid project</button>' : '') + '</div>' +
+    (ps.length ? '<div class="stack">' + ps.map(projectCard).join('') + '</div>' : emptyBox('No paid projects yet', 'When a client wants to hire this team, set up a paid project to agree the budget, send a proposal and get paid.'));
+}
+function projectCard(pr){
+  var b = budgetOf(pr), mine = myAllocs(pr).reduce(function(t, a){ return t + a.value; }, 0);
+  return '<a class="ocard" href="#/projects/' + pr.id + '"><span class="type-dot t-paid">' + icon('coin') + '</span><div style="min-width:0"><div class="meta-line"><span class="eyebrow">Paid project</span>' + pill(PSTATUS, pr.status) + '</div><h4>' + esc(pr.title) + '</h4><div class="meta"><span>' + esc(pr.clientCompany || pr.clientName || 'Client not set') + '</span><span>' + cents$(pr.total) + '</span>' + (mine ? '<span>Your share ' + cents$(mine) + '</span>' : '') + '</div></div><div class="side-col"><span class="small muted">' + esc(ago(pr.createdAt)) + '</span></div></a>';
+}
+function wonLeadsBlock(t){
+  if (!commerceOn()) return '';
+  var won = t.leads.filter(function(l){ return l.stage === 'Won'; });
+  if (!won.length) return '';
+  return '<section class="card" style="margin-top:16px"><div class="card-h"><h3>Won — turn into paid work</h3></div>' + won.map(function(l){ return '<div class="row"><div class="grow"><b>' + esc(l.company) + '</b><div class="small muted">' + esc(l.need || '') + (l.value ? ' · ' + esc(l.value) : '') + '</div></div><button class="btn btn-ink btn-sm" data-act="project-from-lead" data-team="' + t.id + '" data-id="' + l.id + '">Set up paid project</button></div>'; }).join('') + '<p class="small muted" style="margin-top:12px">Creates a private team for the delivery and a paid project you can budget and send to the client.</p></section>';
+}
+function oppProjectBlock(o){
+  if (!commerceOn() || !o.mine) return '';
+  var accepted = (S.received[o.id] || []).filter(function(a){ return a.status === 'accepted'; });
+  var existing = S.projects.find(function(p){ return p.opportunityId === o.id; });
+  if (existing) return '<section class="card"><div class="card-h"><h3>Paid project</h3>' + pill(PSTATUS, existing.status) + '</div><a class="btn btn-ink btn-sm" href="#/projects/' + existing.id + '">Open project</a></section>';
+  if (!accepted.length || (o.type !== 'paid' && o.type !== 'collab')) return '';
+  return '<section class="card"><div class="card-h"><h3>Ready to start?</h3></div><p class="small muted" style="margin-bottom:12px">' + accepted.length + ' accepted applicant' + (accepted.length > 1 ? 's' : '') + '. Set up a paid project to agree the budget split, send the client a proposal and manage payments.</p><button class="btn btn-ink btn-sm" data-act="project-from-opp" data-id="' + o.id + '">' + icon('coin') + 'Start a paid project</button></section>';
+}
+
+/* ---------- Project page ---------- */
+function stepper(pr){
+  var steps = [['Budget', ['budget_agreed', 'proposal_sent', 'changes_requested', 'approved', 'active', 'completed']], ['Proposal', ['proposal_sent', 'changes_requested', 'approved', 'active', 'completed']], ['Client approval', ['approved', 'active', 'completed']], ['Work & payments', ['active', 'completed']], ['Complete', ['completed']]];
+  var cur = steps.findIndex(function(s){ return s[1].indexOf(pr.status) < 0; });
+  return '<div class="track-l" style="grid-template-columns:repeat(5,1fr)">' + steps.map(function(s, i){ return '<div class="' + (s[1].indexOf(pr.status) > -1 ? 'on' : i === cur ? 'cur' : '') + '"><i></i>' + s[0] + '</div>'; }).join('') + '</div>';
+}
+function nextStep(pr){
+  var lead = isProjLead(pr), b = budgetOf(pr), mine = myAllocs(pr), x;
+  if (pr.status === 'cancelled') return ['This project was cancelled.', ''];
+  if (editable(pr)) {
+    var pending = pr.allocs.filter(function(a){ return !a.acceptedAt; });
+    var mineP = mine.filter(function(a){ return !a.acceptedAt; });
+    if (mineP.length) return ['Review and accept your share of the budget (' + cents$(mineP.reduce(function(t, a){ return t + a.value; }, 0)) + ').', '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/budget">Review my share</a>'];
+    if (!lead) return ['The project lead is preparing the budget and proposal.', ''];
+    if (!pr.total) x = 'Set the project price and client details.';
+    else if (!pr.milestones.length) x = 'Add the milestones the client will approve.';
+    else if (!pr.allocs.length) x = 'Split the team budget (' + cents$(b.net) + ') between team members.';
+    else if (pending.length) x = 'Waiting for ' + pending.map(function(a){ return a.member === 'me' ? 'you' : first(nameOf(a.member)); }).join(', ') + ' to accept their share.';
+    else x = 'Everyone has accepted. Agree the budget to lock it, then send the proposal.';
+    return [pr.status === 'changes_requested' ? 'The client asked for changes. Update the proposal, agree the budget again and resend. ' + x : x, '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/budget">Open budget</a>'];
+  }
+  if (pr.status === 'budget_agreed') return [lead ? 'Budget agreed. Review the proposal and send it to the client.' : 'Budget agreed. The lead will send the proposal to the client.', lead ? '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/proposal">Review & send</a>' : ''];
+  if (pr.status === 'proposal_sent') return ['Proposal is with ' + esc(pr.clientName || 'the client') + ' for review.', lead ? '<button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button>' : ''];
+  if (pr.status === 'approved') return ['The client approved. Work starts once the first payment is received.', '<a class="btn btn-line btn-sm" href="#/projects/' + pr.id + '/payments">View invoices</a>'];
+  if (pr.status === 'active') { var nm = pr.milestones.find(function(m){ return m.status !== 'approved'; }); return [nm ? 'Next milestone: ' + esc(nm.title) + ' (' + MS_STATUS[nm.status][0].toLowerCase() + ').' : 'All milestones approved — waiting for the final payment.', '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/milestones">Open milestones</a>']; }
+  if (pr.status === 'completed') return ['Completed' + (pr.payouts.some(function(o){ return o.status === 'eligible'; }) ? ' — payouts are ready to release.' : '.'), '<a class="btn btn-line btn-sm" href="#/projects/' + pr.id + '/payments">Payments</a>'];
+  return ['', ''];
+}
+function pProject(id, tab){
+  if (!commerceOn()) return emptyBox('Paid projects need a member account', 'Sign in to a live Cleverherd account to use paid projects.');
+  var pr = proj(id); if (!pr) return notFound('This project isn’t available. It may be private to its team.');
+  tab = tab || 'overview';
+  var t = projTeam(pr), lead = isProjLead(pr), ns = nextStep(pr);
+  var tabs = [['overview', 'Overview'], ['budget', 'Budget'], ['proposal', 'Proposal'], ['milestones', 'Milestones'], ['payments', 'Payments'], ['client', 'Client' + (pr.messages.filter(function(m){ return m.fromClient; }).length ? ' (' + pr.messages.filter(function(m){ return m.fromClient; }).length + ')' : '')]];
+  var body = tab === 'budget' ? projBudget(pr) : tab === 'proposal' ? projProposal(pr) : tab === 'milestones' ? projMilestones(pr) : tab === 'payments' ? projPayments(pr) : tab === 'client' ? projClient(pr) : projOverview(pr);
+  return '<a class="back" href="#/teams/' + pr.teamId + '/projects">' + icon('left') + esc(t.name) + '</a>' +
+    (testMode() ? '<p class="note" style="margin-bottom:14px"><b>Test mode.</b> Payments use Stripe’s sandbox — no real money moves.</p>' : '') +
+    '<div class="hero-card" style="display:block"><div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start"><div><div class="meta-line"><span class="pill dk">Paid project</span>' + pill(PSTATUS, pr.status) + (pr.type === 'managed' ? '<span class="pill">Managed by Cleverherd</span>' : '') + '</div><h1 style="margin-top:12px;font-size:clamp(24px,3vw,34px)">' + esc(pr.title) + '</h1><p class="muted" style="margin-top:4px">For ' + esc([pr.clientName, pr.clientCompany].filter(Boolean).join(', ') || 'client not set') + ' · ' + cents$(pr.total) + '</p></div>' +
+      (lead && ['completed', 'cancelled'].indexOf(pr.status) < 0 ? '<div class="actions"><button class="btn btn-ghost btn-sm" data-act="project-cancel" data-id="' + pr.id + '">Cancel project</button></div>' : '') + '</div><div style="margin-top:20px">' + stepper(pr) + '</div></div>' +
+    (ns[0] ? '<section class="card next-step"><div class="grow"><span class="eyebrow">Next step</span><p style="margin-top:4px">' + ns[0] + '</p></div>' + ns[1] + '</section>' : '') +
+    '<div class="tabs" role="tablist">' + tabs.map(function(x){ return '<a href="#/projects/' + pr.id + '/' + x[0] + '" role="tab" aria-selected="' + (tab === x[0]) + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</a>'; }).join('') + '</div>' + body;
+}
+function numbersCard(pr){
+  var b = budgetOf(pr);
+  return '<section class="card"><div class="card-h"><h3>Where the money goes</h3></div><div class="kv">' +
+    '<div><span>Project price (client pays)</span><b>' + cents$(b.total) + '</b></div>' +
+    '<div><span>Cleverherd fee (' + pr.feePct + '%' + (pr.type === 'managed' ? ', managed project' : '') + ')</span><b>−' + cents$(b.fee) + '</b></div>' +
+    '<div><span>Card processing (est. ' + (S.settings ? S.settings.processing_pct : 2.9) + '% + ' + cents$(S.settings ? S.settings.processing_fixed_cents : 30) + ' × ' + b.nPay + ' payment' + (b.nPay > 1 ? 's' : '') + ')</span><b>−' + cents$(b.proc) + '</b></div>' +
+    '<div><span><b>Team budget</b></span><b>' + cents$(b.net) + '</b></div>' +
+    '<div><span>Allocated</span><b>' + cents$(b.alloc) + '</b></div>' +
+    '<div><span>Unallocated</span><b class="' + (b.left < 0 ? 'neg' : '') + '">' + cents$(b.left) + '</b></div></div>' +
+    '<p class="small muted" style="margin-top:12px">Unallocated money stays with Cleverherd if it isn’t assigned — allocate the whole team budget unless you mean to leave a buffer. Processing is an estimate; any difference is absorbed by Cleverherd.</p></section>';
+}
+function projOverview(pr){
+  var mine = myAllocs(pr), myTotal = mine.reduce(function(t, a){ return t + a.value; }, 0);
+  var ev = pr.events.slice(0, 12);
+  return '<div class="split"><div class="stack">' + numbersCard(pr) +
+    '<section class="card"><div class="card-h"><h3>Activity</h3></div>' + (ev.length ? ev.map(function(e){ return '<div class="row"><div class="grow"><b>' + esc(eventLabel(e)) + '</b><div class="small muted">' + esc(e.actor) + ' · ' + esc(ago(e.created_at)) + '</div></div></div>'; }).join('') : '<p class="small muted">Nothing yet.</p>') + '</section></div>' +
+    '<div class="stack">' + (mine.length ? '<section class="card"><div class="card-h"><h3>Your share</h3><b>' + cents$(myTotal) + '</b></div>' + mine.map(function(a){ return '<div class="row"><div class="grow"><b>' + esc(a.role || 'Contributor') + '</b><div class="small muted">' + esc(allocDetail(a)) + '</div></div>' + (a.acceptedAt ? '<span class="pill ok">Accepted</span>' : '<span class="pill sd">Not accepted</span>') + '</div>'; }).join('') + '<p class="small muted" style="margin-top:10px">Paid out after the work it covers is approved and paid for by the client.</p></section>' : '') +
+    '<section class="card"><div class="kv"><div><span>Team</span><b>' + esc(projTeam(pr).name) + '</b></div><div><span>Payment plan</span><b>' + esc(PLANS[pr.plan]) + (pr.plan === 'deposit_balance' ? ' (' + pr.depositPct + '%)' : '') + '</b></div><div><span>Client email</span><b>' + esc(pr.clientEmail || '—') + '</b></div><div><span>Milestones</span><b>' + pr.milestones.filter(function(m){ return m.status === 'approved'; }).length + ' of ' + pr.milestones.length + ' approved</b></div></div></section>' +
+    '<p class="note">Compensation is agreed by everyone before work starts. Contribution records don’t change payouts automatically, and Cleverherd isn’t an escrow service: client payments are held in Cleverherd’s Stripe balance and paid out once the work they cover is approved.</p></div></div>';
+}
+function eventLabel(e){
+  var d = e.detail || {};
+  return ({budget_agreed: 'Budget agreed', allocation_accepted: 'Share accepted' + (d.role ? ' — ' + d.role : ''), proposal_sent: 'Proposal v' + d.version + ' sent to client', proposal_approved: 'Client approved proposal v' + d.version + (d.by ? ' (' + d.by + ')' : ''), changes_requested: 'Client requested changes', reopened: 'Budget reopened for changes', invoice_issued: 'Invoice ' + d.number + ' issued — ' + cents$(d.amount), payment_received: 'Payment received — ' + cents$(d.amount) + (d.method === 'offline' ? ' (recorded offline)' : ''), payment_failed: 'Payment failed', work_started: 'Work started', milestone_in_progress: 'Started: ' + d.milestone, milestone_submitted: 'Submitted for review: ' + d.milestone, milestone_approved: 'Client approved: ' + d.milestone, revision_requested: 'Revision requested: ' + d.milestone, completed: 'Project completed', payout_paid: 'Payout sent — ' + cents$(d.amount), payout_failed: 'Payout failed', payout_eligible: 'Payout waiting', refund: 'Refund issued', dispute_opened: 'Payment disputed', dispute_won: 'Dispute resolved in our favour', dispute_lost: 'Dispute lost', cancelled: 'Project cancelled', client_link_reset: 'Client link reset', feedback: 'Client left feedback (' + d.rating + '/5)', invoice_void: 'Invoice ' + d.number + ' voided'})[e.kind] || e.kind;
+}
+function projBudget(pr){
+  var lead = isProjLead(pr), ed = editable(pr) && lead, b = budgetOf(pr), t = projTeam(pr);
+  var mems = activeMembers(t);
+  var details = ed ? '<form class="card form" data-form="project-details" data-id="' + pr.id + '" novalidate><div class="card-h"><h3>Price & client</h3></div>' +
+      field('pd-title', 'Project title', '<input class="in" id="pd-title" name="title" value="' + esc(pr.title) + '" required maxlength="140">') +
+      '<div class="two">' + field('pd-total', 'Project price (USD)', '<input class="in" id="pd-total" name="total" inputmode="decimal" value="' + esc(dollars(pr.total)) + '" placeholder="12000">', 'What the client pays in total.') + field('pd-plan', 'Payment plan', '<select class="sel" id="pd-plan" name="plan">' + options(Object.keys(PLANS).map(function(k){ return [k, PLANS[k]]; }), pr.plan) + '</select>') + '</div>' +
+      '<div class="two">' + field('pd-dep', 'Deposit %', '<input class="in" id="pd-dep" name="deposit" type="number" min="0" max="100" value="' + pr.depositPct + '"' + (pr.plan !== 'deposit_balance' ? ' disabled' : '') + '>', 'Used with the deposit plan.') + (S.me.isAdmin ? field('pd-type', 'Project type (admin)', '<select class="sel" id="pd-type" name="type">' + options([['marketplace', 'Member-run (' + S.settings.marketplace_fee_pct + '% fee)'], ['managed', 'Managed by Cleverherd (' + S.settings.managed_fee_pct + '% fee)']], pr.type) + '</select>') : '<div></div>') + '</div>' +
+      '<div class="two">' + field('pd-cn', 'Client name', '<input class="in" id="pd-cn" name="clientName" value="' + esc(pr.clientName) + '" maxlength="120">') + field('pd-cc', 'Company', '<input class="in" id="pd-cc" name="clientCompany" value="' + esc(pr.clientCompany) + '" maxlength="120">') + '</div>' +
+      field('pd-ce', 'Client email', '<input class="in" id="pd-ce" name="clientEmail" type="email" value="' + esc(pr.clientEmail) + '" maxlength="200">', 'Used for the proposal link and receipts. Never shown to other members.') +
+      '<p class="err" role="alert"></p><button class="btn btn-ink" type="submit" style="justify-self:start">Save</button></form>' : '';
+  var rows = pr.allocs.map(function(a){
+    var mineA = a.member === 'me';
+    return '<tr><td><div class="person">' + av(P(a.member || 'x'), 'sm') + '<span>' + esc(a.member ? nameOf(a.member) : 'Former member') + '<small class="muted" style="display:block">' + esc(a.role || '') + '</small></span></div></td><td class="small">' + esc(allocDetail(a)) + '</td><td class="r"><b>' + cents$(a.value) + '</b></td><td>' +
+      (a.acceptedAt ? '<span class="pill ok">Accepted</span>' : mineA && editable(pr) ? '<button class="btn btn-ink btn-sm" data-act="alloc-accept" data-id="' + a.id + '">Accept</button>' : '<span class="pill sd">Waiting</span>') + '</td><td class="r">' +
+      (ed ? '<button class="link-btn" data-act="alloc-edit" data-project="' + pr.id + '" data-id="' + a.id + '">Edit</button> <button class="link-btn" data-act="alloc-del" data-id="' + a.id + '">Remove</button>' : '') + '</td></tr>';
+  }).join('');
+  var allocCard = '<section class="card"><div class="card-h"><h3>Team budget split</h3>' + (ed && mems.length ? '<button class="btn btn-ink btn-sm" data-act="alloc-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add a share</button>' : '') + '</div>' +
+    (pr.allocs.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Member</th><th>How</th><th class="r">Amount</th><th>Agreement</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="small muted">No shares yet. ' + (ed ? 'Add a share for each person, including yourself.' : '') + '</p>') +
+    '<div class="budget-bar" aria-label="Allocated ' + cents$(b.alloc) + ' of ' + cents$(b.net) + '"><i style="width:' + (b.net ? Math.min(100, b.alloc / b.net * 100) : 0) + '%"></i></div><p class="small muted">' + cents$(b.alloc) + ' of ' + cents$(b.net) + ' allocated · ' + cents$(b.left) + ' unallocated</p>' +
+    (ed ? '<div class="share-row">' + '<button class="btn btn-ink" data-act="project-lock" data-id="' + pr.id + '">Agree budget</button><span class="small muted" style="align-self:center">Locks the price, milestones and shares so the proposal can be sent.</span></div>' : '') +
+    (lead && ['budget_agreed', 'proposal_sent', 'changes_requested'].indexOf(pr.status) > -1 && !editable(pr) ? '<div class="share-row"><button class="btn btn-line" data-act="project-reopen" data-id="' + pr.id + '">Reopen for changes</button><span class="small muted" style="align-self:center">' + (pr.status === 'proposal_sent' ? 'Withdraws the proposal the client has.' : '') + '</span></div>' : '') +
+    '</section>';
+  return '<div class="split"><div class="stack">' + allocCard + details + '</div><div class="stack">' + numbersCard(pr) +
+    '<p class="note">Agree compensation before work begins. Each person accepts their own share; changing the price or a share asks them to accept again. Shares can’t add up to more than the team budget.</p></div></div>';
+}
+function proposalPreview(pr, snap){
+  var x = snap || {title: pr.title, summary: pr.summary, scope: pr.scope, timeline: pr.timeline, terms: pr.terms, valid_until: pr.validUntil, client_name: pr.clientName, client_company: pr.clientCompany, team: projTeam(pr).name, total_cents: pr.total, fee_pct: pr.feePct, payment_plan: pr.plan, deposit_pct: pr.depositPct, milestones: pr.milestones.map(function(m){ return {title: m.title, description: m.description, due_date: m.due, amount_cents: m.amount}; })};
+  var sched = x.payment_plan === 'upfront' ? 'Full payment of ' + cents$(x.total_cents) + ' on approval.' : x.payment_plan === 'deposit_balance' ? (x.deposit_pct ? x.deposit_pct + '% deposit (' + cents$(Math.round(x.total_cents * x.deposit_pct / 100)) + ') on approval; ' : '') + 'balance of ' + cents$(x.total_cents - Math.round(x.total_cents * x.deposit_pct / 100)) + ' when all milestones are approved.' : 'Each milestone is invoiced when you approve it.';
+  return '<div class="proposal"><span class="eyebrow">Proposal</span><h2>' + esc(x.title) + '</h2><p class="muted">For ' + esc([x.client_name, x.client_company].filter(Boolean).join(', ') || 'client') + ' · from ' + esc(x.team) + (x.valid_until ? ' · valid until ' + esc(fmtDate(x.valid_until)) : '') + '</p>' +
+    (x.summary ? '<h4>Summary</h4><p style="white-space:pre-line">' + esc(x.summary) + '</p>' : '') +
+    '<h4>Scope</h4><p style="white-space:pre-line">' + esc(x.scope || '—') + '</p>' +
+    '<h4>Milestones</h4><ul>' + (x.milestones || []).map(function(m){ return '<li><b>' + esc(m.title) + '</b>' + (m.due_date ? ' — by ' + esc(fmtDate(m.due_date)) : '') + (x.payment_plan === 'milestones' ? ' · ' + cents$(m.amount_cents) : '') + (m.description ? '<br><span class="small muted">' + esc(m.description) + '</span>' : '') + '</li>'; }).join('') + '</ul>' +
+    (x.timeline ? '<h4>Timeline</h4><p style="white-space:pre-line">' + esc(x.timeline) + '</p>' : '') +
+    '<h4>Price</h4><p><b>' + cents$(x.total_cents) + '</b> — includes Cleverherd’s platform fee (' + x.fee_pct + '%). No other fees for the client.</p><p class="small">' + esc(sched) + '</p>' +
+    (x.terms ? '<h4>Terms</h4><p style="white-space:pre-line">' + esc(x.terms) + '</p>' : '') + '</div>';
+}
+function projProposal(pr){
+  var lead = isProjLead(pr), ed = editable(pr) && lead, last = pr.proposals[0];
+  var form = ed ? '<form class="card form" data-form="project-proposal" data-id="' + pr.id + '" novalidate><div class="card-h"><h3>Proposal details</h3></div>' +
+    field('pp-sum', 'Summary <small>(optional)</small>', '<textarea class="in" id="pp-sum" name="summary" rows="2" maxlength="4000">' + esc(pr.summary) + '</textarea>') +
+    field('pp-scope', 'Scope of work', '<textarea class="in" id="pp-scope" name="scope" rows="6" maxlength="8000" placeholder="What’s included, deliverables, number of revisions…">' + esc(pr.scope) + '</textarea>') +
+    field('pp-tl', 'Timeline', '<textarea class="in" id="pp-tl" name="timeline" rows="2" maxlength="2000">' + esc(pr.timeline) + '</textarea>') +
+    field('pp-terms', 'Terms <small>(optional)</small>', '<textarea class="in" id="pp-terms" name="terms" rows="3" maxlength="4000" placeholder="Revisions, ownership of the work on final payment, cancellation…">' + esc(pr.terms) + '</textarea>', 'Have important terms reviewed by a professional. Cleverherd’s standard client terms are pending legal review.') +
+    field('pp-valid', 'Valid until <small>(optional)</small>', '<input class="in" id="pp-valid" name="valid" type="date" value="' + esc(pr.validUntil || '') + '">') +
+    '<button class="btn btn-ink" type="submit" style="justify-self:start">Save proposal</button></form>' : '';
+  var send = lead && pr.status === 'budget_agreed' ? '<section class="card"><div class="card-h"><h3>Ready to send</h3></div><p class="small muted" style="margin-bottom:12px">The client gets a private link to review and approve — no account needed. You can send it from your own email.</p><button class="btn btn-ink" data-act="project-send" data-id="' + pr.id + '">' + icon('send') + 'Send proposal</button></section>' : '';
+  var hist = pr.proposals.length ? '<section class="card"><div class="card-h"><h3>Versions sent</h3></div>' + pr.proposals.map(function(v){ return '<div class="row" style="align-items:flex-start"><div class="grow"><b>Version ' + v.version + '</b> <span class="pill ' + (v.status === 'approved' ? 'ok' : v.status === 'sent' ? 'sd' : 'ln') + '">' + esc(v.status.replace('_', ' ')) + '</span><div class="small muted">Sent ' + esc(fmtDate(v.sent_at)) + (v.responded_at ? ' · ' + (v.status === 'approved' ? 'approved by ' : 'response from ') + esc(v.responder_name || 'client') + ' on ' + esc(fmtDate(v.responded_at)) : '') + '</div>' + (v.response_note ? '<p class="small" style="margin-top:6px">“' + esc(v.response_note) + '”</p>' : '') + (v.agreement_text ? '<p class="small muted" style="margin-top:6px">Recorded agreement: ' + esc(v.agreement_text) + '</p>' : '') + '</div></div>'; }).join('') + (lead && pr.status === 'proposal_sent' ? '<div class="share-row"><button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button></div>' : '') + '</section>' : '';
+  return '<div class="split wide-l"><div class="stack">' + (form || '') + send + hist + '</div><div class="stack"><section class="card">' + proposalPreview(pr, !editable(pr) && last ? last.snapshot : null) + '</section><p class="small muted">' + (editable(pr) ? 'Preview of what the client will see.' : 'The version the client has.') + ' Internal shares are never shown to the client.</p></div></div>';
+}
+function projMilestones(pr){
+  var lead = isProjLead(pr), ed = editable(pr) && lead, working = pr.status === 'approved' || pr.status === 'active';
+  var list = pr.milestones.map(function(m, i){
+    return '<section class="card ms-card"><div class="card-h"><div><span class="eyebrow">Milestone ' + (i + 1) + '</span><h3 style="margin-top:4px">' + esc(m.title) + '</h3><p class="small muted">' + (m.due ? 'Due ' + esc(fmtDate(m.due)) : 'No due date') + (pr.plan === 'milestones' ? ' · ' + cents$(m.amount) : '') + '</p></div>' + pill(MS_STATUS, m.status) + '</div>' +
+      (m.description ? '<p class="small" style="white-space:pre-line;margin-bottom:10px">' + esc(m.description) + '</p>' : '') +
+      (m.status === 'revision_requested' ? '<p class="note" style="margin-bottom:10px"><b>Client feedback:</b> ' + esc(m.revisionNote) + '</p>' : '') +
+      (m.deliverables.length ? '<div class="deliv">' + m.deliverables.map(function(d){ return '<div class="row"><div class="grow"><b>' + (d.url ? '<a class="link" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.title) + ' ↗</a>' : esc(d.title)) + '</b><div class="small muted">' + esc(d.by ? nameOf(d.by) : '') + ' · ' + esc(fmtDate(d.at)) + (d.note ? ' · ' + esc(d.note) : '') + '</div></div>' + (['submitted', 'approved'].indexOf(m.status) < 0 && (d.by === 'me' || lead) ? '<button class="link-btn" data-act="deliv-del" data-id="' + d.id + '">Remove</button>' : '') + '</div>'; }).join('') + '</div>' : '') +
+      (m.status === 'approved' ? '<p class="small muted">Approved by ' + esc(m.approvedBy) + ' on ' + esc(fmtDate(m.approvedAt)) + '</p>' : '') +
+      (working && m.status !== 'approved' && m.status !== 'submitted' ? '<form class="add-task" data-form="deliverable" data-project="' + pr.id + '" data-id="' + m.id + '"><input class="in" name="title" placeholder="Deliverable name" required maxlength="140" aria-label="Deliverable name"><input class="in" name="url" placeholder="https:// link (Drive, Figma, site…)" maxlength="500" aria-label="Link"><button class="btn btn-line" type="submit">Add</button></form>' +
+        '<div class="share-row">' + (m.status === 'planned' ? '<button class="btn btn-line btn-sm" data-act="ms-status" data-id="' + m.id + '" data-v="in_progress">Start</button>' : '') + '<button class="btn btn-ink btn-sm" data-act="ms-status" data-id="' + m.id + '" data-v="submitted">Submit to client for review</button></div>' : '') +
+      (ed ? '<div class="share-row"><button class="link-btn" data-act="ms-edit" data-project="' + pr.id + '" data-id="' + m.id + '">Edit</button><button class="link-btn" data-act="ms-del" data-id="' + m.id + '">Remove</button></div>' : '') + '</section>';
+  }).join('');
+  var sum = pr.milestones.reduce(function(t, m){ return t + m.amount; }, 0);
+  return (ed ? '<div class="ph" style="margin-bottom:16px"><div><p style="margin:0">Milestones are what the client reviews and approves. ' + (pr.plan === 'milestones' ? 'With per-milestone payment, amounts must add up to the price (' + cents$(sum) + ' of ' + cents$(pr.total) + ').' : '') + '</p></div><button class="btn btn-ink btn-sm" data-act="ms-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add milestone</button></div>' : '') +
+    (pr.milestones.length ? '<div class="stack">' + list + '</div>' : emptyBox('No milestones yet', 'Break the work into a few checkpoints the client can approve.')) +
+    (working ? '<p class="note" style="margin-top:16px">Add links to delivered work, then submit the milestone. The client approves it or asks for a revision from their project page.</p>' : '');
+}
+function projPayments(pr){
+  var lead = isProjLead(pr), admin = S.me.isAdmin, s = S.settings;
+  var inv = pr.invoices.filter(function(i){ return i.status !== 'void' || admin; });
+  var invCard = '<section class="card"><div class="card-h"><h3>Invoices</h3><span class="small muted">' + esc(PLANS[pr.plan]) + '</span></div>' + (inv.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Invoice</th><th>For</th><th class="r">Amount</th><th>Status</th><th></th></tr></thead><tbody>' + inv.map(function(i){ return '<tr><td><b>' + esc(i.number) + '</b><div class="small muted">' + esc(fmtDate(i.issuedAt)) + '</div></td><td class="small">' + esc(i.description) + (i.refunded ? '<div class="small muted">Refunded ' + cents$(i.refunded) + '</div>' : '') + (i.method === 'offline' ? '<div class="small muted">Recorded offline</div>' : '') + '</td><td class="r">' + cents$(i.amount) + '</td><td>' + pill(INV_STATUS, i.status) + '</td><td class="r">' +
+      (admin && (i.status === 'open' || i.status === 'failed') ? '<button class="link-btn" data-act="inv-offline" data-id="' + i.id + '">Record payment</button> <button class="link-btn" data-act="inv-void" data-id="' + i.id + '">Void</button>' : '') +
+      (admin && i.intent && (i.status === 'paid' || i.status === 'partially_refunded') ? '<button class="link-btn" data-act="inv-refund" data-id="' + i.id + '" data-amount="' + (i.amount - i.refunded) + '">Refund</button>' : '') + '</td></tr>'; }).join('') + '</tbody></table></div>' :
+      '<p class="small muted">Invoices are created automatically: ' + (pr.plan === 'milestones' ? 'one for each milestone when the client approves it.' : pr.plan === 'upfront' ? 'the full amount when the client approves the proposal.' : 'the deposit when the client approves, and the balance when all milestones are approved.') + '</p>') +
+    (inv.some(function(i){ return i.status === 'open'; }) ? '<p class="small muted" style="margin-top:10px">' + (s.payments_enabled ? 'The client pays from their project page by card or bank (via Stripe).' : 'Online payments aren’t switched on yet — an admin can record payments received another way.') + '</p>' : '') + '</section>';
+  var pays = pr.payouts;
+  var poCard = '<section class="card"><div class="card-h"><h3>Payouts to the team</h3>' + (lead && s.payments_enabled && pays.some(function(o){ return o.status === 'eligible' || o.status === 'failed'; }) ? '<button class="btn btn-ink btn-sm" data-act="payouts-release" data-id="' + pr.id + '">Release payouts</button>' : '') + '</div>' +
+    (pays.length ? pays.map(function(o){ return '<div class="row"><div class="grow"><b>' + esc(o.member ? nameOf(o.member) : 'Former member') + '</b> <span class="small muted">' + esc(o.role) + '</span>' + (o.note ? '<div class="small muted">' + esc(o.note) + '</div>' : '') + '</div><b>' + cents$(o.amount) + '</b>' + pill(PO_STATUS, o.status) + (admin && o.status === 'on_hold' ? '<button class="link-btn" data-act="po-unhold" data-id="' + o.id + '">Release hold</button>' : '') + (admin && (o.status === 'eligible' || o.status === 'failed') ? '<button class="link-btn" data-act="po-paid" data-id="' + o.id + '">Mark paid outside Stripe</button>' : '') + '</div>'; }).join('') :
+      '<p class="small muted">' + (pr.plan === 'milestones' ? 'Shares tied to a milestone become payable once that milestone is approved and paid; everything else when the project is complete and fully paid.' : 'Payouts become available once the project is complete and fully paid.') + '</p>') +
+    (myAllocs(pr).length && !(S.payoutAccount && S.payoutAccount.payouts_enabled) ? '<div class="note" style="margin-top:12px">To receive your share, <a class="link" href="#/earnings">set up payouts</a> with Stripe.</div>' : '') + '</section>';
+  return '<div class="split"><div class="stack">' + invCard + poCard + '</div><div class="stack">' + numbersCard(pr) +
+    '<p class="note">Client payments are processed by Stripe and held in Cleverherd’s Stripe balance until the work they cover is approved; then contributor payouts are released to each member’s own Stripe account. Refunds or disputes put unreleased payouts on hold. This is not an escrow service.</p></div></div>';
+}
+function projClient(pr){
+  var lead = isProjLead(pr);
+  var msgs = pr.messages;
+  return '<div class="split"><section class="card"><div class="card-h"><h3>Messages with the client</h3></div><div class="msgs" style="max-height:420px">' + (msgs.length ? msgs.map(function(m){ return '<div class="msg ' + (m.fromClient ? '' : 'me') + '"><b class="small">' + esc(m.fromClient ? (m.name || 'Client') : (m.by === 'me' ? 'You' : nameOf(m.by))) + '</b><br>' + esc(m.body) + '<small>' + esc(fmtTime(m.at)) + '</small></div>'; }).join('') : '<p class="small muted" style="margin:auto">No messages yet. The client can write to the team from their project page.</p>') + '</div>' +
+    (['cancelled'].indexOf(pr.status) < 0 ? '<form class="compose" data-form="project-msg" data-id="' + pr.id + '"><textarea class="in" name="t" rows="1" placeholder="Message the client…" maxlength="4000" required aria-label="Message to client"></textarea><button class="btn btn-ink" type="submit" aria-label="Send">' + icon('send') + '</button></form>' : '') + '</section>' +
+    '<div class="stack">' + (lead && pr.proposals.length ? '<section class="card"><div class="card-h"><h3>Client link</h3></div><p class="small muted" style="margin-bottom:12px">Anyone with this link can view this project’s proposal, milestones and invoices and respond as the client. Share it only with the client.</p><div class="share-row"><button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy link</button><button class="btn btn-ghost btn-sm" data-act="project-relink" data-id="' + pr.id + '">Reset link</button></div></section>' : '') +
+    (pr.feedback ? '<section class="card"><div class="card-h"><h3>Client feedback</h3><span>' + '★'.repeat(pr.feedback.rating) + '☆'.repeat(5 - pr.feedback.rating) + '</span></div><p>' + esc(pr.feedback.comment || '') + '</p><p class="small muted" style="margin-top:8px">' + (pr.feedback.publish ? 'Shown on team members’ profiles.' : 'Private to the team.') + '</p></section>' : '') +
+    '<section class="card"><div class="kv"><div><span>Client</span><b>' + esc(pr.clientName || '—') + '</b></div><div><span>Company</span><b>' + esc(pr.clientCompany || '—') + '</b></div><div><span>Email</span><b>' + esc(pr.clientEmail || '—') + '</b></div></div></section></div></div>';
+}
+
+/* ---------- Earnings ---------- */
+function pEarnings(){
+  if (!commerceOn()) return notFound();
+  var acct = S.payoutAccount, pays = S.myPayouts, credits = S.credits.filter(function(c){ return c.member === 'me'; });
+  var sum = function(st){ return pays.filter(function(o){ return st.indexOf(o.status) > -1; }).reduce(function(t, o){ return t + o.amount; }, 0); };
+  var agreed = 0; S.projects.forEach(function(p){ if (['approved', 'active'].indexOf(p.status) > -1) myAllocs(p).forEach(function(a){ if (!pays.some(function(o){ return o.projectId === p.id; })) agreed += a.value; }); });
+  var acctCard = '<section class="card"><div class="card-h"><h3>Payout account</h3>' + (acct ? (acct.payouts_enabled ? '<span class="pill ok">Ready</span>' : '<span class="pill sd">Setup incomplete</span>') : '') + '</div>' +
+    (acct ? (acct.payouts_enabled ? '<p class="small muted" style="margin-bottom:12px">Payouts go to the bank account you added in Stripe.</p><div class="share-row"><button class="btn btn-line btn-sm" data-act="payout-dashboard">Open Stripe dashboard</button><button class="btn btn-ghost btn-sm" data-act="payout-refresh">Refresh status</button></div>' : '<p class="small muted" style="margin-bottom:12px">Stripe still needs a few details before you can be paid.</p><div class="share-row"><button class="btn btn-ink btn-sm" data-act="payout-setup">Continue setup</button><button class="btn btn-ghost btn-sm" data-act="payout-refresh">Refresh status</button></div>') :
+      '<p class="small muted" style="margin-bottom:12px">To receive payouts, verify your identity and add a bank account with Stripe, Cleverherd’s payment provider. Cleverherd never sees your bank details.</p>' + (S.settings.payments_enabled ? '<button class="btn btn-ink btn-sm" data-act="payout-setup">Set up payouts</button>' : '<p class="small">Online payouts aren’t switched on yet.</p>')) + '</section>';
+  return '<div class="ph"><div><span class="eyebrow">Earnings</span><h1>Your earnings</h1><p>Money from paid Cleverherd projects. Only you can see these amounts.</p></div></div>' +
+    (testMode() ? '<p class="note" style="margin-bottom:16px"><b>Test mode.</b> No real money is paid out yet.</p>' : '') +
+    '<div class="g4" style="margin-bottom:20px"><div class="stat"><b>' + cents$(sum(['paid'])) + '</b><small>Paid out</small></div><div class="stat"><b>' + cents$(sum(['eligible', 'failed', 'processing'])) + '</b><small>Ready / in progress</small></div><div class="stat"><b>' + cents$(sum(['on_hold'])) + '</b><small>On hold</small></div><div class="stat"><b>' + cents$(agreed) + '</b><small>Agreed, not yet earned</small></div></div>' +
+    '<div class="split"><div class="stack"><section class="card"><div class="card-h"><h3>Payout history</h3></div>' + (pays.length ? pays.map(function(o){ var p = proj(o.projectId); return '<a class="row row-link" href="#/projects/' + o.projectId + '/payments"><div class="grow"><b>' + esc(p ? p.title : 'Project') + '</b><div class="small muted">' + esc(o.role) + (o.paidAt ? ' · sent ' + esc(fmtDate(o.paidAt)) : '') + (o.note ? ' · ' + esc(o.note) : '') + '</div></div><b>' + cents$(o.amount) + '</b>' + pill(PO_STATUS, o.status) + '</a>'; }).join('') : '<p class="small muted">No payouts yet.</p>') + '</section>' +
+    '<section class="card"><div class="card-h"><h3>Completed projects on your profile</h3></div>' + (credits.length ? credits.map(function(c){ return '<div class="row"><div class="grow"><b>' + esc(c.title) + '</b><div class="small muted">' + esc(c.role || 'Contributor') + ' · ' + esc(c.team) + ' · ' + esc(fmtDate(c.at)) + '</div></div><label class="check" style="margin:0"><input type="checkbox" data-change="credit-public" data-id="' + c.id + '"' + (c.public ? ' checked' : '') + '> <span>Show on profile</span></label></div>'; }).join('') + '<p class="small muted" style="margin-top:10px">Project names, roles and published client feedback can be shown. Earnings are never shown to anyone else.</p>' : '<p class="small muted">Completed paid projects appear here and, if you choose, on your profile as verified work.</p>') + '</section></div>' +
+    '<div class="stack">' + acctCard + '<p class="note">You’re responsible for taxes on your earnings. Stripe may ask for tax details and, in the US, issues tax forms where required.</p></div></div>';
+}
+function creditsSection(who){
+  if (!commerceOn()) return '';
+  var cs = S.credits.filter(function(c){ return c.member === who && (who === 'me' || c.public); });
+  if (!cs.length) return '';
+  return '<section class="card"><div class="card-h"><h3>Completed on Cleverherd</h3><span class="pill ok">' + icon('check') + 'Verified</span></div>' + cs.map(function(c){ var fb = S.feedbackPublic.find(function(f){ return f.project_id === c.projectId && f.publish; }); return '<div class="row" style="align-items:flex-start"><div class="grow"><b>' + esc(c.title) + '</b><div class="small muted">' + esc(c.role || 'Contributor') + ' · ' + esc(c.team) + ' · ' + esc(fmtDate(c.at)) + (who === 'me' && !c.public ? ' · hidden from others' : '') + '</div>' + (fb ? '<p class="small" style="margin-top:6px">' + '★'.repeat(fb.rating) + ' “' + esc(fb.comment) + '” — ' + esc(fb.client_name || 'Client') + '</p>' : '') + '</div></div>'; }).join('') + '</section>';
+}
+
+/* ---------- Admin: payments ---------- */
+function adminPayments(){
+  if (!commerceOn()) return emptyBox('Payments not set up', 'Run supabase/payments.sql in Supabase to enable paid projects.');
+  var s = S.settings, ps = S.projects;
+  var holds = [], waiting = [];
+  ps.forEach(function(p){ p.payouts.forEach(function(o){ if (o.status === 'on_hold') holds.push([p, o]); if (o.status === 'eligible') waiting.push([p, o]); }); });
+  var open = []; ps.forEach(function(p){ p.invoices.forEach(function(i){ if (i.status === 'open' || i.status === 'failed' || i.status === 'disputed') open.push([p, i]); }); });
+  return '<div class="split"><div class="stack"><form class="card form" data-form="admin-fees"><div class="card-h"><h3>Fees & payments</h3>' + (s.payments_mode === 'live' ? '<span class="pill sd">LIVE</span>' : '<span class="pill">Test mode</span>') + '</div>' +
+    '<div class="two">' + field('af-m', 'Member-run project fee %', '<input class="in" id="af-m" name="marketplace" type="number" step="0.5" min="0" max="50" value="' + s.marketplace_fee_pct + '">') + field('af-g', 'Managed project fee %', '<input class="in" id="af-g" name="managed" type="number" step="0.5" min="0" max="60" value="' + s.managed_fee_pct + '">') + '</div>' +
+    '<div class="two">' + field('af-p', 'Card processing estimate %', '<input class="in" id="af-p" name="ppct" type="number" step="0.1" min="0" max="10" value="' + s.processing_pct + '">') + field('af-f', 'Plus per payment (cents)', '<input class="in" id="af-f" name="pfixed" type="number" min="0" max="500" value="' + s.processing_fixed_cents + '">') + '</div>' +
+    field('af-d', 'Default deposit %', '<input class="in" id="af-d" name="deposit" type="number" min="0" max="100" value="' + s.default_deposit_pct + '">') +
+    '<label class="switch"><input type="checkbox" name="enabled"' + (s.payments_enabled ? ' checked' : '') + '><span><b>Online payments switched on</b><small>Shows “Pay now” to clients and allows payout setup. Requires the Stripe keys in Supabase.</small></span></label>' +
+    '<p class="small muted">Fee changes apply to new projects. Existing projects keep the fee they were created with.</p><button class="btn btn-ink" type="submit" style="justify-self:start">Save</button>' +
+    '<p class="note">Mode: <b>' + s.payments_mode + '</b>. Switching to live requires a Stripe live key, an activated Stripe account and reviewed client and contributor terms — it can only be changed in the database (see SETUP.md).</p></form></div>' +
+    '<div class="stack"><section class="card"><div class="card-h"><h3>Projects</h3><span class="small muted">' + ps.length + '</span></div>' + (ps.length ? ps.slice(0, 20).map(function(p){ return '<a class="row row-link" href="#/projects/' + p.id + '"><div class="grow"><b>' + esc(p.title) + '</b><div class="small muted">' + esc(projTeam(p).name) + ' · ' + cents$(p.total) + ' · ' + p.feePct + '%</div></div>' + pill(PSTATUS, p.status) + '</a>'; }).join('') : '<p class="small muted">None yet.</p>') + '</section>' +
+    '<section class="card"><div class="card-h"><h3>Needs attention</h3></div>' + (open.length + holds.length + waiting.length ? open.map(function(x){ return '<a class="row row-link" href="#/projects/' + x[0].id + '/payments"><div class="grow"><b>' + esc(x[1].number) + ' · ' + cents$(x[1].amount) + '</b><div class="small muted">' + esc(x[0].title) + '</div></div>' + pill(INV_STATUS, x[1].status) + '</a>'; }).join('') + holds.concat(waiting).map(function(x){ return '<a class="row row-link" href="#/projects/' + x[0].id + '/payments"><div class="grow"><b>Payout ' + cents$(x[1].amount) + ' — ' + esc(x[1].member ? nameOf(x[1].member) : 'former member') + '</b><div class="small muted">' + esc(x[0].title) + '</div></div>' + pill(PO_STATUS, x[1].status) + '</a>'; }).join('') : '<p class="small muted">Nothing outstanding.</p>') + '</section></div></div>';
+}
+
+/* ---------- Actions ---------- */
+var PACT = {
+  'project-new': function(d){ if (!commerceOn()) { toast('Paid projects need a live member account.', 'error'); return; } projectModal({team: d.team}); },
+  'project-from-lead': function(d){ var t = team(d.team), l = t.leads.find(function(x){ return x.id === d.id; }); projectModal({fromLead: l, title: (l.need || 'Project') + ' for ' + l.company, clientCompany: l.company}); },
+  'project-from-opp': function(d){ var o = opp(d.id); projectModal({fromOpp: o, title: o.title, clientCompany: o.byKind === 'Organization' ? o.by : '', total: toCents(o.comp)}); },
+  'alloc-accept': function(d){ act(function(){ return papi.rpc('allocation_accept', {a: d.id}); }, 'Share accepted'); },
+  'alloc-del': function(d){ act(function(){ return papi.deleteAlloc(d.id); }, 'Share removed'); },
+  'alloc-edit': function(d){ allocModal(proj(d.project), d.id); },
+  'ms-edit': function(d){ msModal(proj(d.project), d.id); },
+  'ms-del': function(d){ act(function(){ return papi.deleteMilestone(d.id); }, 'Milestone removed'); },
+  'ms-status': function(d){ act(function(){ return papi.rpc('milestone_update_status', {m: d.id, s: d.v}); }, d.v === 'submitted' ? 'Sent to the client for review' : 'Milestone started'); },
+  'deliv-del': function(d){ act(function(){ return papi.deleteDeliverable(d.id); }, 'Removed'); },
+  'project-lock': function(d){ confirmBox('Agree this budget?', 'This locks the price, milestones and everyone’s shares. You can reopen it until the client approves.', 'Agree budget', function(){ act(function(){ return papi.rpc('project_lock_budget', {p: d.id}); }, 'Budget agreed — next, send the proposal', function(){ go('#/projects/' + d.id + '/proposal'); refresh(); }); }); },
+  'project-reopen': function(d){ confirmBox('Reopen the budget?', 'The proposal goes back to draft. If the client has a link, they won’t be able to approve the old version.', 'Reopen', function(){ act(function(){ return papi.rpc('project_reopen', {p: d.id}); }, 'Reopened for changes'); }); },
+  'project-send': function(d){ var pr = proj(d.id); confirmBox('Send the proposal?', 'You’ll get a private link for ' + esc(pr.clientName || 'the client') + ' to review and approve ' + cents$(pr.total) + '.', 'Send', function(){ act(function(){ return papi.rpc('project_send_proposal', {p: d.id}); }, 'Proposal ready to share', function(token){ shareLinkModal(proj(d.id), token); }); }); },
+  'project-link': async function(d){ try { var token = await papi.rpc('project_client_link', {p: d.id}); shareLinkModal(proj(d.id), token); } catch (e) { toast(friendly(e), 'error'); } },
+  'project-relink': function(d){ confirmBox('Reset the client link?', 'The old link stops working immediately. Send the new one to your client.', 'Reset', function(){ act(function(){ return papi.rpc('project_regenerate_link', {p: d.id}); }, 'New link created', function(token){ shareLinkModal(proj(d.id), token); }); }, true); },
+  'project-cancel': function(d){ openModal('<h2>Cancel this project?</h2><p class="sub">Open invoices are voided. This can’t be undone.</p><form class="form" data-form="project-cancel" data-id="' + d.id + '">' + field('pc-r', 'Reason <small>(optional)</small>', '<input class="in" id="pc-r" name="reason" maxlength="500">') + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Keep project</button><button class="btn btn-danger" type="submit">Cancel project</button></div></form>'); },
+  'inv-offline': function(d){ openModal('<h2>Record a payment</h2><p class="sub">For payments received outside Stripe (bank transfer, check). This marks the invoice paid.</p><form class="form" data-form="inv-offline" data-id="' + d.id + '">' + field('io-n', 'Reference', '<input class="in" id="io-n" name="note" maxlength="300" placeholder="e.g. Wire 2026-11-03" required>') + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Mark paid</button></div></form>'); },
+  'inv-void': function(d){ confirmBox('Void this invoice?', 'The client will no longer be able to pay it.', 'Void', function(){ act(function(){ return papi.rpc('admin_void_invoice', {inv: d.id}); }, 'Invoice voided'); }, true); },
+  'inv-refund': function(d){ openModal('<h2>Refund through Stripe</h2><p class="sub">Unreleased payouts for this project go on hold.</p><form class="form" data-form="inv-refund" data-id="' + d.id + '">' + field('ir-a', 'Amount (USD)', '<input class="in" id="ir-a" name="amount" inputmode="decimal" value="' + dollars(+d.amount) + '">') + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-danger" type="submit">Refund</button></div></form>'); },
+  'payouts-release': function(d){ confirmBox('Release payouts?', 'Sends each ready payout to the member’s Stripe account. Members who haven’t finished payout setup are skipped until they do.', 'Release', function(){ act(function(){ return payFn('release', {project_id: d.id}); }, null, function(res){ var r = (res && res.results) || []; var paid = r.filter(function(x){ return x.status === 'paid'; }).length; toast(paid + ' payout' + (paid === 1 ? '' : 's') + ' sent' + (r.length > paid ? ' · ' + (r.length - paid) + ' waiting' : '')); refresh(); }); }); },
+  'po-unhold': function(d){ act(function(){ return papi.rpc('admin_release_hold', {o: d.id}); }, 'Hold released'); },
+  'po-paid': function(d){ confirmBox('Mark as paid outside Stripe?', 'Use only if you paid this member another way.', 'Mark paid', function(){ act(function(){ return papi.rpc('admin_mark_payout_paid', {o: d.id, note: ''}); }, 'Recorded'); }); },
+  'payout-setup': async function(){ try { document.body.classList.add('busy'); var r = await payFn('onboard'); location.href = r.url; } catch (e) { document.body.classList.remove('busy'); toast(friendly(e), 'error'); } },
+  'payout-refresh': function(){ act(function(){ return payFn('account_status'); }, 'Status updated'); },
+  'payout-dashboard': async function(){ try { var r = await payFn('dashboard'); window.open(r.url, '_blank', 'noopener'); } catch (e) { toast(friendly(e), 'error'); } }
+};
+function shareLinkModal(pr, token){
+  if (!token) { toast('No client link yet — send the proposal first.', 'error'); return; }
+  var url = clientUrl(token), body = 'Hi ' + (pr.clientName || '') + ',\n\nHere is our proposal for ' + pr.title + '. You can review the scope, milestones and price, approve it, and pay securely here:\n\n' + url + '\n\nLet us know if you have any questions.\n\n' + S.me.name;
+  openModal('<h2>Share with your client</h2><p class="sub">This private link lets ' + esc(pr.clientName || 'the client') + ' review, approve and pay — no account needed.</p><div class="copy-row"><input class="in" id="cliLink" value="' + esc(url) + '" readonly aria-label="Client link"><button class="btn btn-ink" data-act="copy" data-target="cliLink">Copy</button></div>' +
+    '<div class="share-row"><a class="btn btn-line btn-sm" href="mailto:' + esc(encodeURIComponent(pr.clientEmail || '')) + '?subject=' + encodeURIComponent('Proposal: ' + pr.title) + '&body=' + encodeURIComponent(body) + '">' + icon('mail') + 'Open in email</a></div><p class="small muted" style="margin-top:12px">Treat it like a password: anyone with the link can act as the client.</p><div class="modal-actions"><button class="btn btn-line" data-act="close">Done</button></div>');
+}
+function projectModal(o){
+  var leadTeams = myTeams().filter(function(t){ return isLead(t) && t.kind !== 'Workstream'; });
+  var newTeam = !!(o.fromLead || o.fromOpp) || !leadTeams.length;
+  openModal('<h2>Set up a paid project</h2><p class="sub">Start with the basics — you’ll agree the budget split and milestones next. Nothing is sent to the client until you say so.</p><form class="form" data-form="project-new" novalidate>' +
+    (o.fromOpp ? '<input type="hidden" name="opp" value="' + o.fromOpp.id + '">' : '') +
+    (newTeam ? field('pn-team', 'Delivery team name', '<input class="in" id="pn-team" name="teamName" required maxlength="80" value="' + esc((o.clientCompany || o.title || 'Client') + ' team') + '">', o.fromOpp ? 'Accepted applicants are invited to the team.' : 'A private team is created for delivery.') :
+      field('pn-tsel', 'Team', '<select class="sel" id="pn-tsel" name="team">' + options(leadTeams.map(function(t){ return [t.id, t.name]; }), o.team || leadTeams[0].id) + '</select>')) +
+    field('pn-title', 'Project title', '<input class="in" id="pn-title" name="title" required maxlength="140" value="' + esc(o.title || '') + '">') +
+    '<div class="two">' + field('pn-cn', 'Client name', '<input class="in" id="pn-cn" name="clientName" maxlength="120">') + field('pn-cc', 'Company', '<input class="in" id="pn-cc" name="clientCompany" maxlength="120" value="' + esc(o.clientCompany || '') + '">') + '</div>' +
+    field('pn-ce', 'Client email', '<input class="in" id="pn-ce" name="clientEmail" type="email" maxlength="200">') +
+    '<div class="two">' + field('pn-total', 'Price (USD)', '<input class="in" id="pn-total" name="total" inputmode="decimal" value="' + esc(dollars(o.total || 0)) + '" placeholder="12000">') + field('pn-plan', 'Payment plan', '<select class="sel" id="pn-plan" name="plan">' + options(Object.keys(PLANS).map(function(k){ return [k, PLANS[k]]; }), 'deposit_balance') + '</select>') + '</div>' +
+    '<p class="small muted">Cleverherd’s fee for member-run projects is ' + S.settings.marketplace_fee_pct + '% of the price, shown in the budget before anyone agrees.</p><p class="err" role="alert"></p>' +
+    '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Create project</button></div></form>');
+  if (o.team && !newTeam) { var sel = $('#pn-tsel'); if (sel) sel.value = o.team; }
+  UI.projectSeed = o;
+}
+function allocModal(pr, id){
+  var a = id ? pr.allocs.find(function(x){ return x.id === id; }) : {member: 'me', role: '', method: 'fixed', fixed: 0, percent: 0, rate: 0, hours: 0, milestoneId: null};
+  var mems = activeMembers(projTeam(pr)), b = budgetOf(pr);
+  openModal('<h2>' + (id ? 'Edit share' : 'Add a share') + '</h2><p class="sub">Team budget ' + cents$(b.net) + ' · unallocated ' + cents$(b.left + (id ? a.value : 0)) + '</p><form class="form" data-form="alloc" data-project="' + pr.id + '"' + (id ? ' data-id="' + id + '"' : '') + ' novalidate>' +
+    '<div class="two">' + field('al-m', 'Member', '<select class="sel" id="al-m" name="member">' + options(mems.map(function(m){ return [m.id, nameOf(m.id)]; }), a.member) + '</select>') + field('al-r', 'Role', '<input class="in" id="al-r" name="role" maxlength="60" value="' + esc(a.role) + '" placeholder="e.g. Design">') + '</div>' +
+    field('al-k', 'How they’re paid', '<select class="sel" id="al-k" name="method" data-change="alloc-method">' + options(Object.keys(METHODS).map(function(k){ return [k, METHODS[k]]; }), a.method) + '</select>') +
+    '<div class="am am-fixed am-milestone">' + field('al-f', 'Amount (USD)', '<input class="in" id="al-f" name="fixed" inputmode="decimal" value="' + esc(dollars(a.fixed)) + '">') + '</div>' +
+    '<div class="am am-milestone">' + field('al-ms', 'Paid when this milestone is approved', '<select class="sel" id="al-ms" name="milestone">' + options([['', 'Choose…']].concat(pr.milestones.map(function(m){ return [m.id, m.title]; })), a.milestoneId || '') + '</select>') + '</div>' +
+    '<div class="am am-percent am-commission">' + field('al-p', 'Percent', '<input class="in" id="al-p" name="percent" type="number" step="0.5" min="0" max="100" value="' + (a.percent || '') + '">') + '</div>' +
+    '<div class="am am-hourly two">' + field('al-rate', 'Hourly rate (USD)', '<input class="in" id="al-rate" name="rate" inputmode="decimal" value="' + esc(dollars(a.rate)) + '">') + field('al-h', 'Estimated hours', '<input class="in" id="al-h" name="hours" type="number" step="0.5" min="0" value="' + (a.hours || '') + '">') + '</div>' +
+    '<p class="alloc-prev"><span>This share</span><b id="allocPrev">—</b></p><p class="small muted am am-hourly">Hourly shares are budgeted at the estimate; agree any overrun as a new share.</p><p class="small muted am am-commission">Commission is a % of the full project price, for whoever brought in the client.</p>' +
+    '<p class="err" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Save share</button></div></form>');
+  allocModalSync(pr);
+}
+function allocModalSync(pr){
+  var f = $('form[data-form="alloc"]'); if (!f) return;
+  pr = pr || proj(f.dataset.project);
+  var d = fd(f);
+  $$('.am', f).forEach(function(el){ el.style.display = el.classList.contains('am-' + d.method) ? '' : 'none'; });
+  var el = $('#allocPrev'); if (el) el.textContent = cents$(allocPreview(pr, d));
+}
+function msModal(pr, id){
+  var m = id ? pr.milestones.find(function(x){ return x.id === id; }) : {title: '', description: '', due: '', amount: 0};
+  openModal('<h2>' + (id ? 'Edit milestone' : 'Add milestone') + '</h2><form class="form" data-form="milestone-p" data-project="' + pr.id + '"' + (id ? ' data-id="' + id + '"' : '') + ' novalidate>' +
+    field('pm-t', 'Title', '<input class="in" id="pm-t" name="title" required maxlength="140" value="' + esc(m.title) + '">') +
+    field('pm-d', 'What the client gets', '<textarea class="in" id="pm-d" name="description" rows="3" maxlength="2000">' + esc(m.description) + '</textarea>') +
+    '<div class="two">' + field('pm-due', 'Due date', '<input class="in" id="pm-due" name="due" type="date" value="' + esc(m.due || '') + '">') + (pr.plan === 'milestones' ? field('pm-a', 'Amount billed (USD)', '<input class="in" id="pm-a" name="amount" inputmode="decimal" value="' + esc(dollars(m.amount)) + '">') : '<div></div>') + '</div>' +
+    '<p class="err" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Save</button></div></form>');
+}
+
+var PFORMS = {
+  'project-new': async function(d, f){
+    if (trim(d.title).length < 2) return setErr(f, 'Give the project a title.', '[name=title]');
+    if (d.clientEmail && !validEmail(trim(d.clientEmail))) return setErr(f, 'Enter a valid client email, or leave it for later.', '[name=clientEmail]');
+    var seed = UI.projectSeed || {};
+    closeModal();
+    act(async function(){
+      var teamId = d.team;
+      if (!teamId) {
+        var t = await api.createTeam({name: trim(d.teamName) || trim(d.title), kind: 'Client project', project: trim(d.title), visibility: 'private', joinPolicy: 'invite'});
+        teamId = t.id;
+        if (seed.fromOpp) { var acc = (S.received[seed.fromOpp.id] || []).filter(function(a){ return a.status === 'accepted'; }); for (var k = 0; k < acc.length; k++) { try { await api.invite(teamId, acc[k].applicant, 'Contributor'); } catch (e) {} } }
+      }
+      return papi.create({team_id: teamId, opportunity_id: d.opp || null, title: trim(d.title), client_name: trim(d.clientName), client_company: trim(d.clientCompany), client_email: trim(d.clientEmail), total_cents: toCents(d.total), payment_plan: d.plan, deposit_pct: S.settings.default_deposit_pct});
+    }, 'Paid project created', function(p){ go('#/projects/' + p.id + '/budget'); });
+  },
+  'project-details': function(d, f){
+    if (trim(d.title).length < 2) return setErr(f, 'Give the project a title.', '[name=title]');
+    if (d.clientEmail && !validEmail(trim(d.clientEmail))) return setErr(f, 'Enter a valid client email.', '[name=clientEmail]');
+    var row = {title: trim(d.title), total_cents: toCents(d.total), payment_plan: d.plan, client_name: trim(d.clientName), client_company: trim(d.clientCompany), client_email: trim(d.clientEmail)};
+    if (d.deposit !== undefined) row.deposit_pct = Math.max(0, Math.min(100, parseInt(d.deposit, 10) || 0));
+    if (d.type) row.project_type = d.type;
+    act(function(){ return papi.update(f.dataset.id, row); }, 'Saved');
+  },
+  'project-proposal': function(d, f){ act(function(){ return papi.update(f.dataset.id, {summary: trim(d.summary), scope: trim(d.scope), timeline: trim(d.timeline), terms: trim(d.terms), valid_until: d.valid || null}); }, 'Proposal saved'); },
+  alloc: function(d, f){
+    var row = {project_id: f.dataset.project, member: U(d.member), role: trim(d.role), method: d.method, fixed_cents: toCents(d.fixed), percent: parseFloat(d.percent) || 0, hourly_rate_cents: toCents(d.rate), hours: parseFloat(d.hours) || 0, milestone_id: d.method === 'milestone' ? (d.milestone || null) : null};
+    if (d.method === 'milestone' && !d.milestone) return setErr(f, 'Choose the milestone this payment is tied to.', '[name=milestone]');
+    if (allocPreview(proj(f.dataset.project), d) <= 0) return setErr(f, 'Enter an amount greater than zero.');
+    if (f.dataset.id) delete row.project_id;
+    closeModal(); act(function(){ return papi.saveAlloc(f.dataset.id, row); }, 'Share saved — they’ll be asked to accept it');
+  },
+  'milestone-p': function(d, f){
+    if (!trim(d.title)) return setErr(f, 'Add a title.', '[name=title]');
+    var row = {title: trim(d.title), description: trim(d.description), due_date: d.due || null};
+    if (d.amount !== undefined) row.amount_cents = toCents(d.amount);
+    var pr = proj(f.dataset.project);
+    closeModal();
+    act(function(){ return f.dataset.id ? papi.updateMilestone(f.dataset.id, row) : papi.addMilestone(Object.assign(row, {project_id: pr.id, position: pr.milestones.length + 1})); }, 'Milestone saved');
+  },
+  deliverable: function(d, f){
+    var url = trim(d.url);
+    if (url && !/^https:\/\//i.test(url)) { toast('Links must start with https://', 'error'); return; }
+    act(function(){ return papi.deliverable({project_id: f.dataset.project, milestone_id: f.dataset.id, title: trim(d.title), url: url, submitted_by: MYID}); }, 'Deliverable added');
+  },
+  'project-msg': function(d, f){ var t = trim(d.t); if (!t) return; act(function(){ return papi.message(f.dataset.id, t); }); },
+  'project-cancel': function(d, f){ closeModal(); act(function(){ return papi.rpc('project_cancel', {p: f.dataset.id, reason: trim(d.reason)}); }, 'Project cancelled'); },
+  'inv-offline': function(d, f){ if (!trim(d.note)) return; closeModal(); act(function(){ return papi.rpc('admin_record_offline_payment', {inv: f.dataset.id, note: trim(d.note)}); }, 'Payment recorded'); },
+  'inv-refund': function(d, f){ var c = toCents(d.amount); if (c <= 0) return; closeModal(); act(function(){ return payFn('refund', {invoice_id: f.dataset.id, amount_cents: c}); }, 'Refund sent to Stripe — status updates in a moment'); },
+  'admin-fees': function(d){ act(function(){ return papi.settings({marketplace_fee_pct: parseFloat(d.marketplace) || 0, managed_fee_pct: parseFloat(d.managed) || 0, processing_pct: parseFloat(d.ppct) || 0, processing_fixed_cents: parseInt(d.pfixed, 10) || 0, default_deposit_pct: parseInt(d.deposit, 10) || 0, payments_enabled: !!d.enabled}); }, 'Settings saved'); }
+};
+Object.assign(ACT, PACT);
+Object.assign(FORMS, PFORMS);
+document.addEventListener('change', function(e){
+  if (e.target.closest('form[data-form="alloc"]')) allocModalSync();
+  var c = e.target.closest('[data-change="credit-public"]'); if (c) act(function(){ return papi.credit(c.dataset.id, c.checked); }, c.checked ? 'Shown on your profile' : 'Hidden from your profile');
+  if (e.target.name === 'plan' && e.target.closest('form[data-form="project-details"]')) { var dep = $('#pd-dep'); if (dep) dep.disabled = e.target.value !== 'deposit_balance'; }
+});
+document.addEventListener('input', function(e){ if (e.target.closest('form[data-form="alloc"]')) allocModalSync(); });
+
 
 boot();
 })();

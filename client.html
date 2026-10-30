@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Your project — Cleverherd</title>
+<meta name="theme-color" content="#162927">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDYuMzcyIiBoZWlnaHQ9IjQyOC4zMDciIHZpZXdCb3g9IjAgMCA0MDYuMzcyIDQyOC4zMDciPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0zNTQ2LjcgLTY2NS4yMDYpIj48cGF0aCBkPSJNODQ0Ljk2Niw0MzIuODA3YzExMi4yODYsMCwxOTIuNzM4LTkwLjI5MiwxOTIuNzM4LTIxNC4xNTNTOTYwLjcyNCw0LjUsODQ0LjM4Nyw0LjVjLTk4Ljk3NCwwLTE3NS4zNzQsNjYuNTYxLTE3NS4zNzQsMTU3LjQzMlYzOTIuODdjMCwyMy43MzEsMTguNTIxLDM5LjkzNyw0NS43MjUsMzkuOTM3Wm0tODQuNS03Mi45MjhWMTYxLjkzMmMwLTQ4LjYxOSwzNy4wNDItODQuNSw4NC41LTg0LjUsNjAuMTk0LDAsMTAwLjEzMiw1OS42MTYsMTAwLjEzMiwxNDEuOCwwLDgxLjAzMS0zOS4zNTgsMTQwLjY0Ny05My43NjUsMTQwLjY0N1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI4NzcuNjg3IDY2MC43MDYpIiBmaWxsPSIjMTEyYjI5Ii8+PHBhdGggZD0iTTM3LjcwNiwwQTM3LjcwNiwzNy43MDYsMCwxLDEsMCwzNy43MDYsMzcuNzA2LDM3LjcwNiwwLDAsMSwzNy43MDYsMFoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM2OTIuNDY2IDc5MS43ODkpIiBmaWxsPSIjMTEyYjI5Ii8+PHBhdGggZD0iTTMzLjM5LDUuNjQyYTEwLjc3MywxMC43NzMsMCwwLDEsMTguOTQ1LDBMODQuNDEsNjQuODU3YTEwLjc3MywxMC43NzMsMCwwLDEtOS40NzMsMTUuOUgxMC43ODhhMTAuNzczLDEwLjc3MywwLDAsMS05LjQ3My0xNS45WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzgzNS4zNDggNzgzLjA0OSkgcm90YXRlKC00NSkiIGZpbGw9IiMxMTJiMjkiLz48L2c+PC9zdmc+">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#112b29;--deep:#162927;--forest:#33564d;--sage:#abbaa5;--sand:#b6a68f;--bone:#e7e2d6;--paper:#f1f0ec;--white:#fbfffe;--line:rgba(17,43,41,.12);--h:'Inter',system-ui,sans-serif;--b:'Montserrat',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 var(--b);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--h);letter-spacing:-.025em;line-height:1.15;margin:0}
+p{margin:0}a{color:inherit}
+:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
+.top{background:var(--deep);color:var(--bone);padding:28px 20px 70px}
+.top .in{max-width:880px;margin:0 auto}
+.top img{height:18px}
+.top h1{font-size:clamp(26px,4vw,38px);margin:26px 0 6px}
+.top p{color:var(--sage)}
+.wrap{max-width:880px;margin:-46px auto 0;padding:0 16px 60px;display:grid;gap:18px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:24px}
+.card h2{font-size:20px;margin-bottom:12px}
+.card h4{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--forest);margin:18px 0 6px}
+.pill{display:inline-block;font:700 10.5px var(--h);letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:var(--bone);color:var(--forest)}
+.pill.ok{background:var(--forest);color:var(--bone)}.pill.sd{background:var(--sand);color:var(--ink)}
+.muted{color:var(--forest)}.small{font-size:13px}
+.note{font-size:13px;color:var(--forest);background:var(--paper);border-left:3px solid var(--sand);padding:10px 12px;border-radius:0 10px 10px 0}
+.note.test{background:#fff7e6;border-color:#d39b2a;color:#5c4210}
+.row{display:flex;gap:14px;align-items:center;padding:14px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.row:first-of-type{border-top:0}
+.grow{flex:1;min-width:180px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:700 14px var(--h);padding:11px 18px;border-radius:99px;border:1.5px solid transparent;cursor:pointer;text-decoration:none;background:var(--ink);color:var(--bone)}
+.btn:hover{background:var(--forest)}.btn:disabled{opacity:.5;cursor:default}
+.btn.line{background:transparent;color:var(--ink);border-color:rgba(17,43,41,.3)}
+.btn.sm{padding:7px 13px;font-size:13px}
+.form{display:grid;gap:12px;margin-top:14px}
+label{font-size:13px;font-weight:600;display:grid;gap:5px}
+.in{width:100%;padding:11px 13px;border-radius:12px;border:1.5px solid rgba(17,43,41,.2);background:var(--white);font:500 14px var(--b);color:var(--ink)}
+textarea.in{min-height:80px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:13px;line-height:1.45}
+.check input{margin-top:3px;width:16px;height:16px;accent-color:var(--forest)}
+.err{color:#8a2f1f;font-weight:600;font-size:13px;display:none}.err.on{display:block}
+.price{font:900 34px var(--h);letter-spacing:-.04em}
+.msgs{display:grid;gap:8px;max-height:360px;overflow:auto;margin-bottom:12px}
+.msg{max-width:80%;padding:10px 14px;border-radius:14px;background:var(--paper);font-size:14px}
+.msg.me{justify-self:end;background:var(--forest);color:var(--bone)}
+.msg small{display:block;opacity:.7;font-size:11px;margin-top:3px}
+.stars{display:flex;gap:6px}.stars label{display:inline}.stars input{position:absolute;opacity:0}.stars span{font-size:26px;cursor:pointer;color:var(--bone)}
+.stars input:checked~span,.stars label:hover span{color:var(--sand)}
+.foot{text-align:center;font-size:12px;color:var(--forest);padding:10px 16px 40px}
+.foot a{color:inherit}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bone);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;display:none;max-width:calc(100vw - 32px);z-index:9}
+.toast.on{display:block}.toast.bad{background:#6e2416}
+ul{padding-left:18px;margin:0}
+@media (max-width:620px){.two{grid-template-columns:1fr}.card{padding:18px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in"><a href="https://cleverherd.com"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MDIuMjAxIiBoZWlnaHQ9IjgwLjU4OSIgdmlld0JveD0iMCAwIDcwMi4yMDEgODAuNTg5Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTQ4LjkgLTIwMS4yMDYpIj48cGF0aCBkPSJNMTAyLjg0OCwyOS43NTFhOS45MzEsOS45MzEsMCwwLDAsOS4wMjYsNC44MzVjNS45MSwwLDguNy00LjQwNiw0LjcyOC0xMC41M0MxMTAuMTU1LDEyLjAyMiw5Ny44LDQuNSw4Mi42NDcsNC41LDU5Ljc2LDQuNSw0My4yMTIsMjEuNDc3LDQzLjIxMiw0NC43OTRTNTkuNzYsODUuMDg5LDgyLjY0Nyw4NS4wODljMTUuMTUxLDAsMjcuNTA4LTcuNTIyLDMzLjk1NS0xOS41NTYsMy45NzYtNi4xMjUsMS4xODItMTAuNTMtNC43MjgtMTAuNTNhOS45MzEsOS45MzEsMCwwLDAtOS4wMjYsNC44MzVBMjAuOTkyLDIwLjk5MiwwLDAsMSw4My41MDcsNzEuNTVjLTEzLjMyNCwwLTIyLjk5NS0xMC40MjMtMjIuOTk1LTI2Ljc1NnM5LjY3MS0yNi43NTYsMjIuOTk1LTI2Ljc1NkEyMC45OTIsMjAuOTkyLDAsMCwxLDEwMi44NDgsMjkuNzUxWm0yNi4xMTEtMTYuODdWNzUuNjMzYzAsNC45NDMsMy4zMzEsOC4zODEsOC40ODksOC4zODFoMzMuMzFhNi43NjksNi43NjksMCwxLDAsMC0xMy41MzlIMTQ1LjgyOVYxMi44ODFjMC01LjA1LTMuMzMxLTguMzgxLTguNDg5LTguMzgxQzEzMi4yOSw0LjUsMTI4Ljk1OSw3LjgzMSwxMjguOTU5LDEyLjg4MVptNTcuMTY0LDYyLjc1MmMwLDQuOTQzLDMuNDM4LDguMzgxLDguNDg5LDguMzgxaDMzLjMxYTYuMzczLDYuMzczLDAsMCwwLDYuNzY5LTYuNzY5LDYuMzczLDYuMzczLDAsMCwwLTYuNzY5LTYuNzY5SDIwMy4xVjUxLjQ1N2gyMy44NTRhNi40LDYuNCwwLDAsMCw2Ljc2OS02LjY2Miw2LjQ1OCw2LjQ1OCwwLDAsMC02Ljc2OS02Ljg3N0gyMDMuMXYtMTguOGgyNC44MjFjNC4wODMsMCw2Ljc2OS0yLjY4Niw2Ljc2OS02LjY2MiwwLTQuMTkxLTIuNjg2LTYuODc3LTYuNzY5LTYuODc3aC0zMy4zMWMtNS4xNTgsMC04LjQ4OSwzLjMzMS04LjQ4OSw4LjM4MVptNTUuNTUzLTU4LjAyNCwyNi42NDgsNjIuNDNjMS4xODIsMi45LDQuODM1LDUuMDUsOC43LDUuMDUsMy45NzYsMCw3LjYyOS0yLjE0OSw4LjgxMS01LjA1bDI2LjU0MS02Mi40M0MzMTUuNSw5Ljk4LDMxMi45MTcsNC41LDMwNS44MjUsNC41Yy01LjgsMC04LjYsMy42NTMtMTAuMjA4LDkuMjQxbC0xOC41ODksNDkuNzUtMTguNDgyLTQ5Ljc1QzI1Ni45MzQsOC4xNTMsMjU0LjE0MSw0LjUsMjQ4LjMzOCw0LjUsMjQxLjI0Niw0LjUsMjM4LjU2LDkuOTgsMjQxLjY3NiwxNy42MDlabTc4Ljk3Nyw1OC4wMjRjMCw0Ljk0MywzLjQzOCw4LjM4MSw4LjQ4OSw4LjM4MWgzMy4zMWE2LjM3Myw2LjM3MywwLDAsMCw2Ljc3LTYuNzY5LDYuMzczLDYuMzczLDAsMCwwLTYuNzctNi43NjlIMzM3LjYzMVY1MS40NTdoMjMuODU0YTYuNCw2LjQsMCwwLDAsNi43NjktNi42NjIsNi40NTgsNi40NTgsMCwwLDAtNi43NjktNi44NzdIMzM3LjYzMXYtMTguOGgyNC44MjFjNC4wODMsMCw2Ljc3LTIuNjg2LDYuNzctNi42NjIsMC00LjE5MS0yLjY4Ni02Ljg3Ny02Ljc3LTYuODc3aC0zMy4zMWMtNS4xNTgsMC04LjQ4OSwzLjMzMS04LjQ4OSw4LjM4MVpNMzg5LjEsODUuMDg5YTguMTU3LDguMTU3LDAsMCwwLDguNDg5LTguMzgxVjYxLjY2NGgxNy4xOTJjNy41MjIsMCwxMi44OTQsNC45NDMsMTIuODk0LDExLjV2My41NDZhOC4wMSw4LjAxLDAsMCwwLDguMzgxLDguMzgxLDguMSw4LjEsMCwwLDAsOC40ODktOC4zODF2LTUuOEExOC4xLDE4LjEsMCwwLDAsNDMzLjY5Myw1NC4yNWM2Ljc2OS00LjQwNiwxMC44NTMtMTIuMDM1LDEwLjg1My0yMS4xNjgsMC0xNi41NDgtMTMuMzI0LTI4LjU4Mi0zMi4wMjEtMjguNTgyLTE4LjQ4MiwwLTMxLjgwNiwxMi41NzItMzEuODA2LDI5Ljk3OVY3Ni43MDhBOC4xMzEsOC4xMzEsMCwwLDAsMzg5LjEsODUuMDg5Wm04LjQ4OS0zNi45NjNWMzQuNDc5YzAtOS41NjMsNi4yMzItMTYuNDQsMTUuMDQzLTE2LjQ0LDguNDg5LDAsMTQuNzIxLDYuMzQsMTQuNzIxLDE0LjkzNiwwLDguODExLTYuNjYyLDE1LjE1MS0xNS44LDE1LjE1MVptNTUuOTgyLDI4LjU4MmE3Ljk1Miw3Ljk1MiwwLDAsMCw4LjM4MSw4LjM4MWM1LjE1OCwwLDguNDg5LTMuNDM4LDguNDg5LTguMzgxVjUxLjU2NGgzNi4yMTFWNzYuNzA4YTcuOTUyLDcuOTUyLDAsMCwwLDguMzgxLDguMzgxYzUuMTU4LDAsOC40ODktMy40MzgsOC40ODktOC4zODFWMTIuODgxYzAtNS4wNS0zLjMzMS04LjM4MS04LjM4MS04LjM4MS01LjI2NSwwLTguNDg5LDMuMzMxLTguNDg5LDguMzgxVjM4LjAyNUg0NzAuNDQxVjEyLjg4MWMwLTUuMDUtMy4zMzEtOC4zODEtOC4zODEtOC4zODEtNS4xNTgsMC04LjQ4OSwzLjMzMS04LjQ4OSw4LjM4MVpNNTM2LjIsNzUuNjMzYzAsNC45NDMsMy40MzgsOC4zODEsOC40ODksOC4zODFINTc4YTYuMzczLDYuMzczLDAsMCwwLDYuNzY5LTYuNzY5QTYuMzczLDYuMzczLDAsMCwwLDU3OCw3MC40NzVINTUzLjE4VjUxLjQ1N2gyMy44NTRhNi40LDYuNCwwLDAsMCw2Ljc2OS02LjY2Miw2LjQ1OCw2LjQ1OCwwLDAsMC02Ljc2OS02Ljg3N0g1NTMuMTh2LTE4LjhINTc4YzQuMDgzLDAsNi43NjktMi42ODYsNi43NjktNi42NjIsMC00LjE5MS0yLjY4Ni02Ljg3Ny02Ljc2OS02Ljg3N2gtMzMuMzFjLTUuMTU4LDAtOC40ODksMy4zMzEtOC40ODksOC4zODFabTY4LjQ0Nyw5LjQ1NmE4LjE1Nyw4LjE1NywwLDAsMCw4LjQ4OS04LjM4MVY2MS42NjRINjMwLjMzYzcuNTIyLDAsMTIuODk0LDQuOTQzLDEyLjg5NCwxMS41djMuNTQ2YTguMDEsOC4wMSwwLDAsMCw4LjM4MSw4LjM4MSw4LjEsOC4xLDAsMCwwLDguNDg5LTguMzgxdi01LjhBMTguMSwxOC4xLDAsMCwwLDY0OS4yNDIsNTQuMjVjNi43NjktNC40MDYsMTAuODUzLTEyLjAzNSwxMC44NTMtMjEuMTY4LDAtMTYuNTQ4LTEzLjMyNC0yOC41ODItMzIuMDIxLTI4LjU4Mi0xOC40ODIsMC0zMS44MDYsMTIuNTcyLTMxLjgwNiwyOS45NzlWNzYuNzA4QTguMTMsOC4xMywwLDAsMCw2MDQuNjQ5LDg1LjA4OVptOC40ODktMzYuOTYzVjM0LjQ3OWMwLTkuNTYzLDYuMjMyLTE2LjQ0LDE1LjA0My0xNi40NCw4LjQ4OSwwLDE0LjcyMSw2LjM0LDE0LjcyMSwxNC45MzYsMCw4LjgxMS02LjY2MiwxNS4xNTEtMTUuOCwxNS4xNTFabTg4LjU0LDM1Ljg4OWMyMC44NDYsMCwzNS43ODItMTYuNzYzLDM1Ljc4Mi0zOS43NTdTNzIzLjE2OCw0LjUsNzAxLjU3MSw0LjVjLTE4LjM3NCwwLTMyLjU1OCwxMi4zNTctMzIuNTU4LDI5LjIyN1Y3Ni42YzAsNC40MDYsMy40MzgsNy40MTQsOC40ODksNy40MTRaTTY4NS45OSw3MC40NzVWMzMuNzI3YTE1LjM3MywxNS4zNzMsMCwwLDEsMTUuNjg4LTE1LjY4OGMxMS4xNzUsMCwxOC41ODksMTEuMDY4LDE4LjU4OSwyNi4zMjYsMCwxNS4wNDMtNy4zMDcsMjYuMTExLTE3LjQwNywyNi4xMTFaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDUuNjg3IDE5Ni43MDYpIiBmaWxsPSIjZTdlMmQ2Ii8+PGNpcmNsZSBjeD0iNyIgY3k9IjciIHI9IjciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDgwMS43NjEgMjI0LjcwNikiIGZpbGw9IiNlN2UyZDYiLz48cGF0aCBkPSJNNy41NTQsMy4yNDdhMiwyLDAsMCwxLDMuNTE3LDBMMTcuMDI2LDE0LjI0YTIsMiwwLDAsMS0xLjc1OSwyLjk1M0gzLjM1OEEyLDIsMCwwLDEsMS42LDE0LjI0WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoODI1Ljc3NCAyMjIuNDg2KSByb3RhdGUoLTQ1KSIgZmlsbD0iI2U3ZTJkNiIvPjwvZz48L3N2Zz4=" alt="Cleverherd"></a><h1 id="title">Your project</h1><p id="sub">Loading…</p></div></header>
+<main class="wrap" id="main" aria-live="polite"></main>
+<footer class="foot">Cleverherd · Independent minds. Collective momentum. · Questions? <a href="mailto:hello@cleverherd.com">hello@cleverherd.com</a> · <a href="index.html#/privacy">Privacy</a> · <a href="index.html#/terms">Terms</a></footer>
+<div class="toast" id="toast" role="status"></div>
+<script>
+(function(){
+  'use strict';
+  var CONFIG = {"supabaseUrl": "https://wqzpnukifcyuroeoqopc.supabase.co", "supabaseAnonKey": "sb_publishable_C-vp7mfq_bvpc1SjxEkRjA_6mEt3Tdl", "contactEmail": "hello@cleverherd.com"};
+  var hp = new URLSearchParams(location.hash.slice(1));
+  var TOKEN = hp.get('t') || '', JUST_PAID = hp.get('paid') === '1';
+  var D = null, busy = false;
+  var $ = function(s){ return document.querySelector(s); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var money = function(c){ c = Math.round(+c || 0); return '$' + (c / 100).toLocaleString('en-US', {minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2}); };
+  var date = function(d){ if (!d) return ''; var x = new Date(d.length === 10 ? d + 'T12:00:00' : d); return isNaN(x) ? d : x.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}); };
+  var store = function(k, v){ try { if (v === undefined) return localStorage.getItem(k) || ''; localStorage.setItem(k, v); } catch (e) { return ''; } };
+  function toast(m, bad){ var t = $('#toast'); t.textContent = m; t.className = 'toast on' + (bad ? ' bad' : ''); clearTimeout(toast.t); toast.t = setTimeout(function(){ t.className = 'toast'; }, bad ? 5500 : 3000); }
+  function headers(){ var k = CONFIG.supabaseAnonKey, h = {'Content-Type': 'application/json', apikey: k}; if (k.split('.').length === 3) h.Authorization = 'Bearer ' + k; return h; }
+  async function rpc(name, args){
+    var r = await fetch(CONFIG.supabaseUrl + '/rest/v1/rpc/' + name, {method: 'POST', headers: headers(), body: JSON.stringify(args)});
+    var j = await r.json().catch(function(){ return null; });
+    if (!r.ok) throw new Error(((j && j.message) || 'Something went wrong').replace(/^[a-z_]+: ?/, '').replace(/^invalid_link$/, 'This link is not valid. Ask the team for a new one.'));
+    return j;
+  }
+  async function pay(invoice){
+    var h = headers(); if (!h.Authorization) h.Authorization = 'Bearer ' + CONFIG.supabaseAnonKey;
+    var r = await fetch(CONFIG.supabaseUrl + '/functions/v1/payments', {method: 'POST', headers: h, body: JSON.stringify({action: 'checkout', token: TOKEN, invoice_id: invoice})});
+    var j = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error(j.error || 'Payments are unavailable right now.');
+    return j.url;
+  }
+  async function run(fn, ok){
+    if (busy) return; busy = true; document.body.style.cursor = 'progress';
+    try { var res = await fn(); if (res && res.project) { D = res; render(); } if (ok) toast(ok); }
+    catch (e) { toast(e.message, true); }
+    finally { busy = false; document.body.style.cursor = ''; }
+  }
+  var STATUS = {proposal_sent: ['Awaiting your review', 'sd'], changes_requested: ['Being updated by the team', ''], approved: ['Approved — payment due', 'sd'], active: ['In progress', 'ok'], completed: ['Completed', 'ok'], cancelled: ['Cancelled', ''], draft: ['Being prepared', ''], budget_agreed: ['Being prepared', '']};
+  var MS = {planned: ['Planned', ''], in_progress: ['In progress', ''], submitted: ['Ready for your review', 'sd'], revision_requested: ['Revision requested', ''], approved: ['Approved', 'ok']};
+  var INV = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'sd'], refunded: ['Refunded', ''], partially_refunded: ['Partly refunded', ''], disputed: ['Disputed', 'sd']};
+  var pill = function(map, k){ var v = map[k] || [k, '']; return '<span class="pill ' + v[1] + '">' + esc(v[0]) + '</span>'; };
+
+  function proposalHtml(x){
+    var sched = x.payment_plan === 'upfront' ? 'Full payment of ' + money(x.total_cents) + ' when you approve.' : x.payment_plan === 'deposit_balance' ? (x.deposit_pct ? x.deposit_pct + '% deposit (' + money(Math.round(x.total_cents * x.deposit_pct / 100)) + ') when you approve, then ' : '') + 'the balance of ' + money(x.total_cents - Math.round(x.total_cents * x.deposit_pct / 100)) + ' when all milestones are approved.' : 'Each milestone is invoiced when you approve it.';
+    return (x.summary ? '<p style="white-space:pre-line">' + esc(x.summary) + '</p>' : '') +
+      '<h4>Scope of work</h4><p style="white-space:pre-line">' + esc(x.scope || '—') + '</p>' +
+      '<h4>Milestones</h4><ul>' + (x.milestones || []).map(function(m){ return '<li><b>' + esc(m.title) + '</b>' + (m.due_date ? ' — by ' + esc(date(m.due_date)) : '') + (x.payment_plan === 'milestones' ? ' · ' + money(m.amount_cents) : '') + (m.description ? '<br><span class="small muted">' + esc(m.description) + '</span>' : '') + '</li>'; }).join('') + '</ul>' +
+      (x.timeline ? '<h4>Timeline</h4><p style="white-space:pre-line">' + esc(x.timeline) + '</p>' : '') +
+      ((x.roles || []).length ? '<h4>Who’s working on it</h4><p>' + x.roles.map(function(r){ return esc(r.name) + (r.role ? ' (' + esc(r.role) + ')' : ''); }).join(', ') + '</p>' : '') +
+      '<h4>Price</h4><p class="price">' + money(x.total_cents) + '</p><p class="small muted">Includes Cleverherd’s ' + x.fee_pct + '% platform fee. No other fees.</p><p class="small" style="margin-top:6px">' + esc(sched) + '</p>' +
+      (x.terms ? '<h4>Terms</h4><p style="white-space:pre-line">' + esc(x.terms) + '</p>' : '') +
+      (x.valid_until ? '<p class="small muted" style="margin-top:12px">Valid until ' + esc(date(x.valid_until)) + '</p>' : '');
+  }
+  function render(){
+    var p = D.project, pr = D.proposal, snap = pr ? pr.snapshot : null, test = D.payments.mode !== 'live';
+    document.title = (p.title || 'Your project') + ' — Cleverherd';
+    $('#title').textContent = p.title;
+    $('#sub').innerHTML = 'From ' + esc(p.team) + ' on Cleverherd · ' + pill(STATUS, p.status).replace('pill ', 'pill ');
+    var out = [];
+    if (JUST_PAID) out.push('<p class="note">Thank you — your payment is being confirmed. This page updates automatically.</p>');
+    if (test && D.payments.enabled) out.push('<p class="note test"><b>Test mode.</b> Payments use Stripe’s sandbox and no money is charged. Use card 4242 4242 4242 4242 with any future date and any CVC.</p>');
+    if (p.status === 'cancelled') out.push('<section class="card"><h2>This project was cancelled</h2><p class="muted">Contact the team if you have questions.</p></section>');
+    // Proposal
+    if (snap) {
+      var resp = '';
+      if (pr.status === 'sent' && p.status === 'proposal_sent') {
+        resp = '<h4>Your decision</h4><form class="form" id="approve" novalidate><div class="two"><label>Your full name<input class="in" name="who" autocomplete="name" value="' + esc(store('ch-client-name') || p.client_name) + '" required></label><label>Email<input class="in" name="email" type="email" autocomplete="email" value="' + esc(p.client_email) + '" required></label></div>' +
+          '<label class="check"><input type="checkbox" name="agree" required> <span>I approve this proposal' + (p.client_company ? ' on behalf of ' + esc(p.client_company) : '') + ', including the scope, milestones, price of ' + money(p.total_cents) + ' and payment schedule.</span></label>' +
+          '<label>Note to the team <small class="muted">(optional)</small><textarea class="in" name="note" maxlength="2000" rows="2"></textarea></label><p class="err" id="approveErr" role="alert"></p>' +
+          '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="submit">Approve proposal</button><button class="btn line" type="button" id="askChanges">Request changes</button></div></form>' +
+          '<form class="form" id="changes" hidden novalidate><label>What would you like changed?<textarea class="in" name="note" required maxlength="2000"></textarea></label><div style="display:flex;gap:10px"><button class="btn" type="submit">Send to the team</button><button class="btn line" type="button" id="cancelChanges">Back</button></div></form>' +
+          '<p class="small muted" style="margin-top:12px">Your approval, name and the time are recorded as your agreement to this proposal.</p>';
+      } else if (pr.status === 'approved') resp = '<p class="note" style="margin-top:16px">Approved by ' + esc(pr.responder_name) + ' on ' + esc(date(pr.responded_at)) + '.</p>';
+      else if (pr.status === 'changes_requested') resp = '<p class="note" style="margin-top:16px">You asked for changes on ' + esc(date(pr.responded_at)) + '. The team will send an updated proposal.</p>';
+      else if (pr.status === 'superseded') resp = '<p class="note" style="margin-top:16px">The team is updating this proposal.</p>';
+      out.push('<section class="card"><h2>Proposal' + (pr.version > 1 ? ' (version ' + pr.version + ')' : '') + '</h2>' + proposalHtml(snap) + resp + '</section>');
+    } else out.push('<section class="card"><h2>Your proposal is being prepared</h2><p class="muted">You’ll be able to review it here soon.</p></section>');
+    // Invoices
+    if (D.invoices.length) {
+      out.push('<section class="card"><h2>Payments</h2>' + D.invoices.map(function(i){
+        var canPay = (i.status === 'open' || i.status === 'failed') && D.payments.enabled;
+        return '<div class="row"><div class="grow"><b>' + esc(i.description) + '</b><div class="small muted">Invoice ' + esc(i.number) + ' · issued ' + esc(date(i.issued_at)) + (i.due_date && i.status === 'open' ? ' · due ' + esc(date(i.due_date)) : '') + (i.paid_at ? ' · paid ' + esc(date(i.paid_at)) : '') + '</div></div><b>' + money(i.amount_cents) + '</b>' + pill(INV, i.status) +
+          (canPay ? '<button class="btn sm" data-pay="' + i.id + '">Pay ' + money(i.amount_cents) + '</button>' : '') + '</div>';
+      }).join('') + (D.invoices.some(function(i){ return i.status === 'open'; }) && !D.payments.enabled ? '<p class="note" style="margin-top:10px">The team will tell you how to pay. Online card payment isn’t available for this project yet.</p>' : '') +
+      '<p class="small muted" style="margin-top:12px">Card and bank payments are processed securely by Stripe. Cleverherd never sees your card details.</p></section>');
+    }
+    // Milestones
+    if (['approved', 'active', 'completed'].indexOf(p.status) > -1 && D.milestones.length) {
+      out.push('<section class="card"><h2>Milestones</h2>' + D.milestones.map(function(m){
+        return '<div class="row" style="align-items:flex-start"><div class="grow"><b>' + esc(m.title) + '</b> ' + pill(MS, m.status) + '<div class="small muted">' + (m.due_date ? 'Due ' + esc(date(m.due_date)) : '') + (m.approved_at ? ' · approved ' + esc(date(m.approved_at)) : '') + '</div>' +
+          (m.deliverables.length ? '<ul style="margin-top:8px">' + m.deliverables.map(function(d){ return '<li>' + (d.url ? '<a href="' + esc(d.url) + '" target="_blank" rel="noopener noreferrer">' + esc(d.title) + ' ↗</a>' : esc(d.title)) + (d.note ? ' — <span class="small muted">' + esc(d.note) + '</span>' : '') + '</li>'; }).join('') + '</ul>' : '') +
+          (m.status === 'revision_requested' ? '<p class="small muted" style="margin-top:6px">You asked: “' + esc(m.revision_note) + '”</p>' : '') +
+          (m.status === 'submitted' ? '<form class="form ms" data-id="' + m.id + '" novalidate><label>Feedback <small class="muted">(required if requesting a revision)</small><textarea class="in" name="note" rows="2" maxlength="2000"></textarea></label><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sm" type="submit" name="d" value="approve">Approve milestone</button><button class="btn sm line" type="submit" name="d" value="revise">Request a revision</button></div></form>' : '') +
+          '</div></div>';
+      }).join('') + '</section>');
+    }
+    // Messages
+    if (p.status !== 'cancelled') {
+      out.push('<section class="card"><h2>Messages with the team</h2><div class="msgs">' + (D.messages.length ? D.messages.map(function(m){ return '<div class="msg ' + (m.from_client ? 'me' : '') + '"><b class="small">' + esc(m.name) + '</b><br>' + esc(m.body) + '<small>' + esc(date(m.created_at)) + '</small></div>'; }).join('') : '<p class="small muted">No messages yet.</p>') + '</div>' +
+        '<form class="form" id="msg" novalidate><textarea class="in" name="body" rows="2" maxlength="4000" placeholder="Write to the team…" aria-label="Message" required></textarea><div><button class="btn sm" type="submit">Send</button></div></form></section>');
+    }
+    // Feedback
+    if (p.status === 'completed') {
+      var f = D.feedback;
+      out.push('<section class="card"><h2>How did it go?</h2>' + (f ? '<p>Thanks for your feedback (' + '★'.repeat(f.rating) + ').</p>' : '') + '<form class="form" id="fb" novalidate><div class="stars" role="radiogroup" aria-label="Rating">' + [1, 2, 3, 4, 5].map(function(n){ return '<label><input type="radio" name="rating" value="' + n + '"' + (f && f.rating === n ? ' checked' : '') + '><span aria-label="' + n + ' stars">★</span></label>'; }).join('') + '</div><label>Comments<textarea class="in" name="comment" maxlength="2000">' + esc(f ? f.comment : '') + '</textarea></label><label class="check"><input type="checkbox" name="publish"' + (f && f.publish ? ' checked' : '') + '> <span>The team may show my rating and comment on their Cleverherd profiles, with my first name.</span></label><div><button class="btn sm" type="submit">' + (f ? 'Update feedback' : 'Send feedback') + '</button></div></form></section>');
+    }
+    $('#main').innerHTML = out.join('');
+    bind();
+  }
+  function bind(){
+    var ap = $('#approve'), ch = $('#changes');
+    if (ap) {
+      ap.addEventListener('submit', function(e){ e.preventDefault(); var d = new FormData(ap), err = $('#approveErr');
+        if (!String(d.get('who') || '').trim()) { err.textContent = 'Type your full name.'; err.className = 'err on'; return; }
+        if (!d.get('agree')) { err.textContent = 'Tick the box to confirm your approval.'; err.className = 'err on'; return; }
+        store('ch-client-name', String(d.get('who')).trim());
+        run(function(){ return rpc('client_respond_proposal', {t: TOKEN, v: D.proposal.version, approve: true, who: d.get('who'), email: d.get('email'), note: d.get('note') || ''}); }, 'Approved — thank you!');
+      });
+      $('#askChanges').addEventListener('click', function(){ ap.hidden = true; ch.hidden = false; ch.querySelector('textarea').focus(); });
+      $('#cancelChanges').addEventListener('click', function(){ ch.hidden = true; ap.hidden = false; });
+      ch.addEventListener('submit', function(e){ e.preventDefault(); var note = new FormData(ch).get('note'); if (String(note || '').trim().length < 3) { toast('Tell the team what to change.', true); return; }
+        run(function(){ return rpc('client_respond_proposal', {t: TOKEN, v: D.proposal.version, approve: false, who: store('ch-client-name') || D.project.client_name, email: D.project.client_email, note: note}); }, 'Sent — the team will update the proposal');
+      });
+    }
+    document.querySelectorAll('[data-pay]').forEach(function(b){ b.addEventListener('click', async function(){ b.disabled = true; try { location.href = await pay(b.dataset.pay); } catch (e) { b.disabled = false; toast(e.message, true); } }); });
+    document.querySelectorAll('form.ms').forEach(function(f){ f.addEventListener('submit', function(e){ e.preventDefault(); var approve = (e.submitter && e.submitter.value) !== 'revise', note = new FormData(f).get('note') || '';
+      if (!approve && String(note).trim().length < 3) { toast('Describe what needs to change.', true); return; }
+      run(function(){ return rpc('client_milestone_decision', {t: TOKEN, m: f.dataset.id, approve: approve, who: store('ch-client-name') || D.project.client_name, note: note}); }, approve ? 'Milestone approved' : 'Revision requested');
+    }); });
+    var mf = $('#msg'); if (mf) mf.addEventListener('submit', function(e){ e.preventDefault(); var body = String(new FormData(mf).get('body') || '').trim(); if (!body) return;
+      run(function(){ return rpc('client_message', {t: TOKEN, who: store('ch-client-name') || D.project.client_name || 'Client', body: body}); }, 'Message sent'); });
+    var fb = $('#fb'); if (fb) fb.addEventListener('submit', function(e){ e.preventDefault(); var d = new FormData(fb); if (!d.get('rating')) { toast('Choose a rating.', true); return; }
+      run(function(){ return rpc('client_feedback', {t: TOKEN, rating: +d.get('rating'), comment: d.get('comment') || '', publish: !!d.get('publish'), who: (store('ch-client-name') || D.project.client_name || '').split(' ')[0]}); }, 'Thank you!'); });
+  }
+  async function load(){
+    if (!CONFIG.supabaseUrl) { $('#sub').textContent = 'This page isn’t connected yet.'; return; }
+    if (!TOKEN) { $('#sub').textContent = 'Open this page using the link from your project team.'; return; }
+    try { D = await rpc('client_portal', {t: TOKEN}); render(); }
+    catch (e) { $('#title').textContent = 'Link not valid'; $('#sub').textContent = e.message; }
+    if (JUST_PAID) { var n = 0, iv = setInterval(async function(){ n++; try { D = await rpc('client_portal', {t: TOKEN}); render(); } catch (e) {} if (n > 8 || !D.invoices.some(function(i){ return i.status === 'open' || i.status === 'processing'; })) { clearInterval(iv); JUST_PAID = false; history.replaceState(null, '', location.pathname + '#t=' + TOKEN); render(); } }, 2500); }
+  }
+  load();
+})();
+</script>
+</body>
+</html>
