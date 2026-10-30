@@ -69,6 +69,8 @@ p{margin:0}
 section{padding:clamp(84px,11vw,144px) 0;position:relative}
 .dark{background:var(--deep);color:var(--bone)}
 .bone{background:var(--bone)}
+section.bone:has(+ section.bone){padding-bottom:clamp(40px,5vw,64px)}
+section.bone + section.bone{padding-top:0}
 .eyebrow{font-family:var(--h);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;display:inline-flex;align-items:center;gap:12px;color:var(--forest)}
 .eyebrow::before{content:"";width:26px;height:2px;background:currentColor}
 .dark .eyebrow{color:var(--sand)}
@@ -111,10 +113,12 @@ section{padding:clamp(84px,11vw,144px) 0;position:relative}
 .menu-btn span,.menu-btn span::before,.menu-btn span::after{display:block;width:18px;height:2px;background:currentColor;position:relative;transition:transform .3s}
 .menu-btn span::before,.menu-btn span::after{content:"";position:absolute;left:0}
 .menu-btn span::before{top:-6px}.menu-btn span::after{top:6px}
-.mobile{position:fixed;inset:76px 0 auto;z-index:49;background:var(--deep);color:var(--bone);padding:12px 20px 28px;display:none;box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+.mobile{position:fixed;inset:0;z-index:49;background:var(--deep);color:var(--bone);padding:92px 20px 40px;display:none;overflow-y:auto;overscroll-behavior:contain}
+.nav.menu-open{background:rgb(241,240,236)}
+html.menu-lock,html.menu-lock body{overflow:hidden}
 .mobile.open{display:block}
 .mobile a{display:block;padding:14px 0;font-family:var(--h);font-weight:700;font-size:20px;text-decoration:none;border-bottom:1px solid var(--line-l)}
-.mobile .btn{margin-top:20px;font-size:16px;border-bottom:0}
+.mobile a.btn{display:flex;justify-content:center;align-items:center;width:100%;margin-top:24px;padding:16px 26px;font-size:16px;border-bottom:0;text-align:center}
 
 /* ===== Hero ===== */
 .hero{background:var(--deep);color:var(--bone);padding:148px 0 0;overflow:hidden}
@@ -1450,7 +1454,7 @@ main:focus{outline:none}
 
   /* Mobile menu */
   var menuBtn = $('#menuBtn'), menu = $('#mobileMenu');
-  var setMenu = function(open){ menu.classList.toggle('open', open); menuBtn.setAttribute('aria-expanded', open); menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu'); if(open) nav.classList.add('scrolled'); else onScroll(); };
+  var setMenu = function(open){ menu.classList.toggle('open', open); nav.classList.toggle('menu-open', open); document.documentElement.classList.toggle('menu-lock', open); menuBtn.setAttribute('aria-expanded', open); menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu'); if(open) nav.classList.add('scrolled'); else onScroll(); };
   menuBtn.addEventListener('click', function(){ setMenu(!menu.classList.contains('open')); });
   $$('#mobileMenu a').forEach(function(a){ a.addEventListener('click', function(){ setMenu(false); }); });
 

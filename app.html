@@ -108,7 +108,7 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .side .btn-ghost{color:var(--sage);justify-content:flex-start;font-size:13px}
 .side .btn-ghost:hover{background:rgba(231,226,214,.07);color:var(--bone)}
 .main{min-width:0;display:flex;flex-direction:column}
-.top{position:sticky;top:0;z-index:30;background:rgba(241,240,236,.88);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:12px 32px}
+.top{position:sticky;top:0;z-index:30;background:rgba(241,240,236,.88);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);display:flex;align-items:center;gap:14px;padding:12px max(32px,calc((100% - 1260px)/2 + 32px))}
 .top .mlogo{display:none}
 .search{flex:1;max-width:520px;position:relative}
 .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--forest);width:18px;height:18px}
@@ -120,7 +120,7 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .icon-btn .dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--sand);border:2px solid var(--paper)}
 .demo-bar{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--bone);font-size:12.5px;font-weight:600;color:var(--forest);padding:7px 16px;text-align:center}
 .demo-bar button{border:0;background:none;text-decoration:underline;cursor:pointer;font-weight:700;color:var(--ink);padding:0}
-.content{padding:32px;width:100%;max-width:1260px;animation:in .45s var(--ease)}
+.content{padding:32px;width:100%;max-width:1260px;margin:0 auto;animation:in .45s var(--ease)}
 @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .tabbar{display:none}
 
@@ -308,7 +308,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .msg:not(.me){border-bottom-left-radius:4px}
 .msg small{display:block;font-size:11px;opacity:.7;margin-top:4px}
 .compose{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line)}
-.compose .in{border-radius:99px}
+.compose{align-items:flex-end}
+.compose textarea.in{min-height:44px;max-height:160px;height:44px;padding:11px 18px;border-radius:22px;resize:none;line-height:1.45;overflow-y:auto}
+.compose .btn{flex:none;width:44px;height:44px;padding:0;justify-content:center;border-radius:50%}
 
 /* ---------- Auth & onboarding ---------- */
 .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
@@ -406,7 +408,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .skip:focus{left:12px}
 .hello .intent button{font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;border:1px solid var(--line-l);background:transparent;color:var(--bone);cursor:pointer}
 .hello .intent button.on{background:var(--sand);color:var(--ink);border-color:var(--sand)}
-.app-foot{margin-top:auto;display:flex;flex-wrap:wrap;gap:6px 20px;padding:22px 32px 28px;font-size:12.5px;border-top:1px solid var(--line)}
+.app-foot{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 20px;padding:22px 32px 28px;font-size:12.5px;border-top:1px solid var(--line)}
 .app-foot a{color:var(--forest);text-decoration:none;font-weight:600}.app-foot a:hover{color:var(--ink)}
 .side-links{display:grid;gap:2px}
 .side-links a{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;font-size:13px;color:var(--sage);text-decoration:none;font-weight:600}
@@ -2871,6 +2873,18 @@ document.addEventListener('change', function(e){
   if (e.target.name === 'plan' && e.target.closest('form[data-form="project-details"]')) { var dep = $('#pd-dep'); if (dep) dep.disabled = e.target.value !== 'deposit_balance'; }
 });
 document.addEventListener('input', function(e){ if (e.target.closest('form[data-form="alloc"]')) allocModalSync(); });
+
+/* Message boxes: start one line high and grow with the text (up to the CSS max). */
+document.addEventListener('input', function (e) {
+  var t = e.target;
+  if (!t || t.tagName !== 'TEXTAREA' || !t.closest('.compose')) return;
+  t.style.height = '44px';
+  t.style.height = Math.min(t.scrollHeight + 3, 160) + 'px';
+});
+document.addEventListener('submit', function (e) {
+  var t = e.target && e.target.querySelector && e.target.querySelector('.compose textarea, textarea');
+  if (e.target.classList && e.target.classList.contains('compose') && t) setTimeout(function () { t.style.height = '44px'; }, 0);
+}, true);
 
 
 boot();
