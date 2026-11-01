@@ -466,7 +466,7 @@ body.busy .content{opacity:.85;transition:opacity .2s}
 .ib-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
 .ib-goal{background:rgba(231,226,214,.08);border:1px solid var(--line-l);border-radius:18px;padding:18px;display:grid;gap:8px}
 .ib-goal b{font-family:var(--h);font-size:44px;letter-spacing:-.05em;line-height:1}
-.ib-goal b span{font-size:20px;color:var(--sage)}
+.ib-goal b span{font-size:20px;color:var(--sage);letter-spacing:.02em;margin-left:.1em}
 .ib-goal small{color:var(--sage);font-size:12px;font-weight:600}
 .ib-goal .bar{background:rgba(231,226,214,.15)}
 .icard.feat{background:linear-gradient(135deg,var(--forest),var(--deep));color:var(--bone);border:0}
@@ -618,6 +618,26 @@ body.dragging{-webkit-user-select:none;user-select:none}
   .top{gap:12px}
   .top .mlogo{width:30px}
   .search input{height:44px}
+}
+
+/* Header action buttons (e.g. Labs: Validate / Share an idea) */
+.ph .actions{display:flex;gap:10px;flex-wrap:wrap}
+/* Form fields never wider than their container (dialogs on phones) */
+.form > *,.field,.form .two > *{min-width:0}
+.field .in,.field .sel,.form .in,.form .sel{width:100%;max-width:100%;min-width:0}
+input[type=date].in,input[type=time].in,input[type=datetime-local].in{-webkit-appearance:none;appearance:none;display:block;min-height:46px;text-align:left}
+input[type=date].in::-webkit-date-and-time-value{text-align:left;margin:0}
+.modal{overflow-x:hidden}
+/* iPhone Safari zooms into fields with text under 16px; keep them at 16px on phones */
+@media (max-width:900px){.in,.sel,textarea,select,input:not([type=checkbox]):not([type=radio]){font-size:16px}}
+/* Filter dropdowns styled like the filter chips (no white fill; dark when a filter is set) */
+.sel.fsel{font:600 13px var(--b);color:var(--ink);padding:8px 34px 8px 14px;min-height:38px;border-radius:99px;border:1.5px solid rgba(17,43,41,.25);background-color:transparent;transition:background-color .2s,color .2s,border-color .2s}
+.sel.fsel:hover{border-color:var(--ink)}
+.sel.fsel.on{background-color:var(--ink);color:var(--bone);border-color:var(--ink);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23e7e2d6' stroke-width='2'/%3E%3C/svg%3E")}
+.sel.fsel option{background:var(--white);color:var(--ink)}
+@media (max-width:900px){
+  .sel.fsel{font-size:16px;min-height:44px;padding:10px 38px 10px 16px}
+  .toolbar .sel.fsel.show-sm{display:block;flex:0 0 auto}
 }
 
 </style>
@@ -1427,8 +1447,8 @@ function pNetwork(){
     (inc.length ? '<section class="card" style="margin-bottom:18px"><div class="card-h"><h3>Connection requests</h3><span class="pill sd">' + inc.length + '</span></div>' + inc.map(function(id){ var p = P(id); return '<div class="row">' + av(p) + '<div class="grow"><a class="row-link" href="#/network/' + id + '"><b>' + esc(p.name) + '</b></a><div class="small muted">' + esc(p.title) + '</div></div><button class="btn btn-ink btn-sm" data-act="accept-conn" data-id="' + id + '">Accept</button><button class="btn btn-ghost btn-sm" data-act="decline-conn" data-id="' + id + '">Ignore</button></div>'; }).join('') + '</section>' : '') +
     '<div class="tabs" role="tablist">' + [['directory', 'Directory'], ['new', 'Newest members'], ['connections', 'My connections']].map(function(t){ return '<a href="#" role="tab" aria-selected="' + (f.tab === t[0]) + '" data-act="net-tab" data-v="' + t[0] + '" class="' + (f.tab === t[0] ? 'on' : '') + '">' + t[1] + '</a>'; }).join('') + '</div>' +
     '<div class="toolbar"><div class="search">' + icon('search') + '<input data-filter="net.q" value="' + esc(f.q) + '" placeholder="Search name, skill, interest…" aria-label="Search members"></div>' +
-    '<select class="sel" data-filter="net.role" aria-label="Role">' + options([['', 'Any role']].concat(Object.keys(ROLES).map(function(r){ return [r, r]; })), f.role) + '</select>' +
-    '<select class="sel" data-filter="net.hours" aria-label="Availability">' + options([['', 'Any availability']].concat(HOURS.map(function(h){ return [h, h]; })), f.hours) + '</select></div>' +
+    '<select class="sel fsel' + (f.role ? ' on' : '') + '" data-filter="net.role" aria-label="Role">' + options([['', 'Any role']].concat(Object.keys(ROLES).map(function(r){ return [r, r]; })), f.role) + '</select>' +
+    '<select class="sel fsel' + (f.hours ? ' on' : '') + '" data-filter="net.hours" aria-label="Availability">' + options([['', 'Any availability']].concat(HOURS.map(function(h){ return [h, h]; })), f.hours) + '</select></div>' +
     '<div id="list" aria-live="polite">' + netList() + '</div>';
 }
 function connectButtons(id){
@@ -1488,7 +1508,8 @@ function pOpps(){
   var nApp = Object.keys(S.applications).length, nSaved = Object.keys(S.saved).filter(function(k){ return S.saved[k]; }).length, nMine = S.opps.filter(function(o){ return o.mine; }).length;
   return '<div class="ph"><div><span class="eyebrow">Opportunities</span><h1>Find work worth doing.</h1><p>Paid projects, employment, team roles, collaborations and startup seats. Every listing states its compensation type, and new listings are reviewed before they appear.</p></div><button class="btn btn-ink" data-act="post-opp">' + icon('plus') + 'Post an opportunity</button></div>' +
     '<div class="tabs" role="tablist">' + [['all', 'Browse'], ['applied', 'Applications (' + nApp + ')'], ['saved', 'Saved (' + nSaved + ')'], ['mine', 'Posted by you (' + nMine + ')']].map(function(t){ return '<a href="#" role="tab" aria-selected="' + (f.view === t[0]) + '" data-act="opp-view" data-v="' + t[0] + '" class="' + (f.view === t[0] ? 'on' : '') + '">' + t[1] + '</a>'; }).join('') + '</div>' +
-    '<div class="toolbar"><div class="search">' + icon('search') + '<input data-filter="opp.q" value="' + esc(f.q) + '" placeholder="Search opportunities…" aria-label="Search opportunities"></div><div class="chips" role="group" aria-label="Type">' + types.map(function(t){ return '<button class="chip ' + (f.type === t[0] ? 'on' : '') + '" aria-pressed="' + (f.type === t[0]) + '" data-act="opp-type" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
+    '<div class="toolbar"><div class="search">' + icon('search') + '<input data-filter="opp.q" value="' + esc(f.q) + '" placeholder="Search opportunities…" aria-label="Search opportunities"></div><div class="chips hide-sm" role="group" aria-label="Type">' + types.map(function(t){ return '<button class="chip ' + (f.type === t[0] ? 'on' : '') + '" aria-pressed="' + (f.type === t[0]) + '" data-act="opp-type" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
+    '<select class="sel fsel show-sm' + (f.type !== types[0][0] ? ' on' : '') + '" data-change="opp-type" aria-label="Type">' + options(types.map(function(t){ return [t[0], t[0] === types[0][0] ? 'All types' : t[1]]; }), f.type) + '</select></div>' +
     '<div id="list" aria-live="polite">' + oppList() + '</div>';
 }
 function pOpp(id){
@@ -1624,7 +1645,8 @@ function pLabs(){
   return '<div class="ph"><div><span class="eyebrow">Labs</span><h1>Turn ideas into something real.</h1><p>Share an idea, pressure-test it with the community and recruit a founding team.</p></div><div class="actions"><a class="btn btn-line" href="#/tools/validate">' + icon('target') + 'Validate an idea</a><a class="btn btn-ink" href="#/labs/new">' + icon('plus') + 'Share an idea</a></div></div>' +
     (init && f.view === 'all' ? '<div style="margin-bottom:22px">' + ideaCard(init) + '</div>' : '') +
     '<div class="tabs" role="tablist">' + [['all', 'Discover'], ['following', 'Following'], ['mine', 'My ideas']].map(function(t){ return '<a href="#" role="tab" aria-selected="' + (f.view === t[0]) + '" data-act="labs-view" data-v="' + t[0] + '" class="' + (f.view === t[0] ? 'on' : '') + '">' + t[1] + '</a>'; }).join('') + '</div>' +
-    '<div class="toolbar"><div class="chips" role="group" aria-label="Stage">' + ['All'].concat(STAGES).map(function(s){ return '<button class="chip ' + (f.stage === s ? 'on' : '') + '" aria-pressed="' + (f.stage === s) + '" data-act="labs-stage" data-v="' + s + '">' + s + '</button>'; }).join('') + '</div></div>' + body;
+    '<div class="toolbar"><div class="chips hide-sm" role="group" aria-label="Stage">' + ['All'].concat(STAGES).map(function(s){ return '<button class="chip ' + (f.stage === s ? 'on' : '') + '" aria-pressed="' + (f.stage === s) + '" data-act="labs-stage" data-v="' + s + '">' + s + '</button>'; }).join('') + '</div>' +
+    '<select class="sel fsel show-sm' + (f.stage !== 'All' ? ' on' : '') + '" data-change="labs-stage" aria-label="Stage">' + options([['All', 'All stages']].concat(STAGES.map(function(s){ return [s, s]; })), f.stage) + '</select></div>' + body;
 }
 function ideaForm(i){
   i = i || {title:'', tagline:'', cat:'SaaS', model:'', problem:'', solution:'', audience:'', looking:[]};
@@ -2387,6 +2409,7 @@ document.addEventListener('submit', function(e){
 var filterInput = function(e){
   var t = e.target.closest('[data-filter]'); if (!t) return;
   var k = t.dataset.filter.split('.'); UI[k[0]][k[1]] = t.value;
+  if (t.classList.contains('fsel')) t.classList.toggle('on', !!t.value);
   var box = $('#list'); if (box) box.innerHTML = k[0] === 'net' ? netList() : oppList();
 };
 document.addEventListener('input', filterInput);
@@ -2394,6 +2417,8 @@ document.addEventListener('change', function(e){
   if (e.target.matches('select[data-filter]')) return filterInput(e);
   var c = e.target.closest('[data-change]'); if (!c) return;
   if (c.dataset.change === 'app-status') act(function(){ return api.setAppStatus(c.dataset.id, c.value); }, 'Applicant status updated');
+  if (c.dataset.change === 'opp-type') { UI.opp.type = c.value; refresh(); return; }
+  if (c.dataset.change === 'labs-stage') { UI.labs.stage = c.value; refresh(); return; }
   if (c.dataset.change === 'idea-stage') act(function(){ return api.updateIdea(c.dataset.id, {stage:c.value}); }, 'Stage updated');
   if (c.dataset.change === 'need') { UI.need = $$('input[name=need]:checked').map(function(x){ return x.value; }); refresh(); }
   if (e.target.name === 'kind' && e.target.closest('form[data-form="outreach"]')) { captureForm('outreach'); refresh(); }

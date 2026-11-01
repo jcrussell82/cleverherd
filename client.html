@@ -88,6 +88,9 @@ textarea.in{min-height:84px;resize:vertical}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bone);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;display:none;max-width:calc(100vw - 32px);z-index:9}
 .toast.on{display:block}.toast.bad{background:#6e2416}
 ul{padding-left:18px;margin:0}
+.form > *,.two > *{min-width:0}
+input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-height:46px}
+@media (max-width:900px){.in,textarea{font-size:16px}}
 @media (max-width:620px){.two{grid-template-columns:1fr}.card{padding:22px 20px;border-radius:20px}.summary{padding:24px 20px}.wrap{gap:16px}.top{padding-bottom:70px}.inv .end{width:100%;justify-content:space-between}}
 </style>
 </head>
