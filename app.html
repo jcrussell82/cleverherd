@@ -571,6 +571,54 @@ a.stat{text-decoration:none;transition:border-color .2s}a.stat:hover{border-colo
 b.neg{color:#8a2f1f}
 .ms-card .deliv{border-top:1px solid var(--line);padding-top:6px;margin-bottom:10px}
 .tbl td small.muted{font-size:12px}
+.danger-zone{margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}
+.danger-zone h3{font-size:15px;margin-bottom:6px}
+.dz-row{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.dz-row:first-of-type{border-top:0}
+.dz-row .btn{flex:none;margin-top:2px}
+.dz-row p{margin-top:3px}
+.err-text{color:#8a2f1f;font-weight:600}
+.danger-text{color:#8a2f1f}
+/* Task board drag and drop */
+.vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.col-cards{display:flex;flex-direction:column;gap:10px;flex:1;min-height:56px}
+.col-empty{border:1.5px dashed rgba(17,43,41,.18);border-radius:12px;padding:16px;text-align:center;font-size:12.5px;color:var(--forest)}
+.task{cursor:grab;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:box-shadow .15s,transform .15s,opacity .15s}
+.task:hover{box-shadow:0 4px 14px -6px rgba(17,43,41,.35)}
+.task:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
+.task.pressing{transform:scale(.98);box-shadow:0 0 0 2px var(--sand)}
+.task.drag-src{display:none}
+.task.just-moved{animation:justMoved .7s var(--ease)}
+@keyframes justMoved{0%{box-shadow:0 0 0 3px var(--sand)}100%{box-shadow:0 1px 0 rgba(17,43,41,.06)}}
+.drag-ghost{position:fixed;left:0;top:0;z-index:200;pointer-events:none;cursor:grabbing;box-shadow:0 18px 40px -12px rgba(17,43,41,.5);opacity:.96;margin:0}
+.drop-ph{border:2px dashed var(--forest);border-radius:12px;background:rgba(51,86,77,.08);flex:none}
+.col.drop-on{box-shadow:inset 0 0 0 2px rgba(51,86,77,.35)}
+body.dragging,body.dragging *{cursor:grabbing!important}
+body.dragging{-webkit-user-select:none;user-select:none}
+/* Mobile account menu (avatar dropdown) */
+.show-sm{display:none}
+.acct{position:relative}
+.acct-btn{position:relative;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;display:grid;place-items:center}
+.acct-btn .av{width:44px;height:44px;font-size:14px}
+.acct-btn[aria-expanded="true"] .av{box-shadow:0 0 0 3px var(--sand)}
+.acct-btn .dot{position:absolute;top:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--sand);border:2px solid var(--paper)}
+.acct-menu{position:absolute;right:0;top:calc(100% + 10px);z-index:60;width:min(280px,calc(100vw - 24px));max-height:calc(100vh - 90px);overflow:auto;background:var(--white);border:1px solid var(--line);border-radius:18px;box-shadow:0 22px 50px -18px rgba(17,43,41,.45);padding:8px}
+.acct-menu[hidden]{display:none}
+.acct-who{padding:12px 14px 12px;border-bottom:1px solid var(--line);margin-bottom:6px;display:grid;gap:2px}
+.acct-who b{font-family:var(--h);font-size:15px}.acct-who small{color:var(--forest);font-size:12.5px}
+.acct-menu [role=menuitem]{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 14px;border:0;border-radius:12px;background:transparent;font:600 15px var(--b);color:var(--ink);text-decoration:none;cursor:pointer;text-align:left}
+.acct-menu [role=menuitem] svg{width:20px;height:20px;color:var(--forest);flex:none}
+.acct-menu [role=menuitem]:hover,.acct-menu [role=menuitem]:focus-visible{background:var(--paper);outline:none}
+.acct-menu [role=menuitem].on{background:var(--bone)}
+.acct-menu .ct{margin-left:auto;background:var(--sand);color:var(--ink);font:800 11px var(--h);border-radius:99px;padding:2px 8px}
+.acct-menu .acct-out{margin-top:6px;border-top:1px solid var(--line);border-radius:0 0 12px 12px;color:#8a2f1f}
+.acct-menu .acct-out svg{color:#8a2f1f}
+@media (max-width:900px){
+  .show-sm{display:block}
+  .top{gap:12px}
+  .top .mlogo{width:30px}
+  .search input{height:44px}
+}
 
 </style>
 </head>
@@ -733,7 +781,7 @@ function opp(id){ return S.opps.find(function(o){ return o.id === id; }); }
 function myStatus(t){ var m = t.members.find(function(x){ return x.id === 'me'; }); return m ? m.status : null; }
 function isLead(t){ var m = t.members.find(function(x){ return x.id === 'me'; }); return (m && m.status === 'active' && m.lead) || S.me.isAdmin; }
 function activeMembers(t){ return t.members.filter(function(m){ return m.status === 'active'; }); }
-function myTeams(){ return S.teams.filter(function(t){ return myStatus(t) === 'active'; }); }
+function myTeams(){ return S.teams.filter(function(t){ return myStatus(t) === 'active' && !t.archived; }); }
 function initiative(){ return S.ideas.find(function(i){ return i.kind === 'initiative' && i.featured; }); }
 function skillHits(mine, theirs){ return (theirs || []).filter(function(t){ return (mine || []).some(function(m){ return norm(t).indexOf(norm(m)) > -1 || norm(m).indexOf(norm(t)) > -1; }); }); }
 function rolesOf(skills){ return Object.keys(ROLES).filter(function(r){ return (skills || []).some(function(s){ return ROLES[r].some(function(k){ return norm(s).indexOf(k) > -1; }); }); }); }
@@ -958,9 +1006,9 @@ async function loadLive(){
   r[10].forEach(function(x){ if (x.member === MYID) s.pledges[x.idea_id] = x.amount; });
   s.teams = r[12].map(function(t){
     var by = function(rows){ return rows.filter(function(x){ return x.team_id === t.id; }); };
-    return {id:t.id, name:t.name, kind:t.kind, project:t.project, status:t.status, idea:t.idea_id, visibility:t.visibility, joinPolicy:t.join_policy, createdBy:M(t.created_by),
+    return {id:t.id, name:t.name, kind:t.kind, project:t.project, status:t.status, idea:t.idea_id, visibility:t.visibility, joinPolicy:t.join_policy, archived:!!t.archived_at, createdBy:M(t.created_by),
       members:by(r[13]).map(function(m){ return {id:M(m.member), role:m.role, status:m.status, lead:m.is_lead}; }),
-      tasks:by(r[14]).map(function(k){ return {id:k.id, t:k.title, s:k.status, o:k.owner ? M(k.owner) : ''}; }),
+      tasks:by(r[14]).map(function(k){ return {id:k.id, t:k.title, s:k.status, o:k.owner ? M(k.owner) : '', p:k.position != null ? +k.position : Date.parse(k.created_at) / 1000}; }),
       milestones:by(r[15]).map(function(m){ return {id:m.id, t:m.title, d:m.due, done:m.done}; }),
       contributions:by(r[16]).map(function(c){ return {id:c.id, m:M(c.member), type:c.type, desc:c.description, amt:c.amount, d:c.created_at}; }),
       leads:by(r[17]).map(function(l){ return {id:l.id, company:l.company, need:l.need, source:l.source, stage:l.stage, next:l.next_step, value:l.value, owner:l.owner ? M(l.owner) : ''}; }),
@@ -1014,6 +1062,8 @@ var live = {
   deleteComment: function(id){ return SB.from('comments').delete().eq('id', id).then(chk); },
   pledge: function(iid, amt){ if (!amt) return SB.from('pledges').delete().eq('idea_id', iid).eq('member', MYID).then(chk); return SB.from('pledges').upsert({idea_id:iid, member:MYID, amount:amt}).then(chk); },
   createTeam: function(f){ return SB.from('teams').insert({name:f.name, kind:f.kind, project:f.project, visibility:f.visibility, join_policy:f.joinPolicy, idea_id:f.idea || null, created_by:MYID}).select().single().then(chk); },
+  archiveTeam: function(id, on){ return SB.rpc('team_archive', {t:id, archive:!!on}).then(chk); },
+  deleteTeam: function(id){ return SB.rpc('team_delete', {t:id}).then(chk); },
   updateTeam: function(id, f){ return SB.from('teams').update({name:f.name, project:f.project, status:f.status, visibility:f.visibility, join_policy:f.joinPolicy}).eq('id', id).then(chk); },
   joinTeam: function(tid, status){ return SB.from('team_members').insert({team_id:tid, member:MYID, status:status, role:''}).then(chk); },
   invite: function(tid, mid, role){ return SB.from('team_members').insert({team_id:tid, member:mid, status:'invited', role:role || ''}).then(chk); },
@@ -1022,7 +1072,8 @@ var live = {
   setRole: function(tid, mid, role, lead){ return SB.from('team_members').update({role:role, is_lead:!!lead}).eq('team_id', tid).eq('member', U(mid)).then(chk); },
   removeMember: function(tid, mid){ return SB.from('team_members').delete().eq('team_id', tid).eq('member', U(mid)).then(chk); },
   addTask: function(tid, t, o){ return SB.from('tasks').insert({team_id:tid, title:t, owner:o ? U(o) : null}).then(chk); },
-  moveTask: function(tid, kid, s){ return SB.from('tasks').update({status:s}).eq('id', kid).then(chk); },
+  moveTask: function(tid, kid, s, pos){ var f = {status:s}; if (pos != null) f.position = pos; return SB.from('tasks').update(f).eq('id', kid).then(chk); },
+  updateTask: function(tid, kid, f){ return SB.from('tasks').update({title:f.t, owner:f.o ? U(f.o) : null}).eq('id', kid).then(chk); },
   deleteTask: function(tid, kid){ return SB.from('tasks').delete().eq('id', kid).then(chk); },
   addMilestone: function(tid, t, d){ return SB.from('milestones').insert({team_id:tid, title:t, due:d}).then(chk); },
   toggleMilestone: function(tid, mid, done){ return SB.from('milestones').update({done:done}).eq('id', mid).then(chk); },
@@ -1065,6 +1116,8 @@ var demo = {
   deleteComment: D(function(id){ S.ideas.forEach(function(i){ i.comments = i.comments.filter(function(c){ return c.id !== id; }); }); }),
   pledge: D(function(iid, amt){ var i = idea(iid), prev = S.pledges[iid] || 0; if (amt) { if (!prev) i.supporters++; i.funding += amt - prev; S.pledges[iid] = amt; } else { i.funding -= prev; i.supporters--; delete S.pledges[iid]; } }),
   createTeam: function(f){ var t = {id:uid('t'), name:f.name, kind:f.kind, project:f.project, status:'Forming', idea:f.idea || null, visibility:f.visibility, joinPolicy:f.joinPolicy, members:[{id:'me', role:'Lead', status:'active', lead:true}], tasks:[], milestones:[], contributions:[], leads:[], ownership:[]}; S.teams.push(t); if (f.idea) idea(f.idea).team = t.id; saveDemo(); return Promise.resolve(t); },
+  archiveTeam: D(function(id, on){ team(id).archived = !!on; }),
+  deleteTeam: D(function(id){ S.teams = S.teams.filter(function(t){ return t.id !== id; }); }),
   updateTeam: D(function(id, f){ var t = team(id); ['name', 'project', 'status', 'visibility', 'joinPolicy'].forEach(function(k){ t[k] = f[k]; }); }),
   joinTeam: D(function(tid, status){ team(tid).members.push({id:'me', role:'', status:status, lead:false}); }),
   invite: D(function(tid, mid, role){ team(tid).members.push({id:mid, role:role, status:'invited', lead:false}); }),
@@ -1072,8 +1125,9 @@ var demo = {
   approve: D(function(tid, mid){ team(tid).members.forEach(function(m){ if (m.id === mid) m.status = 'active'; }); }),
   setRole: D(function(tid, mid, role, lead){ team(tid).members.forEach(function(m){ if (m.id === mid) { m.role = role; m.lead = !!lead; } }); }),
   removeMember: D(function(tid, mid){ var t = team(tid); t.members = t.members.filter(function(m){ return m.id !== mid; }); }),
-  addTask: D(function(tid, t, o){ team(tid).tasks.push({id:uid('k'), t:t, s:'todo', o:o}); }),
-  moveTask: D(function(tid, kid, s){ team(tid).tasks.forEach(function(k){ if (k.id === kid) k.s = s; }); }),
+  addTask: D(function(tid, t, o){ team(tid).tasks.push({id:uid('k'), t:t, s:'todo', o:o, p:Date.now() / 1000}); }),
+  moveTask: D(function(tid, kid, s, pos){ team(tid).tasks.forEach(function(k){ if (k.id === kid) { k.s = s; if (pos != null) k.p = pos; } }); }),
+  updateTask: D(function(tid, kid, f){ team(tid).tasks.forEach(function(k){ if (k.id === kid) { k.t = f.t; k.o = f.o || ''; } }); }),
   deleteTask: D(function(tid, kid){ var t = team(tid); t.tasks = t.tasks.filter(function(k){ return k.id !== kid; }); }),
   addMilestone: D(function(tid, t, d){ team(tid).milestones.push({id:uid('s'), t:t, d:d, done:false}); }),
   toggleMilestone: D(function(tid, mid, done){ team(tid).milestones.forEach(function(m){ if (m.id === mid) m.done = done; }); }),
@@ -1100,7 +1154,7 @@ function friendly(e){
   if (/duplicate key|already exists|unique/i.test(m)) return 'That’s already done.';
   if (/violates check constraint/i.test(m)) return 'Something you entered is too long or not allowed. Please check and try again.';
   if (/Failed to fetch|NetworkError|network/i.test(m)) return 'Couldn’t reach the server. Check your connection and try again.';
-  return m.replace(/^rate_limit:\s*/, '');
+  return m.replace(/^(rate_limit|has_records|active_projects|wrong_status|has_payments|admin_required):\s*/, '');
 }
 /* Run an action: write, refresh from the server, re-render. */
 async function act(fn, okMsg, after){
@@ -1120,6 +1174,44 @@ async function act(fn, okMsg, after){
    Shell
    ===================================================================== */
 var NAV = [['home', 'Home', 'home'], ['network', 'Network', 'users'], ['opportunities', 'Opportunities', 'brief'], ['teams', 'Teams', 'grid'], ['labs', 'Labs', 'flask'], ['invest', 'Invest', 'trend']];
+// Mobile account menu: the avatar opens Profile, Admin, Tools, Chat, Settings and Sign out.
+function accountMenu(active, unread){
+  var adminCount = S.admin && S.admin.stats ? (S.admin.stats.inquiries_new + S.admin.stats.opps_pending + S.admin.stats.reports_open) : 0;
+  var items = [['profile', 'My profile', 'user', 0]]
+    .concat(S.me.isAdmin ? [['admin', 'Admin', 'shield', adminCount]] : [])
+    .concat([['tools', 'Tools', 'tool', 0], ['messages', 'Chat', 'chat', unread]])
+    .concat(showEarnings() ? [['earnings', 'Earnings', 'coin', 0]] : [])
+    .concat([['invite', 'Invite people', 'heart', 0], ['settings', 'Settings', 'gear', 0]]);
+  return '<div class="acct show-sm"><button class="acct-btn" type="button" id="acctBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="acctMenu" aria-label="Account menu' + (unread ? ', ' + unread + ' unread messages' : '') + '">' + av(meP()) + (unread || adminCount ? '<span class="dot"></span>' : '') + '</button>' +
+    '<div class="acct-menu" id="acctMenu" role="menu" aria-labelledby="acctBtn" hidden><div class="acct-who"><b>' + esc(S.me.name) + '</b><small>' + esc(S.me.title || 'Founding member') + '</small></div>' +
+    items.map(function(n){ return '<a role="menuitem" href="#/' + n[0] + '" class="' + (active === n[0] ? 'on' : '') + '"' + (active === n[0] ? ' aria-current="page"' : '') + '>' + icon(n[2]) + '<span>' + n[1] + '</span>' + (n[3] ? '<span class="ct">' + n[3] + '</span>' : '') + '</a>'; }).join('') +
+    '<button role="menuitem" type="button" class="acct-out" data-act="signout">' + icon('logout') + '<span>Sign out</span></button></div></div>';
+}
+(function(){
+  function menu(){ return document.getElementById('acctMenu'); }
+  function setOpen(open, focusBtn){
+    var m = menu(), b = document.getElementById('acctBtn'); if (!m || !b) return;
+    m.hidden = !open; b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) { var f = m.querySelector('[role=menuitem]'); if (f) f.focus(); } else if (focusBtn) b.focus();
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('#acctBtn');
+    if (b) { e.preventDefault(); setOpen(menu().hidden); return; }
+    var m = menu(); if (!m || m.hidden) return;
+    if (!e.target.closest('#acctMenu') || e.target.closest('[role=menuitem]')) setOpen(false);   // outside tap or a choice
+  });
+  document.addEventListener('keydown', function(e){
+    var m = menu(); if (!m || m.hidden) return;
+    var items = Array.prototype.slice.call(m.querySelectorAll('[role=menuitem]')), i = items.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); setOpen(false, true); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
+    else if (e.key === 'Tab') setOpen(false);
+  });
+  window.addEventListener('hashchange', function(){ setOpen(false); });
+})();
 function shell(active, inner){
   var att = attentionCount(), u = unreadCount();
   var nav = NAV.map(function(n){
@@ -1138,9 +1230,9 @@ function shell(active, inner){
     '<div class="main">' +
       '<header class="top"><a href="#/home" class="mlogo" aria-label="Home"><img src="' + MARK_DARK + '" alt=""></a>' +
         '<form class="search" data-form="search" role="search">' + icon('search') + '<input name="q" placeholder="Search people, opportunities and ideas" aria-label="Search" value="' + esc(active === 'search' ? decodeURIComponent((location.hash.split('/')[2] || '')) : '') + '"></form>' +
-        '<div class="top-actions"><a class="icon-btn" href="#/messages" aria-label="Messages' + (u ? ', ' + u + ' unread' : '') + '">' + icon('chat') + (u ? '<span class="dot"></span>' : '') + '</a>' +
-        '<a class="icon-btn hide-lg" href="#/tools" aria-label="Toolkit">' + icon('tool') + '</a>' +
-        '<a class="icon-btn" href="#/profile" aria-label="Your profile">' + av(meP(), 'sm') + '</a></div></header>' +
+        '<div class="top-actions"><a class="icon-btn hide-sm" href="#/messages" aria-label="Messages' + (u ? ', ' + u + ' unread' : '') + '">' + icon('chat') + (u ? '<span class="dot"></span>' : '') + '</a>' +
+        '<a class="icon-btn hide-sm" href="#/profile" aria-label="Your profile">' + av(meP(), 'sm') + '</a>' +
+        accountMenu(active, u) + '</div></header>' +
       banner +
       '<main class="content" id="content" tabindex="-1">' + inner + '</main>' +
       '<footer class="app-foot"><a href="' + SITE + '#/guidelines">Community guidelines</a><a href="' + SITE + '#/privacy">Privacy</a><a href="' + SITE + '#/terms">Terms</a><a href="' + SITE + '#/contact">Contact &amp; support</a></footer>' +
@@ -1433,16 +1525,18 @@ function teamCard(t){
     '<div class="foot"><div class="avs">' + activeMembers(t).slice(0, 6).map(function(m){ return av(P(m.id), 'sm'); }).join('') + (activeMembers(t).length ? '' : '<span class="small muted">No members yet</span>') + '</div><span>' + (st === 'active' && next ? 'Next: ' + esc(next.t) : activeMembers(t).length + ' member' + (activeMembers(t).length === 1 ? '' : 's')) + '</span></div></a>';
 }
 function pTeams(){
-  var tab = UI.teams, mine = S.teams.filter(function(t){ return myStatus(t) === 'active'; });
-  var discover = S.teams.filter(function(t){ return t.visibility === 'public' && myStatus(t) !== 'active'; });
-  var pending = S.teams.filter(function(t){ return myStatus(t) === 'invited' || myStatus(t) === 'requested'; });
-  var arr = tab === 'discover' ? discover : tab === 'pending' ? pending : mine, body;
+  var tab = UI.teams, mine = S.teams.filter(function(t){ return myStatus(t) === 'active' && !t.archived; });
+  var archived = S.teams.filter(function(t){ return myStatus(t) === 'active' && t.archived; });
+  var discover = S.teams.filter(function(t){ return t.visibility === 'public' && myStatus(t) !== 'active' && !t.archived; });
+  var pending = S.teams.filter(function(t){ return (myStatus(t) === 'invited' || myStatus(t) === 'requested') && !t.archived; });
+  if (tab === 'archived' && !archived.length) tab = 'mine';
+  var arr = tab === 'discover' ? discover : tab === 'pending' ? pending : tab === 'archived' ? archived : mine, body;
   if (arr.length) body = '<div class="g2">' + arr.map(teamCard).join('') + '</div>';
   else if (tab === 'mine') body = emptyBox('You’re not on a team yet', 'Join one of the initiative workstreams, ask to join a public team, or create a team for a client project or venture.', '<a class="btn btn-ink btn-sm" href="#" data-act="teams-tab" data-v="discover">Discover teams</a><button class="btn btn-line btn-sm" data-act="new-team">Create a team</button>');
   else if (tab === 'discover') body = emptyBox('No other public teams yet', 'Teams appear here when members make them discoverable.', '<button class="btn btn-ink btn-sm" data-act="new-team">Create a team</button>');
   else body = emptyBox('Nothing pending', 'Invitations and requests to join will show here.');
   return '<div class="ph"><div><span class="eyebrow">Teams</span><h1>Better work, together.</h1><p>Every team gets a shared workspace: a task board, milestones, a leads pipeline, a contribution record and — for ventures — an ownership record.</p></div><button class="btn btn-ink" data-act="new-team">' + icon('plus') + 'Create a team</button></div>' +
-    '<div class="tabs" role="tablist">' + [['mine', 'My teams (' + mine.length + ')'], ['discover', 'Discover (' + discover.length + ')'], ['pending', 'Invitations & requests (' + pending.length + ')']].map(function(x){ return '<a href="#" role="tab" aria-selected="' + (tab === x[0]) + '" data-act="teams-tab" data-v="' + x[0] + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</a>'; }).join('') + '</div>' + body;
+    '<div class="tabs" role="tablist">' + [['mine', 'My teams (' + mine.length + ')'], ['discover', 'Discover (' + discover.length + ')'], ['pending', 'Invitations & requests (' + pending.length + ')']].concat(archived.length ? [['archived', 'Archived (' + archived.length + ')']] : []).map(function(x){ return '<a href="#" role="tab" aria-selected="' + (tab === x[0]) + '" data-act="teams-tab" data-v="' + x[0] + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</a>'; }).join('') + '</div>' + body;
 }
 function pTeamPublic(t){
   var st = myStatus(t), me = t.members.find(function(m){ return m.id === 'me'; });
@@ -1466,9 +1560,7 @@ function pTeam(id, tab){
   if (tab === 'projects') {
     body = teamProjectsTab(t);
   } else if (tab === 'board') {
-    var cols = [['todo', 'To do'], ['doing', 'In progress'], ['done', 'Done']];
-    body = (t.tasks.length ? '' : '<p class="note" style="margin-bottom:14px">No tasks yet. Break the work into small steps and give each one an owner.</p>') + '<div class="kanban">' + cols.map(function(c, ci){ var ks = t.tasks.filter(function(k){ return k.s === c[0]; });
-      return '<div class="col"><h4><span>' + c[1] + '</span><span>' + ks.length + '</span></h4>' + ks.map(function(k){ return '<div class="task"><p>' + esc(k.t) + '</p><div class="tf">' + (k.o ? av(P(k.o), 'sm') : '<span class="small muted">Unassigned</span>') + '<div class="mv"><button data-act="task-move" data-team="' + t.id + '" data-id="' + k.id + '" data-dir="-1" aria-label="Move ' + esc(k.t) + ' left"' + (ci === 0 ? ' disabled' : '') + '>' + icon('left') + '</button><button data-act="task-move" data-team="' + t.id + '" data-id="' + k.id + '" data-dir="1" aria-label="Move ' + esc(k.t) + ' right"' + (ci === 2 ? ' disabled' : '') + '>' + icon('right') + '</button><button data-act="task-del" data-team="' + t.id + '" data-id="' + k.id + '" aria-label="Delete ' + esc(k.t) + '">' + icon('x') + '</button></div></div></div>'; }).join('') + '</div>'; }).join('') + '</div>' +
+    body = (t.tasks.length ? '' : '<p class="note" style="margin-bottom:14px">No tasks yet. Break the work into small steps and give each one an owner.</p>') + boardHtml(t) +
       '<form class="add-task" data-form="task" data-team="' + t.id + '"><input class="in" name="t" placeholder="Add a task…" aria-label="New task" required maxlength="200"><select class="sel" name="o" aria-label="Owner">' + options([['', 'Unassigned']].concat(mems.map(function(m){ return [m.id, nameOf(m.id)]; })), 'me') + '</select><button class="btn btn-ink" type="submit">' + icon('plus') + 'Add</button></form>';
   } else if (tab === 'milestones') {
     body = '<section class="card">' + (t.milestones.length ? t.milestones.map(function(m){ return '<div class="ms ' + (m.done ? 'done' : '') + '"><button class="ck ' + (m.done ? 'on' : '') + '" data-act="ms-toggle" data-team="' + t.id + '" data-id="' + m.id + '" aria-pressed="' + m.done + '" aria-label="' + esc(m.t) + ': ' + (m.done ? 'done' : 'not done') + '">' + (m.done ? icon('check') : '') + '</button><span class="t">' + esc(m.t) + '</span><span class="small muted">' + esc(m.d) + '</span></div>'; }).join('') : '<p class="small muted">No milestones yet. Add the few checkpoints that matter most.</p>') +
@@ -1501,8 +1593,9 @@ function pTeam(id, tab){
       '<div class="team-actions">' + (lead ? '<button class="btn btn-line btn-sm" data-act="team-settings" data-id="' + t.id + '">Team settings</button>' : '') + (t.kind !== 'Workstream' || true ? '<button class="btn btn-ghost btn-sm" data-act="leave-team" data-id="' + t.id + '" data-msg="You left the team" data-confirm="Leave ' + esc(t.name) + '?">Leave team</button>' : '') + '</div>';
   }
   return '<a class="back" href="#/teams">' + icon('left') + 'Teams</a>' +
+    (t.archived ? '<div class="note" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="grow"><b>This team is archived.</b> It’s hidden from your teams and from discovery. Everything is kept and can be restored.</span>' + (lead ? '<button class="btn btn-line btn-sm" data-act="team-unarchive" data-id="' + t.id + '">Restore team</button>' : '') + '</div>' : '') +
     '<div class="hero-card"><div class="grow"><div class="meta-line"><span class="pill ' + (isVenture ? 'sd' : t.kind === 'Workstream' ? 'ok' : '') + '">' + esc(t.kind) + '</span><span class="small muted">' + esc(t.status) + ' · ' + (t.visibility === 'public' ? 'Public' : 'Private') + '</span>' + sampleTag() + '</div><h1 style="margin-top:10px">' + esc(t.name) + '</h1><p class="muted" style="margin-top:4px">' + esc(t.project) + '</p></div>' +
-      '<div class="actions"><div class="avs">' + mems.slice(0, 6).map(function(m){ return av(P(m.id)); }).join('') + '</div>' + (commerceOn() && lead && t.kind !== 'Workstream' ? '<button class="btn btn-ink btn-sm" data-act="project-new" data-team="' + t.id + '">' + icon('coin') + 'Set up a paid project</button>' : '') + (t.idea ? '<a class="btn btn-line btn-sm" href="#/labs/' + t.idea + '">' + (t.kind === 'Workstream' ? 'Initiative page' : 'Labs page') + '</a>' : '') + '</div></div>' +
+      '<div class="actions"><div class="avs">' + mems.slice(0, 6).map(function(m){ return av(P(m.id)); }).join('') + '</div>' + (lead && !t.archived && t.kind !== 'Workstream' ? '<button class="btn btn-line btn-sm" data-act="team-settings" data-id="' + t.id + '" aria-label="Team settings">' + icon('gear') + 'Settings</button>' : '') + (commerceOn() && lead && !t.archived && t.kind !== 'Workstream' ? '<button class="btn btn-ink btn-sm" data-act="project-new" data-team="' + t.id + '">' + icon('coin') + 'Set up a paid project</button>' : '') + (t.idea ? '<a class="btn btn-line btn-sm" href="#/labs/' + t.idea + '">' + (t.kind === 'Workstream' ? 'Initiative page' : 'Labs page') + '</a>' : '') + '</div></div>' +
     '<div class="tabs" role="tablist">' + tabs.map(function(x){ return '<a href="#/teams/' + t.id + '/' + x[0] + '" role="tab" aria-selected="' + (tab === x[0]) + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</a>'; }).join('') + '</div>' + body;
 }
 
@@ -1879,7 +1972,7 @@ function pSearch(qy){
   var people = listed().filter(function(m){ return norm([m.name, m.title, (m.skills || []).join(' ')].join(' ')).indexOf(qy) > -1; });
   var opps = rankedOpps().filter(function(o){ return norm([o.title, o.by, o.skills.join(' ')].join(' ')).indexOf(qy) > -1; });
   var ideas = S.ideas.filter(function(i){ return norm([i.title, i.tagline, i.cat].join(' ')).indexOf(qy) > -1; });
-  var teams = S.teams.filter(function(t){ return (t.visibility === 'public' || myStatus(t) === 'active') && norm([t.name, t.project].join(' ')).indexOf(qy) > -1; });
+  var teams = S.teams.filter(function(t){ return ((t.visibility === 'public' && !t.archived) || myStatus(t) === 'active') && norm([t.name, t.project].join(' ')).indexOf(qy) > -1; });
   var sec = function(title, items, fn){ return items.length ? '<section class="card"><div class="card-h"><h3>' + title + ' (' + items.length + ')</h3></div>' + items.map(fn).join('') + '</section>' : ''; };
   var out = sec('People', people, function(m){ return '<a class="row row-link" href="#/network/' + m.id + '">' + av(m) + '<div class="grow"><b>' + esc(m.name) + '</b><div class="small muted">' + esc(m.title) + '</div></div></a>'; }) +
     sec('Opportunities', opps, function(o){ return '<a class="row row-link" href="#/opportunities/' + o.id + '">' + typeDot(o.type) + '<div class="grow"><b>' + esc(o.title) + '</b><div class="small muted">' + esc(o.by) + ' · ' + esc((COMP[o.compType] || {}).label || '') + '</div></div></a>'; }) +
@@ -2014,7 +2107,7 @@ var ACT = {
   'approve': function(d){ act(function(){ return api.approve(d.team, d.id); }, 'Approved'); },
   'remove-member': function(d){ act(function(){ return api.removeMember(d.team, d.id); }, 'Removed'); },
   'member-edit': function(d){ var t = team(d.team), m = t.members.find(function(x){ return x.id === d.id; }); openModal('<h2>' + esc(P(d.id).name) + '</h2><form class="form" data-form="member-edit" data-team="' + t.id + '" data-id="' + d.id + '">' + field('me-r', 'Role', '<input class="in" id="me-r" name="role" maxlength="60" value="' + esc(m.role) + '">') + '<label class="check"><input type="checkbox" name="lead"' + (m.lead ? ' checked' : '') + '> <span>Team lead (can invite, approve and manage the team)</span></label><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Save</button></div></form>'); },
-  'team-settings': function(d){ var t = team(d.id); openModal('<h2>Team settings</h2><form class="form" data-form="team-settings" data-id="' + t.id + '">' + field('ts-n', 'Name', '<input class="in" id="ts-n" name="name" maxlength="80" required value="' + esc(t.name) + '">') + field('ts-p', 'What are you working on?', '<input class="in" id="ts-p" name="project" maxlength="300" value="' + esc(t.project) + '">') + field('ts-s', 'Status', '<input class="in" id="ts-s" name="status" maxlength="40" value="' + esc(t.status) + '">') + '<div class="two">' + field('ts-v', 'Visibility', '<select class="sel" id="ts-v" name="visibility">' + options([['private', 'Private'], ['public', 'Public (discoverable)']], t.visibility) + '</select>') + field('ts-j', 'Joining', '<select class="sel" id="ts-j" name="joinPolicy">' + options([['invite', 'Invite only'], ['request', 'Request to join'], ['open', 'Open to anyone']], t.joinPolicy) + '</select>') + '</div><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Save</button></div></form>'); },
+  'team-settings': function(d){ var t = team(d.id); openModal('<h2>Team settings</h2><form class="form" data-form="team-settings" data-id="' + t.id + '">' + field('ts-n', 'Name', '<input class="in" id="ts-n" name="name" maxlength="80" required value="' + esc(t.name) + '">') + field('ts-p', 'What are you working on?', '<input class="in" id="ts-p" name="project" maxlength="300" value="' + esc(t.project) + '">') + field('ts-s', 'Status', '<input class="in" id="ts-s" name="status" maxlength="40" value="' + esc(t.status) + '">') + '<div class="two">' + field('ts-v', 'Visibility', '<select class="sel" id="ts-v" name="visibility">' + options([['private', 'Private'], ['public', 'Public (discoverable)']], t.visibility) + '</select>') + field('ts-j', 'Joining', '<select class="sel" id="ts-j" name="joinPolicy">' + options([['invite', 'Invite only'], ['request', 'Request to join'], ['open', 'Open to anyone']], t.joinPolicy) + '</select>') + '</div><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Save</button></div></form>' + (t.kind !== 'Workstream' ? teamDangerZone(t) : '')); },
   'teams-tab': function(d){ UI.teams = d.v; if (!/^#\/teams$/.test(location.hash)) go('#/teams'); else refresh(); },
   'opp-type': function(d){ UI.opp.type = d.v; refresh(); },
   'opp-view': function(d){ UI.opp.view = d.v; if (location.hash !== '#/opportunities') go('#/opportunities'); else refresh(); },
@@ -2045,7 +2138,7 @@ var ACT = {
       '<div class="two">' + field('nt-v', 'Visibility', '<select class="sel" id="nt-v" name="visibility">' + options([['private', 'Private'], ['public', 'Public (discoverable)']], 'private') + '</select>') + field('nt-j', 'Joining', '<select class="sel" id="nt-j" name="joinPolicy">' + options([['invite', 'Invite only'], ['request', 'Request to join'], ['open', 'Open to anyone']], 'invite') + '</select>') + '</div><p class="err" role="alert"></p>' +
       '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Create team</button></div></form>');
   },
-  'task-move': function(d){ var t = team(d.team), k = t.tasks.find(function(x){ return x.id === d.id; }), order = ['todo', 'doing', 'done']; var ns = order[Math.max(0, Math.min(2, order.indexOf(k.s) + (+d.dir)))]; k.s = ns; refresh(); act(function(){ return api.moveTask(d.team, d.id, ns); }); },
+  'task-move': function(d){ var t = team(d.team), k = t.tasks.find(function(x){ return x.id === d.id; }), order = BOARD_COLS.map(function(c){ return c[0]; }); var ns = order[Math.max(0, Math.min(2, order.indexOf(k.s) + (+d.dir)))]; if (ns !== k.s) placeTask(t, k, ns, colTasks(t, ns).length); },
   'task-del': function(d){ act(function(){ return api.deleteTask(d.team, d.id); }); },
   'ms-toggle': function(d){ var t = team(d.team), m = t.milestones.find(function(x){ return x.id === d.id; }); act(function(){ return api.toggleMilestone(d.team, d.id, !m.done); }, !m.done ? 'Milestone reached' : null); },
   'lead-edit': function(d){
@@ -2353,7 +2446,7 @@ async function start(){
 }
 var syncTimer = null, channel = null;
 function quietRefresh(){
-  if (!SESSION || loading || modalOpen() || document.visibilityState !== 'visible') return;
+  if (!SESSION || loading || modalOpen() || DRAG || document.visibilityState !== 'visible') return;
   var a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.value) return;
   loadLive().then(refresh).catch(function(){});
 }
@@ -2364,6 +2457,10 @@ function startSync(){
     channel = SB.channel('inbox-' + MYID).on('postgres_changes', {event:'INSERT', schema:'public', table:'messages', filter:'recipient=eq.' + MYID}, function(p){
       var from = P(p.new.sender); if (!/^#\/messages\//.test(location.hash) || location.hash.indexOf(p.new.sender) < 0) toast('New message from ' + from.name);
       quietRefresh(); if (location.hash.indexOf('#/messages/' + p.new.sender) === 0) loadLive().then(function(){ markRead(p.new.sender); refresh(); });
+    }).on('postgres_changes', {event:'*', schema:'public', table:'tasks'}, function(){
+      // A teammate changed the board: refresh shortly (skipped while you're dragging or editing).
+      if (!/^#\/teams\/[^\/]+(\/board)?$/.test(location.hash)) return;
+      clearTimeout(startSync.t); startSync.t = setTimeout(quietRefresh, 1200);
     }).subscribe();
   } catch (e) {}
   document.addEventListener('visibilitychange', onVisible);
@@ -2395,6 +2492,9 @@ function teamProjects(t){ return (S.projects || []).filter(function(p){ return p
 function projTeam(pr){ return team(pr.teamId) || {name: 'Team', members: []}; }
 function isProjLead(pr){ var t = team(pr.teamId); return !!(t && isLead(t)) || S.me.isAdmin; }
 function editable(pr){ return pr.status === 'draft' || pr.status === 'changes_requested'; }
+// Invoices, an approved agreement or payouts must be kept: such projects can be cancelled/archived, never deleted.
+function projectHasRecords(pr){ return pr.invoices.length > 0 || pr.payouts.length > 0 || (pr.proposals || []).some(function(x){ return x.status === 'approved'; }); }
+var OPEN_PROJECT = ['budget_agreed', 'proposal_sent', 'changes_requested', 'approved', 'active'];
 function myAllocs(pr){ return pr.allocs.filter(function(a){ return a.member === 'me'; }); }
 function commerceOn(){ return LIVE && !!S.settings; }
 function testMode(){ return !S.settings || S.settings.payments_mode !== 'live'; }
@@ -2460,7 +2560,7 @@ async function loadCommerce(s){
     return {id: p.id, teamId: p.team_id, opportunityId: p.opportunity_id, initiative: p.for_initiative, title: p.title, summary: p.summary,
       clientName: p.client_name, clientCompany: p.client_company, clientEmail: p.client_email, type: p.project_type, feePct: +p.fee_pct,
       currency: p.currency, total: +p.total_cents, plan: p.payment_plan, depositPct: +p.deposit_pct, scope: p.scope, timeline: p.timeline,
-      terms: p.terms, validUntil: p.valid_until, status: p.status, createdBy: M(p.created_by), createdAt: p.created_at, lockedAt: p.budget_locked_at,
+      terms: p.terms, validUntil: p.valid_until, status: p.status, archived: !!p.archived_at, createdBy: M(p.created_by), createdAt: p.created_at, lockedAt: p.budget_locked_at,
       approvedAt: p.approved_at, completedAt: p.completed_at, milestones: ms, allocs: allocs,
       proposals: by(r[5], p.id), invoices: by(r[6], p.id).map(function(i){ return {id: i.id, number: i.number, kind: i.kind, description: i.description, amount: +i.amount_cents, status: i.status, issuedAt: i.issued_at, due: i.due_date, paidAt: i.paid_at, refunded: +i.amount_refunded_cents, method: i.method, note: i.note, intent: i.stripe_payment_intent}; }),
       payouts: by(r[7], p.id).map(function(o){ return {id: o.id, member: o.member ? M(o.member) : null, role: o.role, amount: +o.amount_cents, status: o.status, note: o.note, paidAt: o.paid_at, transfer: o.stripe_transfer_id}; }),
@@ -2519,9 +2619,30 @@ function showEarnings(){ return commerceOn() && (S.myPayouts.length || S.payoutA
 
 /* ---------- Team integration ---------- */
 function teamProjectsTab(t){
-  var ps = teamProjects(t), lead = isLead(t);
+  var all = teamProjects(t), lead = isLead(t), arch = all.filter(function(p){ return p.archived; });
+  var ps = UI.showArchivedProjects ? all : all.filter(function(p){ return !p.archived; });
   return '<div class="ph" style="margin-bottom:16px"><div><p style="margin:0">Paid work this team is quoting or delivering. Budgets are agreed by everyone involved before a proposal goes to the client.</p></div>' + (lead ? '<button class="btn btn-ink btn-sm" data-act="project-new" data-team="' + t.id + '">' + icon('plus') + 'New paid project</button>' : '') + '</div>' +
-    (ps.length ? '<div class="stack">' + ps.map(projectCard).join('') + '</div>' : emptyBox('No paid projects yet', 'When a client wants to hire this team, set up a paid project to agree the budget, send a proposal and get paid.'));
+    (ps.length ? '<div class="stack">' + ps.map(projectCard).join('') + '</div>' : emptyBox(arch.length ? 'No current paid projects' : 'No paid projects yet', 'When a client wants to hire this team, set up a paid project to agree the budget, send a proposal and get paid.')) +
+    (arch.length ? '<p style="margin-top:14px"><button class="link-btn" data-act="toggle-archived-projects">' + (UI.showArchivedProjects ? 'Hide archived projects' : 'Show archived projects (' + arch.length + ')') + '</button></p>' : '');
+}
+// "Archive or delete" section of the team settings dialog.
+function teamDangerZone(t){
+  var ps = teamProjects(t), open = ps.filter(function(p){ return OPEN_PROJECT.indexOf(p.status) > -1; }), kept = ps.filter(projectHasRecords);
+  return '<div class="danger-zone"><h3>Archive or delete</h3>' +
+    '<div class="dz-row"><div class="grow"><b>Archive team</b><p class="small muted">Hides the team from your teams and from discovery. Members keep access to its history, and you can restore it any time.</p>' +
+      (open.length ? '<p class="small err-text">Finish or cancel ' + open.length + ' paid project' + (open.length === 1 ? '' : 's') + ' first: ' + open.map(function(p){ return esc(p.title); }).join(', ') + '.</p>' : '') + '</div>' +
+      '<button class="btn btn-line btn-sm" data-act="team-archive" data-id="' + t.id + '"' + (open.length ? ' disabled' : '') + '>Archive</button></div>' +
+    '<div class="dz-row"><div class="grow"><b>Delete team</b><p class="small muted">Permanently deletes the team and its workspace — tasks, milestones, leads and contributions. This can’t be undone.</p>' +
+      (kept.length ? '<p class="small err-text">Can’t be deleted: ' + kept.length + ' paid project' + (kept.length === 1 ? ' has' : 's have') + ' invoices, an agreement or payout records that must be kept. Archive the team instead.</p>' : '') + '</div>' +
+      '<button class="btn btn-danger btn-sm" data-act="team-delete" data-id="' + t.id + '"' + (kept.length ? ' disabled' : '') + '>Delete…</button></div></div>';
+}
+function projectManageButtons(pr){
+  var lead = isProjLead(pr), b = [];
+  if (!lead) return '';
+  if (['completed', 'cancelled'].indexOf(pr.status) < 0) b.push('<button class="btn btn-ghost btn-sm" data-act="project-cancel" data-id="' + pr.id + '">Cancel project</button>');
+  if (['draft', 'completed', 'cancelled'].indexOf(pr.status) > -1) b.push(pr.archived ? '<button class="btn btn-line btn-sm" data-act="project-unarchive" data-id="' + pr.id + '">Restore</button>' : '<button class="btn btn-ghost btn-sm" data-act="project-archive" data-id="' + pr.id + '">Archive</button>');
+  if (['draft', 'cancelled'].indexOf(pr.status) > -1 && !projectHasRecords(pr)) b.push('<button class="btn btn-ghost btn-sm danger-text" data-act="project-delete" data-id="' + pr.id + '">Delete</button>');
+  return b.length ? '<div class="actions">' + b.join('') + '</div>' : '';
 }
 function projectCard(pr){
   var b = budgetOf(pr), mine = myAllocs(pr).reduce(function(t, a){ return t + a.value; }, 0);
@@ -2580,7 +2701,8 @@ function pProject(id, tab){
   return '<a class="back" href="#/teams/' + pr.teamId + '/projects">' + icon('left') + esc(t.name) + '</a>' +
     (testMode() ? '<p class="note" style="margin-bottom:14px"><b>Test mode.</b> Payments use Stripe’s sandbox — no real money moves.</p>' : '') +
     '<div class="hero-card" style="display:block"><div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start"><div><div class="meta-line"><span class="pill dk">Paid project</span>' + pill(PSTATUS, pr.status) + (pr.type === 'managed' ? '<span class="pill">Managed by Cleverherd</span>' : '') + '</div><h1 style="margin-top:12px;font-size:clamp(24px,3vw,34px)">' + esc(pr.title) + '</h1><p class="muted" style="margin-top:4px">For ' + esc([pr.clientName, pr.clientCompany].filter(Boolean).join(', ') || 'client not set') + ' · ' + cents$(pr.total) + '</p></div>' +
-      (lead && ['completed', 'cancelled'].indexOf(pr.status) < 0 ? '<div class="actions"><button class="btn btn-ghost btn-sm" data-act="project-cancel" data-id="' + pr.id + '">Cancel project</button></div>' : '') + '</div><div style="margin-top:20px">' + stepper(pr) + '</div></div>' +
+      projectManageButtons(pr) + '</div><div style="margin-top:20px">' + stepper(pr) + '</div></div>' +
+    (pr.archived ? '<p class="note" style="margin-bottom:14px"><b>Archived.</b> This project is hidden from the team’s project list. All its records are kept.</p>' : '') +
     (ns[0] ? '<section class="card next-step"><div class="grow"><span class="eyebrow">Next step</span><p style="margin-top:4px">' + ns[0] + '</p></div>' + ns[1] + '</section>' : '') +
     '<div class="tabs" role="tablist">' + tabs.map(function(x){ return '<a href="#/projects/' + pr.id + '/' + x[0] + '" role="tab" aria-selected="' + (tab === x[0]) + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</a>'; }).join('') + '</div>' + body;
 }
@@ -2758,7 +2880,25 @@ var PACT = {
   'project-send': function(d){ var pr = proj(d.id); confirmBox('Send the proposal?', 'You’ll get a private link for ' + esc(pr.clientName || 'the client') + ' to review and approve ' + cents$(pr.total) + '.', 'Send', function(){ act(function(){ return papi.rpc('project_send_proposal', {p: d.id}); }, 'Proposal ready to share', function(token){ shareLinkModal(proj(d.id), token); }); }); },
   'project-link': async function(d){ try { var token = await papi.rpc('project_client_link', {p: d.id}); shareLinkModal(proj(d.id), token); } catch (e) { toast(friendly(e), 'error'); } },
   'project-relink': function(d){ confirmBox('Reset the client link?', 'The old link stops working immediately. Send the new one to your client.', 'Reset', function(){ act(function(){ return papi.rpc('project_regenerate_link', {p: d.id}); }, 'New link created', function(token){ shareLinkModal(proj(d.id), token); }); }, true); },
-  'project-cancel': function(d){ openModal('<h2>Cancel this project?</h2><p class="sub">Open invoices are voided. This can’t be undone.</p><form class="form" data-form="project-cancel" data-id="' + d.id + '">' + field('pc-r', 'Reason <small>(optional)</small>', '<input class="in" id="pc-r" name="reason" maxlength="500">') + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Keep project</button><button class="btn btn-danger" type="submit">Cancel project</button></div></form>'); },
+  'project-cancel': function(d){
+    var pr = proj(d.id), admin = S.me.isAdmin, mail = (CONFIG.contactEmail || 'hello@cleverherd.com');
+    var paid = pr.invoices.filter(function(i){ return ['paid', 'partially_refunded', 'disputed', 'processing'].indexOf(i.status) > -1; });
+    var open = pr.invoices.filter(function(i){ return i.status === 'open' || i.status === 'failed'; });
+    var sum = function(xs){ return cents$(xs.reduce(function(t, i){ return t + i.amount; }, 0)); };
+    var block = '';
+    if (paid.length) block = '<p class="note"><b>Payments have been received (' + sum(paid) + ').</b> A project with client payments can’t be cancelled until they’re refunded' + (admin ? ' — use Refund on the Payments tab first.' : '. Contact Cleverherd at <a class="link" href="mailto:' + esc(mail) + '?subject=' + encodeURIComponent('Cancel project: ' + pr.title) + '">' + esc(mail) + '</a> to arrange it.') + '</p>';
+    else if (['approved', 'active'].indexOf(pr.status) > -1 && !admin) block = '<p class="note"><b>The client has approved this project</b>, so cancelling it is handled by Cleverherd to make sure everyone is treated fairly. Email <a class="link" href="mailto:' + esc(mail) + '?subject=' + encodeURIComponent('Cancel project: ' + pr.title) + '">' + esc(mail) + '</a>.</p>';
+    var what = '<ul class="small" style="margin:6px 0 14px;padding-left:18px">' + (open.length ? '<li>' + open.length + ' unpaid invoice' + (open.length === 1 ? '' : 's') + ' (' + sum(open) + ') will be voided.</li>' : '') +
+      (pr.status !== 'draft' && pr.status !== 'budget_agreed' ? '<li>The client’s project link stops working.</li>' : '') + '<li>The project and its history are kept; you can archive or delete it afterwards.</li></ul>';
+    openModal('<h2>Cancel this project?</h2>' + (block || '<p class="sub">This can’t be undone.</p>' + what) + '<form class="form" data-form="project-cancel" data-id="' + d.id + '">' + (block ? '' : field('pc-r', 'Reason <small>(optional)</small>', '<input class="in" id="pc-r" name="reason" maxlength="500">')) + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Keep project</button>' + (block ? '' : '<button class="btn btn-danger" type="submit">Cancel project</button>') + '</div></form>');
+  },
+  'project-archive': function(d){ act(function(){ return papi.rpc('project_archive', {p: d.id, archive: true}); }, 'Project archived'); },
+  'project-unarchive': function(d){ act(function(){ return papi.rpc('project_archive', {p: d.id, archive: false}); }, 'Project restored'); },
+  'project-delete': function(d){ var pr = proj(d.id); openModal('<h2>Delete “' + esc(pr.title) + '”?</h2><p class="sub">The project, its budget and milestones are permanently deleted. This can’t be undone.</p><form class="form" data-form="project-delete" data-id="' + d.id + '"><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Keep it</button><button class="btn btn-danger" type="submit">Delete project</button></div></form>'); },
+  'toggle-archived-projects': function(){ UI.showArchivedProjects = !UI.showArchivedProjects; render(); },
+  'team-archive': function(d){ var t = team(d.id); openModal('<h2>Archive ' + esc(t.name) + '?</h2><p class="sub">The team is hidden from your teams and from discovery. Nothing is deleted, and you can restore it from Teams → Archived.</p><form class="form" data-form="team-archive" data-id="' + t.id + '"><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Archive team</button></div></form>'); },
+  'team-unarchive': function(d){ act(function(){ return api.archiveTeam(d.id, false); }, 'Team restored'); },
+  'team-delete': function(d){ var t = team(d.id); openModal('<h2>Delete ' + esc(t.name) + '?</h2><p class="sub">This permanently deletes the team and its workspace — tasks, milestones, leads, contributions and draft paid projects. It can’t be undone.</p><form class="form" data-form="team-delete" data-id="' + t.id + '" novalidate>' + field('td-n', 'Type the team name to confirm', '<input class="in" id="td-n" name="name" autocomplete="off" placeholder="' + esc(t.name) + '">') + '<p class="err" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Keep team</button><button class="btn btn-danger" type="submit">Delete team</button></div></form>'); },
   'inv-offline': function(d){ openModal('<h2>Record a payment</h2><p class="sub">For payments received outside Stripe (bank transfer, check). This marks the invoice paid.</p><form class="form" data-form="inv-offline" data-id="' + d.id + '">' + field('io-n', 'Reference', '<input class="in" id="io-n" name="note" maxlength="300" placeholder="e.g. Wire 2026-11-03" required>') + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Mark paid</button></div></form>'); },
   'inv-void': function(d){ confirmBox('Void this invoice?', 'The client will no longer be able to pay it.', 'Void', function(){ act(function(){ return papi.rpc('admin_void_invoice', {inv: d.id}); }, 'Invoice voided'); }, true); },
   'inv-refund': function(d){ openModal('<h2>Refund through Stripe</h2><p class="sub">Unreleased payouts for this project go on hold.</p><form class="form" data-form="inv-refund" data-id="' + d.id + '">' + field('ir-a', 'Amount (USD)', '<input class="in" id="ir-a" name="amount" inputmode="decimal" value="' + dollars(+d.amount) + '">') + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-danger" type="submit">Refund</button></div></form>'); },
@@ -2868,7 +3008,10 @@ var PFORMS = {
   },
   'project-msg': function(d, f){ var t = trim(d.t); if (!t) return; act(function(){ return papi.message(f.dataset.id, t); }); },
   'project-cancel': function(d, f){ closeModal(); act(function(){ return papi.rpc('project_cancel', {p: f.dataset.id, reason: trim(d.reason)}); }, 'Project cancelled'); },
-  'inv-offline': function(d, f){ if (!trim(d.note)) return; closeModal(); act(function(){ return papi.rpc('admin_record_offline_payment', {inv: f.dataset.id, note: trim(d.note)}); }, 'Payment recorded'); },
+  'project-delete': function(d, f){ var tid = (proj(f.dataset.id) || {}).teamId; closeModal(); act(function(){ return papi.rpc('project_delete', {p: f.dataset.id}); }, 'Project deleted', function(){ go('#/teams/' + tid + '/projects'); }); },
+  'team-archive': function(d, f){ closeModal(); act(function(){ return api.archiveTeam(f.dataset.id, true); }, 'Team archived', function(){ go('#/teams'); }); },
+  'team-delete': function(d, f){ var t = team(f.dataset.id); if (trim(d.name) !== t.name) return setErr(f, 'Type the team name exactly as shown to confirm.', '[name=name]'); closeModal(); act(function(){ return api.deleteTeam(t.id); }, 'Team deleted', function(){ go('#/teams'); }); },
+  'inv-offline': function(d, f){ if (!trim(d.note)) return; closeModal(); var inv = f.dataset.id; act(async function(){ await papi.rpc('admin_record_offline_payment', {inv: inv, note: trim(d.note)}); payFn('ga_offline', {invoice_id: inv}).catch(function(){}); }, 'Payment recorded'); },
   'inv-refund': function(d, f){ var c = toCents(d.amount); if (c <= 0) return; closeModal(); act(function(){ return payFn('refund', {invoice_id: f.dataset.id, amount_cents: c}); }, 'Refund sent to Stripe — status updates in a moment'); },
   'admin-fees': function(d){ act(function(){ return papi.settings({marketplace_fee_pct: parseFloat(d.marketplace) || 0, managed_fee_pct: parseFloat(d.managed) || 0, processing_pct: parseFloat(d.ppct) || 0, processing_fixed_cents: parseInt(d.pfixed, 10) || 0, default_deposit_pct: parseInt(d.deposit, 10) || 0, payments_enabled: !!d.enabled}); }, 'Settings saved'); }
 };
@@ -2892,6 +3035,193 @@ document.addEventListener('submit', function (e) {
   var t = e.target && e.target.querySelector && e.target.querySelector('.compose textarea, textarea');
   if (e.target.classList && e.target.classList.contains('compose') && t) setTimeout(function () { t.style.height = '44px'; }, 0);
 }, true);
+
+/* =====================================================================
+   Team task board: ordering, drag and drop, card editing
+   - Desktop: click and drag a card (starts after a few pixels of movement).
+   - Touch: press and hold ~0.35s, then drag. A quick swipe still scrolls.
+   - Keyboard / accessible alternative: focus a card, Enter opens it;
+     Alt+Up/Down reorders, Alt+Left/Right moves between columns. The card
+     dialog also has a Column picker, and the arrow buttons stay on each card.
+   Order is saved per card (tasks.position) so it persists for everyone.
+   ===================================================================== */
+var BOARD_COLS = [['todo', 'To do'], ['doing', 'In progress'], ['done', 'Done']];
+var DRAG = null, DRAG_CLICK_BLOCK = 0;
+
+function taskPos(t, k){ return k.p != null ? k.p : t.tasks.indexOf(k); }
+function colTasks(t, s){ return t.tasks.filter(function(k){ return k.s === s; }).sort(function(a, b){ return taskPos(t, a) - taskPos(t, b); }); }
+
+function boardHtml(t){
+  return '<p id="board-help" class="vh">Drag cards to reorder or move them. On touch screens, press and hold a card first. With a keyboard, press Enter to open a card, or Alt and the arrow keys to move it.</p>' +
+    '<div class="kanban" data-board="' + t.id + '">' + BOARD_COLS.map(function(c, ci){
+      var ks = colTasks(t, c[0]);
+      return '<div class="col" data-col="' + c[0] + '"><h4><span>' + c[1] + '</span><span>' + ks.length + '</span></h4><div class="col-cards">' + ks.map(function(k){
+        return '<article class="task" tabindex="0" data-task="' + k.id + '" data-team="' + t.id + '" aria-roledescription="card" aria-describedby="board-help" aria-label="' + esc(k.t) + ', ' + c[1] + (k.o ? ', ' + esc(nameOf(k.o)) : '') + '"><p>' + esc(k.t) + '</p><div class="tf">' + (k.o ? av(P(k.o), 'sm') : '<span class="small muted">Unassigned</span>') +
+          '<div class="mv"><button data-act="task-move" data-team="' + t.id + '" data-id="' + k.id + '" data-dir="-1" aria-label="Move ' + esc(k.t) + ' left"' + (ci === 0 ? ' disabled' : '') + '>' + icon('left') + '</button><button data-act="task-move" data-team="' + t.id + '" data-id="' + k.id + '" data-dir="1" aria-label="Move ' + esc(k.t) + ' right"' + (ci === 2 ? ' disabled' : '') + '>' + icon('right') + '</button></div></div></article>';
+      }).join('') + (ks.length ? '' : '<div class="col-empty">Drop cards here</div>') + '</div></div>';
+    }).join('') + '</div>';
+}
+
+// Moves card k to column s at index (0 = top), saving the new position(s).
+function placeTask(t, k, s, index){
+  var others = colTasks(t, s).filter(function(x){ return x !== k; });
+  index = Math.max(0, Math.min(index, others.length));
+  var before = others[index - 1], after = others[index], updates = [];
+  var pb = before ? taskPos(t, before) : null, pa = after ? taskPos(t, after) : null, np;
+  if (pb == null && pa == null) np = 1;
+  else if (pb == null) np = pa - 1;
+  else if (pa == null) np = pb + 1;
+  else np = (pb + pa) / 2;
+  if ((pb != null && pa != null && pa - pb < 1e-6) || !isFinite(np)) {
+    // Gap too small: renumber the whole column.
+    others.splice(index, 0, k);
+    others.forEach(function(x, i){ x.s = s; x.p = i + 1; updates.push({id: x.id, s: s, p: i + 1}); });
+  } else { k.s = s; k.p = np; updates.push({id: k.id, s: s, p: np}); }
+  if (k.s !== s) k.s = s;
+  refresh();
+  var el = document.querySelector('[data-task="' + k.id + '"]'); if (el) { el.classList.add('just-moved'); setTimeout(function(){ el.classList.remove('just-moved'); }, 700); }
+  return Promise.all(updates.map(function(u){ return api.moveTask(t.id, u.id, u.s, u.p); }))
+    .catch(function(e){ toast(friendly(e), 'error'); if (LIVE) loadLive().then(refresh).catch(function(){}); });
+}
+
+/* ---------- Pointer drag and drop ---------- */
+(function(){
+  var HOLD_MS = 350, MOVE_TOL = 8, START_DIST = 5;
+  function cardAt(e){ var c = e.target.closest && e.target.closest('.task[data-task]'); return c && !e.target.closest('button, a, input, select, textarea') ? c : null; }
+  function teamOf(card){ return team(card.dataset.team); }
+  function taskOf(card){ var t = teamOf(card); return t && t.tasks.find(function(x){ return x.id === card.dataset.task; }); }
+
+  document.addEventListener('pointerdown', function(e){
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    var card = cardAt(e); if (!card || DRAG) return;
+    var d = {card: card, id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse', active: false, timer: null};
+    DRAG = d;
+    if (d.touch) {
+      card.classList.add('pressing');
+      d.timer = setTimeout(function(){ if (DRAG === d) begin(d); }, HOLD_MS);
+    }
+  });
+  document.addEventListener('pointermove', function(e){
+    var d = DRAG; if (!d || e.pointerId !== d.id) return;
+    d.x = e.clientX; d.y = e.clientY;
+    var dist = Math.hypot(d.x - d.x0, d.y - d.y0);
+    if (!d.active) {
+      if (d.touch) { if (dist > MOVE_TOL) cancel(); return; }   // finger moved first: let the page scroll
+      if (dist > START_DIST) begin(d); else return;
+    }
+    e.preventDefault();
+    follow(d);
+  }, {passive: false});
+  // Stop the page scrolling while a touch drag is active.
+  document.addEventListener('touchmove', function(e){ if (DRAG && DRAG.active) e.preventDefault(); }, {passive: false});
+  document.addEventListener('pointerup', function(e){ if (DRAG && e.pointerId === DRAG.id) finish(true); });
+  document.addEventListener('pointercancel', function(e){ if (DRAG && e.pointerId === DRAG.id) finish(false); });
+  document.addEventListener('keydown', function(e){ if (DRAG && DRAG.active && e.key === 'Escape') finish(false); });
+  document.addEventListener('contextmenu', function(e){ if (DRAG && (DRAG.active || DRAG.touch)) e.preventDefault(); });
+  // A drag ends with a click on desktop; don't let it open the card.
+  document.addEventListener('click', function(e){
+    if (Date.now() < DRAG_CLICK_BLOCK) { e.preventDefault(); e.stopPropagation(); return; }
+    var card = cardAt(e); if (card) { e.preventDefault(); openTask(card.dataset.team, card.dataset.task); }
+  }, true);
+
+  function begin(d){
+    var r = d.card.getBoundingClientRect();
+    d.active = true; d.dx = d.x0 - r.left; d.dy = d.y0 - r.top;
+    d.card.classList.remove('pressing');
+    var g = d.card.cloneNode(true); g.className = 'task drag-ghost'; g.removeAttribute('tabindex'); g.setAttribute('aria-hidden', 'true');
+    g.style.width = r.width + 'px'; document.body.appendChild(g); d.ghost = g;
+    d.ph = document.createElement('div'); d.ph.className = 'drop-ph'; d.ph.style.height = r.height + 'px';
+    d.card.parentNode.insertBefore(d.ph, d.card);
+    d.card.classList.add('drag-src');
+    document.body.classList.add('dragging');
+    if (navigator.vibrate && d.touch) { try { navigator.vibrate(12); } catch (x) {} }
+    follow(d); loop(d);
+  }
+  function follow(d){
+    if (!d.ghost) return;
+    d.ghost.style.transform = 'translate(' + (d.x - d.dx) + 'px,' + (d.y - d.dy) + 'px) rotate(2deg)';
+    var under = document.elementFromPoint(d.x, d.y), col = under && under.closest('.col[data-col]');
+    if (!col || !col.closest('[data-board="' + d.card.dataset.team + '"]')) return;
+    var list = col.querySelector('.col-cards'), cards = Array.prototype.filter.call(list.querySelectorAll('.task[data-task]'), function(c){ return c !== d.card; });
+    var next = cards.find(function(c){ var r = c.getBoundingClientRect(); return d.y < r.top + r.height / 2; }) || null;
+    var empty = list.querySelector('.col-empty'); if (empty) empty.hidden = true;
+    if (next) { if (d.ph.nextSibling !== next) list.insertBefore(d.ph, next); }
+    else if (d.ph.parentNode !== list || d.ph.nextSibling) list.appendChild(d.ph);
+    document.querySelectorAll('.col.drop-on').forEach(function(c){ if (c !== col) c.classList.remove('drop-on'); });
+    col.classList.add('drop-on');
+  }
+  // Auto-scroll the page (and a horizontally scrolling board) near the edges.
+  function loop(d){
+    if (DRAG !== d || !d.active) return;
+    var edge = 70, vy = 0;
+    if (d.y < edge) vy = -Math.ceil((edge - d.y) / 5); else if (d.y > innerHeight - edge) vy = Math.ceil((d.y - innerHeight + edge) / 5);
+    if (vy) { window.scrollBy(0, vy); follow(d); }
+    var kb = d.card.closest('.kanban');
+    if (kb && kb.scrollWidth > kb.clientWidth) { var r = kb.getBoundingClientRect(); if (d.x < r.left + 40) kb.scrollLeft -= 10; else if (d.x > r.right - 40) kb.scrollLeft += 10; }
+    requestAnimationFrame(function(){ loop(d); });
+  }
+  function cancel(){ var d = DRAG; if (!d) return; clearTimeout(d.timer); d.card.classList.remove('pressing'); DRAG = null; }
+  function finish(drop){
+    var d = DRAG; if (!d) return;
+    clearTimeout(d.timer); d.card.classList.remove('pressing');
+    if (!d.active) { DRAG = null; return; }
+    DRAG_CLICK_BLOCK = Date.now() + 350;
+    var col = d.ph.closest('.col[data-col]'), list = d.ph.parentNode;
+    var index = Array.prototype.filter.call(list.children, function(c){ return c === d.ph || (c.matches('.task[data-task]') && c !== d.card); }).indexOf(d.ph);
+    if (d.ghost) d.ghost.remove();
+    d.ph.remove(); d.card.classList.remove('drag-src');
+    document.body.classList.remove('dragging');
+    document.querySelectorAll('.col.drop-on').forEach(function(c){ c.classList.remove('drop-on'); });
+    DRAG = null;
+    var t = teamOf(d.card), k = taskOf(d.card);
+    if (!drop || !col || !t || !k) { refresh(); return; }
+    var same = k.s === col.dataset.col && colTasks(t, k.s).indexOf(k) === index;
+    if (same) { refresh(); return; }
+    placeTask(t, k, col.dataset.col, index);
+  }
+
+  // Keyboard: Alt + arrows move the focused card; Enter opens it.
+  document.addEventListener('keydown', function(e){
+    var card = e.target.closest && e.target.closest('.task[data-task]'); if (!card || e.target !== card) return;
+    var t = teamOf(card), k = taskOf(card); if (!t || !k) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTask(t.id, k.id); return; }
+    if (!e.altKey) return;
+    var order = BOARD_COLS.map(function(c){ return c[0]; }), i = colTasks(t, k.s).indexOf(k), ci = order.indexOf(k.s), go2 = null;
+    if (e.key === 'ArrowUp' && i > 0) go2 = [k.s, i - 1];
+    else if (e.key === 'ArrowDown' && i < colTasks(t, k.s).length - 1) go2 = [k.s, i + 1];
+    else if (e.key === 'ArrowLeft' && ci > 0) go2 = [order[ci - 1], colTasks(t, order[ci - 1]).length];
+    else if (e.key === 'ArrowRight' && ci < 2) go2 = [order[ci + 1], colTasks(t, order[ci + 1]).length];
+    if (!go2) return;
+    e.preventDefault();
+    placeTask(t, k, go2[0], go2[1]).then(function(){ var el = document.querySelector('[data-task="' + k.id + '"]'); if (el) el.focus(); });
+    var el = document.querySelector('[data-task="' + k.id + '"]'); if (el) el.focus();
+    var col = BOARD_COLS.find(function(c){ return c[0] === go2[0]; });
+    announce('Moved to ' + col[1] + ', position ' + (colTasks(t, go2[0]).indexOf(k) + 1));
+  });
+  function announce(m){ var a = document.getElementById('board-live'); if (!a) { a = document.createElement('div'); a.id = 'board-live'; a.className = 'vh'; a.setAttribute('aria-live', 'polite'); document.body.appendChild(a); } a.textContent = m; }
+})();
+
+/* ---------- Card dialog: open and edit ---------- */
+function openTask(tid, kid){
+  var t = team(tid), k = t && t.tasks.find(function(x){ return x.id === kid; }); if (!k) return;
+  openModal('<h2>Edit card</h2><form class="form" data-form="task-edit" data-team="' + t.id + '" data-id="' + k.id + '" novalidate>' +
+    field('te-t', 'Title', '<textarea class="in" id="te-t" name="t" maxlength="200" rows="2" required>' + esc(k.t) + '</textarea>') +
+    '<div class="two">' + field('te-s', 'Column', '<select class="sel" id="te-s" name="s">' + options(BOARD_COLS, k.s) + '</select>') +
+    field('te-o', 'Owner', '<select class="sel" id="te-o" name="o">' + options([['', 'Unassigned']].concat(activeMembers(t).map(function(m){ return [m.id, m.id === 'me' ? 'You' : nameOf(m.id)]; })), k.o || '') + '</select>') + '</div>' +
+    '<p class="err" role="alert"></p><div class="modal-actions" style="justify-content:space-between"><button type="button" class="btn btn-ghost danger-text" data-act="task-del" data-team="' + t.id + '" data-id="' + k.id + '">Delete card</button><span style="display:flex;gap:10px"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Save</button></span></div></form>');
+}
+FORMS['task-edit'] = function(d, f){
+  var t = team(f.dataset.team), k = t.tasks.find(function(x){ return x.id === f.dataset.id; });
+  if (!trim(d.t)) return setErr(f, 'Give the card a title.', '[name=t]');
+  closeModal();
+  var moved = d.s !== k.s;
+  act(async function(){
+    await api.updateTask(t.id, k.id, {t: trim(d.t), o: d.o});
+    if (moved) { var others = colTasks(t, d.s); await api.moveTask(t.id, k.id, d.s, others.length ? taskPos(t, others[others.length - 1]) + 1 : 1); }
+  }, 'Card saved');
+};
+var _taskDel = ACT['task-del'];
+ACT['task-del'] = function(d){ if (modalOpen()) closeModal(); return _taskDel(d); };
 
 
 boot();
