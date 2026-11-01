@@ -149,6 +149,9 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .row .grow{flex:1;min-width:0}
 .row b{font-family:var(--h);letter-spacing:-.01em}
 .row-link{text-decoration:none;display:block}
+.row.row-link{display:flex;color:inherit}
+.attn .row > .btn{flex:none;padding:10px 18px;font-size:14px}
+.attn .row > .btn:first-of-type{margin-left:auto}
 .row-link:hover b{text-decoration:underline}
 .ellip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -1257,7 +1260,7 @@ function attentionCard(){
   incomingRequests().forEach(function(id){ var p = P(id); items.push('<div class="row">' + av(p, 'sm') + '<div class="grow"><b>' + esc(p.name) + '</b><div class="small muted">wants to connect · ' + esc(p.title) + '</div></div><button class="btn btn-ink btn-sm" data-act="accept-conn" data-id="' + id + '">Accept</button><button class="btn btn-ghost btn-sm" data-act="decline-conn" data-id="' + id + '">Ignore</button></div>'); });
   teamInvites().forEach(function(t){ var me = t.members.find(function(m){ return m.id === 'me'; }); items.push('<div class="row"><span class="type-dot">' + icon('grid') + '</span><div class="grow"><b>Invitation to ' + esc(t.name) + '</b><div class="small muted">Role: ' + esc(me.role || 'Contributor') + ' · ' + esc(t.kind) + '</div></div><button class="btn btn-ink btn-sm" data-act="accept-invite" data-id="' + t.id + '">Accept</button><button class="btn btn-ghost btn-sm" data-act="leave-team" data-id="' + t.id + '" data-msg="Invitation declined">Decline</button></div>'); });
   joinRequests().forEach(function(x){ var p = P(x.m.id); items.push('<div class="row">' + av(p, 'sm') + '<div class="grow"><b>' + esc(p.name) + '</b><div class="small muted">asked to join ' + esc(x.team.name) + '</div></div><button class="btn btn-ink btn-sm" data-act="approve" data-team="' + x.team.id + '" data-id="' + x.m.id + '">Approve</button><button class="btn btn-ghost btn-sm" data-act="remove-member" data-team="' + x.team.id + '" data-id="' + x.m.id + '">Decline</button></div>'); });
-  newApplicants().forEach(function(x){ var p = P(x.a.applicant); items.push('<a class="row row-link" href="#/opportunities/' + x.opp.id + '">' + av(p, 'sm') + '<div class="grow"><b>' + esc(p.name) + ' applied</b><div class="small muted">' + esc(x.opp.title) + '</div></div><span class="pill sd">Review</span></a>'); });
+  newApplicants().forEach(function(x){ var p = P(x.a.applicant); items.push('<a class="row row-link" href="#/opportunities/' + x.opp.id + '">' + av(p, 'sm') + '<div class="grow"><b>' + esc(p.name) + ' applied</b><div class="small muted">' + esc(x.opp.title) + '</div></div><span class="btn btn-ink btn-sm">Review</span></a>'); });
   commerceAttention().forEach(function(h){ items.push(h); });
   if (!items.length) return '';
   return '<section class="card attn"><div class="card-h"><h3>Needs your attention</h3><span class="pill sd">' + items.length + '</span></div>' + items.join('') + '</section>';
@@ -2156,6 +2159,10 @@ var FORMS = {
     try {
       var r = await SB.auth.signUp({email:trim(d.email), password:d.password, options:{data:{name:trim(d.name).slice(0, 80), ref:d.ref || ''}, emailRedirectTo:appUrl()}});
       if (r.error) throw r.error;
+      // Analytics: count a sign-up only when Supabase actually created a new account.
+      // (For an email that's already registered, Supabase returns a user with no identities and sends no email.)
+      var nu = r.data && r.data.user;
+      if (nu && !(Array.isArray(nu.identities) && nu.identities.length === 0) && typeof window.gtag === 'function') window.gtag('event', 'sign_up', {method: 'email'});
       try { localStorage.removeItem('ch-ref'); } catch (e) {}
       if (!r.data.session) { UI.pendingEmail = trim(d.email); go('#/verify'); }
     } catch (e) { setErr(f, /registered|exists/i.test(e.message) ? 'An account with that email already exists. Try signing in.' : friendly(e)); }
@@ -2496,16 +2503,16 @@ function commerceAttention(){
   var out = [];
   S.projects.forEach(function(pr){
     if (editable(pr)) myAllocs(pr).filter(function(a){ return !a.acceptedAt; }).forEach(function(a){
-      out.push('<a class="row row-link" href="#/projects/' + pr.id + '/budget"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Review your share: ' + cents$(a.value) + '</b><div class="small muted">' + esc(pr.title) + ' · ' + esc(a.role || METHODS[a.method]) + '</div></div><span class="pill sd">Accept</span></a>');
+      out.push('<a class="row row-link" href="#/projects/' + pr.id + '/budget"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Review your share: ' + cents$(a.value) + '</b><div class="small muted">' + esc(pr.title) + ' · ' + esc(a.role || METHODS[a.method]) + '</div></div><span class="btn btn-ink btn-sm">Accept</span></a>');
     });
-    if (isProjLead(pr) && pr.status === 'changes_requested') out.push('<a class="row row-link" href="#/projects/' + pr.id + '/proposal"><span class="type-dot t-paid">' + icon('brief') + '</span><div class="grow"><b>Client requested changes</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="pill sd">Review</span></a>');
+    if (isProjLead(pr) && pr.status === 'changes_requested') out.push('<a class="row row-link" href="#/projects/' + pr.id + '/proposal"><span class="type-dot t-paid">' + icon('brief') + '</span><div class="grow"><b>Client requested changes</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Review</span></a>');
     pr.milestones.filter(function(m){ return m.status === 'revision_requested'; }).forEach(function(m){
-      out.push('<a class="row row-link" href="#/projects/' + pr.id + '/milestones"><span class="type-dot">' + icon('target') + '</span><div class="grow"><b>Revision requested: ' + esc(m.title) + '</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="pill sd">Open</span></a>');
+      out.push('<a class="row row-link" href="#/projects/' + pr.id + '/milestones"><span class="type-dot">' + icon('target') + '</span><div class="grow"><b>Revision requested: ' + esc(m.title) + '</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Open</span></a>');
     });
-    if (isProjLead(pr) && pr.payouts.some(function(o){ return o.status === 'eligible'; }) && S.settings.payments_enabled) out.push('<a class="row row-link" href="#/projects/' + pr.id + '/payments"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Payouts ready to release</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="pill sd">Release</span></a>');
+    if (isProjLead(pr) && pr.payouts.some(function(o){ return o.status === 'eligible'; }) && S.settings.payments_enabled) out.push('<a class="row row-link" href="#/projects/' + pr.id + '/payments"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Payouts ready to release</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Release</span></a>');
   });
   var waiting = S.myPayouts.filter(function(o){ return o.status === 'eligible'; });
-  if (waiting.length && !(S.payoutAccount && S.payoutAccount.payouts_enabled)) out.push('<a class="row row-link" href="#/earnings"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Set up payouts to receive ' + cents$(waiting.reduce(function(t, o){ return t + o.amount; }, 0)) + '</b><div class="small muted">Takes a few minutes with Stripe</div></div><span class="pill sd">Set up</span></a>');
+  if (waiting.length && !(S.payoutAccount && S.payoutAccount.payouts_enabled)) out.push('<a class="row row-link" href="#/earnings"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Set up payouts to receive ' + cents$(waiting.reduce(function(t, o){ return t + o.amount; }, 0)) + '</b><div class="small muted">Takes a few minutes with Stripe</div></div><span class="btn btn-ink btn-sm">Set up</span></a>');
   return out;
 }
 function showEarnings(){ return commerceOn() && (S.myPayouts.length || S.payoutAccount || S.projects.some(function(p){ return myAllocs(p).length; }) || S.credits.some(function(c){ return c.member === 'me'; })); }
