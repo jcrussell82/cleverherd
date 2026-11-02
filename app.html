@@ -33,6 +33,14 @@
 
 <title>Cleverherd</title>
 <meta name="theme-color" content="#162927">
+<script>
+/* Theme (Settings → Appearance): applied before first paint. Saved per device. */
+(function(){
+  var t = 'light'; try { t = localStorage.getItem('ch-theme') || 'light'; } catch (e) {}
+  var dark = t === 'dark' || (t === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+})();
+</script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDYuMzcyIiBoZWlnaHQ9IjQyOC4zMDciIHZpZXdCb3g9IjAgMCA0MDYuMzcyIDQyOC4zMDciPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0zNTQ2LjcgLTY2NS4yMDYpIj48cGF0aCBkPSJNODQ0Ljk2Niw0MzIuODA3YzExMi4yODYsMCwxOTIuNzM4LTkwLjI5MiwxOTIuNzM4LTIxNC4xNTNTOTYwLjcyNCw0LjUsODQ0LjM4Nyw0LjVjLTk4Ljk3NCwwLTE3NS4zNzQsNjYuNTYxLTE3NS4zNzQsMTU3LjQzMlYzOTIuODdjMCwyMy43MzEsMTguNTIxLDM5LjkzNyw0NS43MjUsMzkuOTM3Wm0tODQuNS03Mi45MjhWMTYxLjkzMmMwLTQ4LjYxOSwzNy4wNDItODQuNSw4NC41LTg0LjUsNjAuMTk0LDAsMTAwLjEzMiw1OS42MTYsMTAwLjEzMiwxNDEuOCwwLDgxLjAzMS0zOS4zNTgsMTQwLjY0Ny05My43NjUsMTQwLjY0N1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI4NzcuNjg3IDY2MC43MDYpIiBmaWxsPSIjMTEyYjI5Ii8+PHBhdGggZD0iTTM3LjcwNiwwQTM3LjcwNiwzNy43MDYsMCwxLDEsMCwzNy43MDYsMzcuNzA2LDM3LjcwNiwwLDAsMSwzNy43MDYsMFoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM2OTIuNDY2IDc5MS43ODkpIiBmaWxsPSIjMTEyYjI5Ii8+PHBhdGggZD0iTTMzLjM5LDUuNjQyYTEwLjc3MywxMC43NzMsMCwwLDEsMTguOTQ1LDBMODQuNDEsNjQuODU3YTEwLjc3MywxMC43NzMsMCwwLDEtOS40NzMsMTUuOUgxMC43ODhhMTAuNzczLDEwLjc3MywwLDAsMS05LjQ3My0xNS45WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzgzNS4zNDggNzgzLjA0OSkgcm90YXRlKC00NSkiIGZpbGw9IiMxMTJiMjkiLz48L2c+PC9zdmc+">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -61,7 +69,7 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .btn:hover{transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .btn-ink{background:var(--ink);color:var(--bone)}.btn-ink:hover{background:var(--forest)}
-.btn-sand{background:var(--sand);color:var(--ink)}.btn-sand:hover{background:var(--bone)}
+.btn-sand{background:var(--sage);color:var(--ink)}.btn-sand:hover{background:var(--bone)}
 .btn-line{border-color:rgba(17,43,41,.28);background:transparent}.btn-line:hover{border-color:var(--ink)}
 .btn-ghost{background:transparent;padding-inline:10px}.btn-ghost:hover{background:rgba(17,43,41,.06)}
 .btn-sm{padding:7px 13px;font-size:13px}
@@ -71,6 +79,8 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .pill.dk{background:var(--ink);color:var(--bone)}
 .pill.sd{background:var(--sand);color:var(--ink)}
 .pill.ok{background:var(--forest);color:var(--bone)}
+.pill.go{background:var(--sage);color:var(--ink)}
+.pill.bad{background:#f6dcd5;color:#8a2f1f}
 .pill.ln{background:transparent;border:1px solid rgba(17,43,41,.25)}
 .tag{display:inline-block;font-size:12px;font-weight:500;padding:3px 10px;border-radius:99px;border:1px solid rgba(17,43,41,.18);background:var(--white)}
 .tag.hit{background:var(--forest);color:var(--bone);border-color:var(--forest)}
@@ -79,7 +89,7 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .small{font-size:12.5px}
 .eyebrow{font-family:var(--h);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--forest)}
 .av{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;font-family:var(--h);font-weight:800;font-size:12.5px;flex:none;color:var(--bone);background:var(--forest)}
-.av-sand{background:var(--sand);color:var(--ink)}.av-sage{background:var(--sage);color:var(--ink)}.av-ink{background:var(--ink)}.av-moss{background:#5e7a70}.av-bone{background:var(--bone);color:var(--ink)}
+.av-sand{background:var(--sand);color:var(--ink)}.av-sage{background:var(--sage);color:var(--ink)}.av-ink{background:var(--ink)}.av-moss{background:#4a665c}.av-bone{background:var(--bone);color:var(--ink)}
 .av.lg{width:76px;height:76px;font-size:24px}
 .av.sm{width:28px;height:28px;font-size:10.5px}
 .avs{display:flex}.avs .av{border:2.5px solid var(--white);margin-left:-9px}.avs .av:first-child{margin-left:0}
@@ -98,7 +108,7 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .snav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-weight:600;font-size:14px;color:var(--sage);text-decoration:none;transition:background .2s,color .2s}
 .snav a:hover{background:rgba(231,226,214,.07);color:var(--bone)}
 .snav a.on{background:var(--forest);color:var(--bone)}
-.snav .ct{margin-left:auto;font-family:var(--h);font-size:11px;font-weight:800;background:var(--sand);color:var(--ink);border-radius:99px;padding:1px 8px}
+.snav .ct{margin-left:auto;font-family:var(--h);font-size:11px;font-weight:800;background:var(--sage);color:var(--ink);border-radius:99px;padding:1px 8px}
 .snav .sep{height:1px;background:var(--line-l);margin:10px 8px}
 .side-foot{margin-top:auto;padding-top:18px;border-top:1px solid var(--line-l);display:grid;gap:10px}
 .me-card{display:flex;gap:10px;align-items:center;text-decoration:none;padding:6px;border-radius:12px}
@@ -186,7 +196,7 @@ textarea.in{min-height:96px;resize:vertical}
 .hello p{color:var(--sage);margin-top:6px}
 .hello .intent{display:flex;gap:6px;flex-wrap:wrap;position:relative;z-index:1}
 .hello .intent a{font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;border:1px solid var(--line-l);text-decoration:none;color:var(--bone)}
-.hello .intent a.on{background:var(--sand);color:var(--ink);border-color:var(--sand)}
+.hello .intent a.on{background:var(--sage);color:var(--ink);border-color:var(--sage)}
 .hello img.mk{position:absolute;right:-50px;bottom:-90px;width:260px;opacity:.06;pointer-events:none}
 .opp-row{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-top:1px solid var(--line);text-decoration:none}
 .opp-row:first-child{border-top:0;padding-top:0}
@@ -228,7 +238,7 @@ textarea.in{min-height:96px;resize:vertical}
 .track-l div i{display:block;height:6px;border-radius:99px;background:var(--bone);margin-bottom:7px}
 .track-l div.on i{background:var(--forest)}
 .track-l div.cur{color:var(--ink)}
-.track-l div.cur i{background:var(--sand)}
+.track-l div.cur i{background:var(--sage)}
 
 /* ---------- Profile / detail ---------- */
 .hero-card{background:var(--white);border:1px solid var(--line);border-radius:22px;padding:26px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
@@ -287,7 +297,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .amts label{cursor:pointer}
 .amts input{position:absolute;opacity:0}
 .amts span{display:inline-block;padding:9px 16px;border-radius:99px;border:1.5px solid var(--line-l);font-weight:700;font-family:var(--h)}
-.amts input:checked+span{background:var(--sand);color:var(--ink);border-color:var(--sand)}
+.amts input:checked+span{background:var(--sage);color:var(--ink);border-color:var(--sage)}
 .locked{position:relative;overflow:hidden}
 .locked .blur{filter:blur(3px);opacity:.55;pointer-events:none;user-select:none}
 .locked .lock-msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px}
@@ -309,7 +319,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .msg{max-width:72%;padding:10px 14px;border-radius:16px;background:var(--paper);font-size:14px}
 .msg.me{align-self:flex-end;background:var(--forest);color:var(--bone);border-bottom-right-radius:4px}
 .msg:not(.me){border-bottom-left-radius:4px}
-.msg small{display:block;font-size:11px;opacity:.7;margin-top:4px}
+.msg small{display:block;font-size:11px;opacity:.85;margin-top:4px}
 .compose{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line)}
 .compose{align-items:flex-end}
 .compose textarea.in{min-height:44px;max-height:160px;height:44px;padding:11px 18px;border-radius:22px;resize:none;line-height:1.45;overflow-y:auto}
@@ -319,7 +329,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
 .auth-art{background:var(--deep);color:var(--bone);padding:44px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
 .auth-art h2{font-size:clamp(34px,4vw,56px);font-weight:900;letter-spacing:-.045em;line-height:1}
-.auth-art h2 em{font-style:normal;color:var(--sand)}
+.auth-art h2 em{font-style:normal;color:var(--sage)}
 .auth-art p{color:var(--sage);margin-top:16px;max-width:420px;font-size:15.5px}
 .auth-art .hills{width:min(420px,80%);margin:30px 0;opacity:.95}
 .auth-form{display:grid;place-items:center;padding:40px 24px}
@@ -363,7 +373,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
 .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);z-index:120;background:var(--ink);color:var(--bone);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s var(--ease);display:flex;gap:10px;align-items:center;max-width:calc(100vw - 32px)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.toast svg{color:var(--sand)}
+.toast svg{color:var(--sage)}
 
 /* ---------- Responsive ---------- */
 @media (max-width:1100px){
@@ -410,7 +420,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .skip{position:absolute;left:-999px;top:8px;z-index:200;background:var(--ink);color:var(--bone);padding:10px 16px;border-radius:10px;font-weight:700;text-decoration:none}
 .skip:focus{left:12px}
 .hello .intent button{font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;border:1px solid var(--line-l);background:transparent;color:var(--bone);cursor:pointer}
-.hello .intent button.on{background:var(--sand);color:var(--ink);border-color:var(--sand)}
+.hello .intent button.on{background:var(--sage);color:var(--ink);border-color:var(--sage)}
 .app-foot{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 20px;padding:22px 32px 28px;font-size:12.5px;border-top:1px solid var(--line)}
 .app-foot a{color:var(--forest);text-decoration:none;font-weight:600}.app-foot a:hover{color:var(--ink)}
 .side-links{display:grid;gap:2px}
@@ -418,7 +428,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 .side-links a:hover{background:rgba(231,226,214,.07);color:var(--bone)}
 .side-links svg.i{width:17px;height:17px}
 .tabbar a{position:relative}
-.tb-dot{position:absolute;top:5px;left:calc(50% + 8px);width:8px;height:8px;border-radius:50%;background:var(--sand)}
+.tb-dot{position:absolute;top:5px;left:calc(50% + 8px);width:8px;height:8px;border-radius:50%;background:var(--sage)}
 .meta-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .meta-icons{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
 .meta-icons span{display:inline-flex;align-items:center;gap:5px}
@@ -586,10 +596,10 @@ b.neg{color:#8a2f1f}
 .task{cursor:grab;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:box-shadow .15s,transform .15s,opacity .15s}
 .task:hover{box-shadow:0 4px 14px -6px rgba(17,43,41,.35)}
 .task:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
-.task.pressing{transform:scale(.98);box-shadow:0 0 0 2px var(--sand)}
+.task.pressing{transform:scale(.98);box-shadow:0 0 0 2px var(--sage)}
 .task.drag-src{display:none}
 .task.just-moved{animation:justMoved .7s var(--ease)}
-@keyframes justMoved{0%{box-shadow:0 0 0 3px var(--sand)}100%{box-shadow:0 1px 0 rgba(17,43,41,.06)}}
+@keyframes justMoved{0%{box-shadow:0 0 0 3px var(--sage)}100%{box-shadow:0 1px 0 rgba(17,43,41,.06)}}
 .drag-ghost{position:fixed;left:0;top:0;z-index:200;pointer-events:none;cursor:grabbing;box-shadow:0 18px 40px -12px rgba(17,43,41,.5);opacity:.96;margin:0}
 .drop-ph{border:2px dashed var(--forest);border-radius:12px;background:rgba(51,86,77,.08);flex:none}
 .col.drop-on{box-shadow:inset 0 0 0 2px rgba(51,86,77,.35)}
@@ -600,7 +610,7 @@ body.dragging{-webkit-user-select:none;user-select:none}
 .acct{position:relative}
 .acct-btn{position:relative;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;display:grid;place-items:center}
 .acct-btn .av{width:44px;height:44px;font-size:14px}
-.acct-btn[aria-expanded="true"] .av{box-shadow:0 0 0 3px var(--sand)}
+.acct-btn[aria-expanded="true"] .av{box-shadow:0 0 0 3px var(--sage)}
 .acct-btn .dot{position:absolute;top:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--sand);border:2px solid var(--paper)}
 .acct-menu{position:absolute;right:0;top:calc(100% + 10px);z-index:60;width:min(280px,calc(100vw - 24px));max-height:calc(100vh - 90px);overflow:auto;background:var(--white);border:1px solid var(--line);border-radius:18px;box-shadow:0 22px 50px -18px rgba(17,43,41,.45);padding:8px}
 .acct-menu[hidden]{display:none}
@@ -610,7 +620,7 @@ body.dragging{-webkit-user-select:none;user-select:none}
 .acct-menu [role=menuitem] svg{width:20px;height:20px;color:var(--forest);flex:none}
 .acct-menu [role=menuitem]:hover,.acct-menu [role=menuitem]:focus-visible{background:var(--paper);outline:none}
 .acct-menu [role=menuitem].on{background:var(--bone)}
-.acct-menu .ct{margin-left:auto;background:var(--sand);color:var(--ink);font:800 11px var(--h);border-radius:99px;padding:2px 8px}
+.acct-menu .ct{margin-left:auto;background:var(--sage);color:var(--ink);font:800 11px var(--h);border-radius:99px;padding:2px 8px}
 .acct-menu .acct-out{margin-top:6px;border-top:1px solid var(--line);border-radius:0 0 12px 12px;color:#8a2f1f}
 .acct-menu .acct-out svg{color:#8a2f1f}
 @media (max-width:900px){
@@ -639,6 +649,113 @@ input[type=date].in::-webkit-date-and-time-value{text-align:left;margin:0}
   .sel.fsel{font-size:16px;min-height:44px;padding:10px 38px 10px 16px}
   .toolbar .sel.fsel.show-sm{display:block;flex:0 0 auto}
 }
+.fsel-row{display:flex;gap:10px;flex-wrap:nowrap}
+@media (max-width:900px){.fsel-row{flex:1 1 100%}.fsel-row .sel.fsel{flex:1 1 0;min-width:0;width:auto;text-overflow:ellipsis}}
+/* Profile photos */
+.av{overflow:hidden}
+.av.has-photo{background:var(--bone)}
+.av img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.av-xl{width:132px;height:132px;font-size:40px}
+.av-edit{position:relative;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;flex:none;align-self:flex-start}
+.av-edit .av{transition:filter .2s}
+.av-edit:hover .av,.av-edit:focus-visible .av{filter:brightness(.88)}
+.av-cam{position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:50%;background:var(--white);color:var(--ink);display:grid;place-items:center;box-shadow:0 2px 8px rgba(17,43,41,.25);border:2px solid var(--white)}
+.av-cam svg{width:16px;height:16px}
+.photo-row{display:flex;gap:18px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.photo-preview{display:flex;gap:18px;align-items:flex-end;justify-content:center;padding:18px 0 22px}
+
+/* =====================================================================
+   Dark mode for the member platform (Settings → Appearance).
+   Strategy: re-point the surface/text variables, then fix the places where a
+   variable is used both as a text colour and as a fill (e.g. --ink is body text
+   AND the primary button fill). Accent on dark = sage, as on the website.
+   ===================================================================== */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --on-light:#112b29;                 /* text on a light fill (sage / sand chips) */
+  --surface-dark:#0b1614;             /* "ink" fills that must stay dark */
+  --paper:#0e1b19;                    /* page */
+  --white:#162826;                    /* cards, inputs, dialogs */
+  --ink:#ebe7dd;                      /* primary text */
+  --forest:var(--sage);               /* secondary text, eyebrows, links */
+  --line:rgba(231,226,214,.13);
+  --line-l:rgba(231,226,214,.14);
+}
+html[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+
+/* Fills that were var(--forest): keep the real dark forest green */
+html[data-theme="dark"] .btn-ink:hover,
+html[data-theme="dark"] .pill.ok,html[data-theme="dark"] .pill.comp-guaranteed,
+html[data-theme="dark"] .tag.hit,html[data-theme="dark"] .av:not([class*="av-"]),html[data-theme="dark"] .snav a.on,
+html[data-theme="dark"] .togs input:checked+span,html[data-theme="dark"] .t-role,html[data-theme="dark"] .invite,
+html[data-theme="dark"] .track span.on,html[data-theme="dark"] .track-l div.on i,html[data-theme="dark"] .ms button.ck.on,
+html[data-theme="dark"] .obar u,html[data-theme="dark"] .msg.me,html[data-theme="dark"] .ob-prog i,
+html[data-theme="dark"] .skill-in .tag,html[data-theme="dark"] .tabbar a.on,html[data-theme="dark"] .rate-opts input:checked+span{background-color:#33564d}
+html[data-theme="dark"] .pill.ok,html[data-theme="dark"] .pill.comp-guaranteed,html[data-theme="dark"] .msg.me,html[data-theme="dark"] .tag.hit{color:var(--bone)}
+html[data-theme="dark"] .av:not([class*="av-"]),html[data-theme="dark"] .av-moss{color:var(--bone)}
+
+/* Fills that were var(--ink): primary actions become sage (dark text); badges stay dark */
+html[data-theme="dark"] .btn-ink,html[data-theme="dark"] .chip.on,html[data-theme="dark"] .big-opt.on,
+html[data-theme="dark"] .chip-radio input:checked+span,html[data-theme="dark"] .sel.fsel.on{background-color:var(--sage);color:var(--on-light);border-color:var(--sage)}
+html[data-theme="dark"] .btn-ink:hover{background-color:var(--bone);color:var(--on-light)}
+html[data-theme="dark"] .btn-ink svg,html[data-theme="dark"] .chip.on svg{color:var(--on-light)}
+html[data-theme="dark"] .sel.fsel.on{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23112b29' stroke-width='2'/%3E%3C/svg%3E")}
+html[data-theme="dark"] .big-opt.on .muted{color:#2c4a42}
+html[data-theme="dark"] .pill.dk,html[data-theme="dark"] .pill.comp-equity,html[data-theme="dark"] .t-paid,html[data-theme="dark"] .av-ink,
+html[data-theme="dark"] .toast,html[data-theme="dark"] .skip,html[data-theme="dark"] .demo-bar b{background-color:var(--surface-dark);color:var(--bone)}
+html[data-theme="dark"] .pill.dk,html[data-theme="dark"] .pill.comp-equity{box-shadow:inset 0 0 0 1px rgba(231,226,214,.18)}
+
+/* Light fills (sage / sand / bone-as-fill) need dark text */
+html[data-theme="dark"] .pill.sd,html[data-theme="dark"] .pill.go,html[data-theme="dark"] .btn-sand,html[data-theme="dark"] .snav .ct,
+html[data-theme="dark"] .hello .intent a.on,html[data-theme="dark"] .hello .intent button.on,html[data-theme="dark"] .t-collab,html[data-theme="dark"] .t-startup,
+html[data-theme="dark"] .amts input:checked+span,html[data-theme="dark"] .av-sand,html[data-theme="dark"] .av-sage,html[data-theme="dark"] .acct-menu .ct,
+html[data-theme="dark"] .pill.comp-conditional,html[data-theme="dark"] .pill.comp-commission,html[data-theme="dark"] .pill.comp-revenue_share,
+html[data-theme="dark"] .ct{color:var(--on-light)}
+html[data-theme="dark"] .pill.bad{background:#4a2019;color:#f3c9bd}
+
+/* Bone used as a surface: becomes a subtle raised tint */
+html[data-theme="dark"] .pill:not(.sd):not(.go):not(.ok):not(.dk):not(.ln):not(.bad):not([class*="comp-"]),
+html[data-theme="dark"] .btn.done,html[data-theme="dark"] .bar,html[data-theme="dark"] .type-dot,
+html[data-theme="dark"] .track span,html[data-theme="dark"] .track-l div i,html[data-theme="dark"] .col,html[data-theme="dark"] .obar,
+html[data-theme="dark"] .thread.on,html[data-theme="dark"] .ob-prog,html[data-theme="dark"] .pcol,html[data-theme="dark"] .tool-mini a:hover,
+html[data-theme="dark"] .budget-bar,html[data-theme="dark"] .acct-menu [role=menuitem].on,html[data-theme="dark"] .av-bone{background-color:rgba(231,226,214,.08);color:var(--ink)}
+html[data-theme="dark"] .btn-sand:hover{background-color:var(--bone);color:var(--on-light)}
+html[data-theme="dark"] .demo-bar{background:#1d302d;color:var(--ink)}
+html[data-theme="dark"] .pill.ln,html[data-theme="dark"] .pill.comp-unpaid{border-color:rgba(231,226,214,.3);color:var(--ink)}
+
+/* Lines, inputs and outlined controls drawn with dark rgba() */
+html[data-theme="dark"] .in,html[data-theme="dark"] .sel,html[data-theme="dark"] .search input,html[data-theme="dark"] textarea,
+html[data-theme="dark"] .btn-line,html[data-theme="dark"] .chip,html[data-theme="dark"] .sel.fsel,html[data-theme="dark"] .big-opt,
+html[data-theme="dark"] .rate-opts span,html[data-theme="dark"] .chip-radio span,html[data-theme="dark"] .amts span,html[data-theme="dark"] .col-empty,
+html[data-theme="dark"] .empty,html[data-theme="dark"] .emptybox{border-color:rgba(231,226,214,.22)}
+html[data-theme="dark"] .in,html[data-theme="dark"] .search input,html[data-theme="dark"] textarea.in{background-color:#122220;color:var(--ink)}
+html[data-theme="dark"] .sel:not(.fsel){background-color:#122220;color:var(--ink)}
+html[data-theme="dark"] .sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23abbaa5' stroke-width='2'/%3E%3C/svg%3E")}
+html[data-theme="dark"] .sel option{background:#162826;color:var(--ink)}
+html[data-theme="dark"] .in::placeholder,html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:rgba(231,226,214,.45)}
+html[data-theme="dark"] .top{background:rgba(14,27,25,.88)}
+html[data-theme="dark"] .modal-bg{background:rgba(0,0,0,.6)}
+html[data-theme="dark"] .card,html[data-theme="dark"] .modal,html[data-theme="dark"] .hero-card,html[data-theme="dark"] .mcard,
+html[data-theme="dark"] .acct-menu,html[data-theme="dark"] .task{border-color:var(--line)}
+html[data-theme="dark"] .task{box-shadow:0 1px 0 rgba(0,0,0,.3)}
+html[data-theme="dark"] .drop-ph{border-color:var(--sage);background:rgba(171,186,165,.08)}
+html[data-theme="dark"] .col.drop-on{box-shadow:inset 0 0 0 2px rgba(171,186,165,.4)}
+html[data-theme="dark"] .note{background:rgba(231,226,214,.05);color:var(--ink)}
+html[data-theme="dark"] .msg{background:rgba(231,226,214,.07)}
+html[data-theme="dark"] .err,html[data-theme="dark"] .err-text,html[data-theme="dark"] .danger-text,html[data-theme="dark"] .acct-menu .acct-out,
+html[data-theme="dark"] .acct-menu .acct-out svg{color:#f0a593}
+html[data-theme="dark"] .btn-danger{background:#a5402c}
+html[data-theme="dark"] .icon-btn:hover,html[data-theme="dark"] .task .mv button:hover,html[data-theme="dark"] .thread:hover{background:rgba(231,226,214,.07)}
+html[data-theme="dark"] .icon-btn .dot,html[data-theme="dark"] .acct-btn .dot{border-color:var(--paper)}
+html[data-theme="dark"] .attn,html[data-theme="dark"] .next-step{border-color:rgba(182,166,143,.55)}
+html[data-theme="dark"] .tabs a.on,html[data-theme="dark"] .tabs a[aria-selected="true"]{color:var(--ink)}
+html[data-theme="dark"] img.mlogo-img,html[data-theme="dark"] .top .mlogo img{filter:invert(.9) sepia(.15) hue-rotate(60deg)}
+html[data-theme="dark"] .av-forest{background-color:#33564d;color:var(--bone)}
+/* Gradients built from --forest: keep the real forest green */
+html[data-theme="dark"] .init-banner,html[data-theme="dark"] .init-hero,html[data-theme="dark"] .icard.feat{background:linear-gradient(135deg,#33564d,#162927)}
+html[data-theme="dark"] .bar i,html[data-theme="dark"] .budget-bar i{background:linear-gradient(90deg,#4a665c,var(--sage))}
+html[data-theme="dark"] .init-banner .muted,html[data-theme="dark"] .init-hero .muted{color:var(--sage)}
+html[data-theme="dark"] .av-ink{box-shadow:inset 0 0 0 1.5px rgba(171,186,165,.45)}
 
 </style>
 </head>
@@ -713,6 +830,7 @@ var IC = {
   logout:'<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3"/>',
   star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   pin:'<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  camera:'<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   coin:'<circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1.1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8M12 16v1.5"/>',
   bookmark:'<path d="M6 3h12v18l-6-4-6 4z"/>',
@@ -786,7 +904,7 @@ function emptyState(){
 }
 
 /* ---------- Lookups ---------- */
-function meP(){ return {id:'me', name:S.me.name || 'You', title:S.me.title, loc:S.me.location, color:'ink', skills:S.me.skills, interests:S.me.interests, hours:S.me.hours, bio:S.me.bio, open:S.me.looking}; }
+function meP(){ return {id:'me', name:S.me.name || 'You', title:S.me.title, loc:S.me.location, color:'ink', avatar:S.me.avatar || null, skills:S.me.skills, interests:S.me.interests, hours:S.me.hours, bio:S.me.bio, open:S.me.looking}; }
 function P(id){
   if (id === 'me') return meP();
   if (id === 'pool') return {id:'pool', name:'Future contributor pool', title:'Reserved', color:'bone', skills:[]};
@@ -794,7 +912,8 @@ function P(id){
 }
 function first(n){ return String(n || '').split(' ')[0]; }
 function nameOf(id){ return id === 'me' ? 'You' : P(id).name; }
-function av(p, cls){ return '<span class="av av-' + (p.color || 'forest') + ' ' + (cls || '') + '" title="' + esc(p.name) + '" aria-hidden="true">' + esc(p.id === 'pool' ? '+' : initials(p.name)) + '</span>'; }
+function avatarOk(src){ return typeof src === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(src); }
+function av(p, cls){ var ph = avatarOk(p.avatar); return '<span class="av av-' + (p.color || 'forest') + ' ' + (cls || '') + (ph ? ' has-photo' : '') + '" title="' + esc(p.name) + '" aria-hidden="true">' + (ph ? '<img src="' + p.avatar + '" alt="">' : esc(p.id === 'pool' ? '+' : initials(p.name))) + '</span>'; }
 function idea(id){ return S.ideas.find(function(i){ return i.id === id; }); }
 function team(id){ return S.teams.find(function(t){ return t.id === id; }); }
 function opp(id){ return S.opps.find(function(o){ return o.id === id; }); }
@@ -999,9 +1118,9 @@ async function loadLive(){
   if (!p) throw new Error('Your profile could not be loaded. Please sign out and in again.');
   var s = emptyState();
   s.session = true;
-  s.me = {name:p.name, title:p.title, location:p.location, showLocation:p.show_location, bio:p.bio, intro:p.intro, skills:p.skills || [], interests:p.interests || [], looking:p.looking || [], hours:p.hours, arrangement:p.arrangement, portfolio:p.portfolio, listed:p.listed, onboarded:p.onboarded, isAdmin:p.is_admin, status:p.status, email:(SESSION && SESSION.user.email) || '', joined:p.created_at};
+  s.me = {name:p.name, title:p.title, location:p.location, showLocation:p.show_location, bio:p.bio, intro:p.intro, skills:p.skills || [], interests:p.interests || [], looking:p.looking || [], hours:p.hours, arrangement:p.arrangement, portfolio:p.portfolio, listed:p.listed, onboarded:p.onboarded, isAdmin:p.is_admin, status:p.status, email:(SESSION && SESSION.user.email) || '', joined:p.created_at, avatar:p.avatar || null};
   s.intent = p.intent || 'find';
-  s.members = r[1].filter(function(d){ return d.id !== MYID; }).map(function(d){ return {id:d.id, name:d.name, title:d.title, loc:d.location, color:colorFor(d.id), skills:d.skills || [], interests:d.interests || [], open:d.looking || [], hours:d.hours, arrangement:d.arrangement, bio:d.bio, intro:d.intro, portfolio:d.portfolio, listed:d.listed, joined:d.created_at}; });
+  s.members = r[1].filter(function(d){ return d.id !== MYID; }).map(function(d){ return {id:d.id, name:d.name, title:d.title, loc:d.location, color:colorFor(d.id), skills:d.skills || [], interests:d.interests || [], open:d.looking || [], hours:d.hours, arrangement:d.arrangement, bio:d.bio, intro:d.intro, portfolio:d.portfolio, listed:d.listed, joined:d.created_at, avatar:d.avatar || null}; });
   r[2].forEach(function(c){ var other = c.requester === MYID ? c.addressee : c.requester; s.connRows[other] = c.id; s.connections[other] = c.status === 'accepted' ? 'connected' : (c.requester === MYID ? 'pending' : 'incoming'); });
   r[3].forEach(function(m){ var other = m.sender === MYID ? m.recipient : m.sender; (s.threads[other] = s.threads[other] || []).push({id:m.id, f:M(m.sender), t:m.body, at:m.created_at}); if (m.recipient === MYID && !m.read_at) s.unread[other] = true; });
   var teamName = {}; r[12].forEach(function(t){ teamName[t.id] = t.name; });
@@ -1061,7 +1180,7 @@ async function loadLive(){
    ===================================================================== */
 function chk(r){ if (r && r.error) throw r.error; return r && r.data; }
 var live = {
-  saveProfile: function(f){ var row = {}; var map = {name:'name', title:'title', location:'location', bio:'bio', intro:'intro', skills:'skills', interests:'interests', looking:'looking', hours:'hours', arrangement:'arrangement', portfolio:'portfolio', showLocation:'show_location', listed:'listed', onboarded:'onboarded', intent:'intent'}; Object.keys(f).forEach(function(k){ if (map[k]) row[map[k]] = f[k]; }); return SB.from('profiles').update(row).eq('id', MYID).then(chk); },
+  saveProfile: function(f){ var row = {}; var map = {name:'name', title:'title', location:'location', bio:'bio', intro:'intro', skills:'skills', interests:'interests', looking:'looking', hours:'hours', arrangement:'arrangement', portfolio:'portfolio', showLocation:'show_location', listed:'listed', onboarded:'onboarded', intent:'intent', avatar:'avatar'}; Object.keys(f).forEach(function(k){ if (map[k]) row[map[k]] = f[k]; }); return SB.from('profiles').update(row).eq('id', MYID).then(chk); },
   connect: function(id){ return SB.from('connections').insert({requester:MYID, addressee:id}).then(chk); },
   acceptConn: function(id){ return SB.from('connections').update({status:'accepted'}).eq('id', S.connRows[id]).then(chk); },
   removeConn: function(id){ return SB.from('connections').delete().eq('id', S.connRows[id]).then(chk); },
@@ -1266,7 +1385,7 @@ function shell(active, inner){
    ===================================================================== */
 function authFrame(inner){
   return '<div class="auth"><div class="auth-art"><a href="' + SITE + '"><img src="' + LOGO_LIGHT + '" alt="Cleverherd" style="height:20px"></a>' +
-    '<div><img class="hills" src="' + HILLS + '" alt=""><span class="eyebrow" style="color:var(--sand)">Founding community</span><h2 style="margin-top:12px">You don’t need every skill. <em>You need the right people.</em></h2><p>Membership is free. Connect with complementary professionals, work on projects together and help shape what Cleverherd becomes.</p></div>' +
+    '<div><img class="hills" src="' + HILLS + '" alt=""><span class="eyebrow" style="color:var(--sage)">Founding community</span><h2 style="margin-top:12px">You don’t need every skill. <em>You need the right people.</em></h2><p>Membership is free. Connect with complementary professionals, work on projects together and help shape what Cleverherd becomes.</p></div>' +
     '<p class="small" style="color:var(--sage)">© ' + new Date().getFullYear() + ' Cleverherd · <a href="' + SITE + '#/privacy" style="color:inherit">Privacy</a> · <a href="' + SITE + '#/terms" style="color:inherit">Terms</a></p></div>' +
     '<div class="auth-form"><div class="auth-card">' + (UI.authMsg ? '<p class="note" role="alert" style="margin-bottom:18px">' + esc(UI.authMsg) + '</p>' : '') + inner + '</div></div></div>';
 }
@@ -1363,7 +1482,7 @@ function pOnboarding(){
 function initiativeBanner(){
   var i = initiative(); if (!i) return '';
   var mine = S.offers[i.id] || [], joined = !!S.following[i.id], pct = i.goalTarget ? Math.round(i.goalCurrent / i.goalTarget * 100) : 0;
-  return '<section class="init-banner"><div class="ib-copy"><span class="eyebrow" style="color:var(--sand)">Founding community initiative</span><h2>' + esc(i.title) + '</h2><p>' + esc(i.tagline) + ' Business development, marketing, research, design and operations all count.</p>' +
+  return '<section class="init-banner"><div class="ib-copy"><span class="eyebrow" style="color:var(--sage)">Founding community initiative</span><h2>' + esc(i.title) + '</h2><p>' + esc(i.tagline) + ' Business development, marketing, research, design and operations all count.</p>' +
     '<div class="ib-actions">' + (joined ? '<a class="btn btn-sand" href="#/labs/' + i.id + '/workstreams">Open your workstreams</a><span class="small" style="color:var(--sage)">You’re in: ' + esc(mine.join(', ') || 'interested') + '</span>' : '<button class="btn btn-sand" data-act="join-initiative" data-id="' + i.id + '">Join the initiative</button><a class="btn btn-line-l" href="#/labs/' + i.id + '">Learn more</a>') + '</div></div>' +
     '<div class="ib-goal" aria-label="' + i.goalCurrent + ' of ' + i.goalTarget + ' ' + esc(i.goalLabel) + '"><b>' + i.goalCurrent + '<span>/' + i.goalTarget + '</span></b><small>' + esc(i.goalLabel) + '</small><div class="bar"><i style="width:' + pct + '%"></i></div><small>' + i.interested + (i.interested === 1 ? ' member' : ' members') + ' taking part</small></div></section>';
 }
@@ -1387,7 +1506,7 @@ function pHome(){
 
   var noOpps = emptyBox('No opportunities yet. We’re building them together.', 'Join our first community initiative, invite a collaborator, or help introduce a business that needs a team.', '<button class="btn btn-ink btn-sm" data-act="join-initiative" data-id="' + INITIATIVE_ID + '">Join the initiative</button><a class="btn btn-line btn-sm" href="#/invite">Invite a collaborator</a><a class="btn btn-line btn-sm" href="' + SITE + '#/join">Introduce a business</a>');
   var oppCard = '<section class="card"><div class="card-h"><h3>Recommended opportunities</h3><a href="#/opportunities">See all</a></div>' + (opps.length ?
-    opps.map(function(o){ var hits = skillHits(S.me.skills, o.skills); return '<a class="opp-row" href="#/opportunities/' + o.id + '">' + typeDot(o.type) + '<div class="grow" style="min-width:0"><div class="meta-line"><span class="eyebrow">' + TYPE[o.type].label + '</span>' + compPill(o) + (hits.length >= 2 ? '<span class="pill ok">Strong match</span>' : '') + (S.applications[o.id] ? '<span class="pill">Applied</span>' : '') + sampleTag() + '</div><h4>' + esc(o.title) + '</h4><p class="small muted" style="margin-top:4px">' + esc([o.comp, o.commit, o.by].filter(Boolean).join(' · ')) + '</p></div></a>'; }).join('') : noOpps) + '</section>';
+    opps.map(function(o){ var hits = skillHits(S.me.skills, o.skills); return '<a class="opp-row" href="#/opportunities/' + o.id + '">' + typeDot(o.type) + '<div class="grow" style="min-width:0"><div class="meta-line"><span class="eyebrow">' + TYPE[o.type].label + '</span>' + compPill(o) + (hits.length >= 2 ? '<span class="pill go">Strong match</span>' : '') + (S.applications[o.id] ? '<span class="pill">Applied</span>' : '') + sampleTag() + '</div><h4>' + esc(o.title) + '</h4><p class="small muted" style="margin-top:4px">' + esc([o.comp, o.commit, o.by].filter(Boolean).join(' · ')) + '</p></div></a>'; }).join('') : noOpps) + '</section>';
   var peopleCard = '<section class="card"><div class="card-h"><h3>People who complement you</h3><a href="#/network">Browse network</a></div>' + (people.length ? '<div class="g2">' +
     people.map(function(x){ var p = x.m; return '<a class="mcard" href="#/network/' + p.id + '" style="padding:16px"><div class="person">' + av(p) + '<span><b>' + esc(p.name) + '</b><small>' + esc(p.title) + '</small></span></div><p class="small muted">' + (x.adds.length ? 'Adds <b>' + esc(x.adds.join(' + ')) + '</b> to your skills' : x.shared.length ? 'Shares your interest in ' + esc(x.shared.join(', ')) : esc(p.intro || 'New to the community')) + '</p></a>'; }).join('') + '</div>' :
     emptyBox('You’re one of the first members here.', 'As people join, those whose skills complement yours will show up here. Know someone great? Bring them in.', '<a class="btn btn-ink btn-sm" href="#/invite">Invite someone</a><a class="btn btn-line btn-sm" href="#/tools/team-builder">Map the skills you need</a>')) + '</section>';
@@ -1447,8 +1566,8 @@ function pNetwork(){
     (inc.length ? '<section class="card" style="margin-bottom:18px"><div class="card-h"><h3>Connection requests</h3><span class="pill sd">' + inc.length + '</span></div>' + inc.map(function(id){ var p = P(id); return '<div class="row">' + av(p) + '<div class="grow"><a class="row-link" href="#/network/' + id + '"><b>' + esc(p.name) + '</b></a><div class="small muted">' + esc(p.title) + '</div></div><button class="btn btn-ink btn-sm" data-act="accept-conn" data-id="' + id + '">Accept</button><button class="btn btn-ghost btn-sm" data-act="decline-conn" data-id="' + id + '">Ignore</button></div>'; }).join('') + '</section>' : '') +
     '<div class="tabs" role="tablist">' + [['directory', 'Directory'], ['new', 'Newest members'], ['connections', 'My connections']].map(function(t){ return '<a href="#" role="tab" aria-selected="' + (f.tab === t[0]) + '" data-act="net-tab" data-v="' + t[0] + '" class="' + (f.tab === t[0] ? 'on' : '') + '">' + t[1] + '</a>'; }).join('') + '</div>' +
     '<div class="toolbar"><div class="search">' + icon('search') + '<input data-filter="net.q" value="' + esc(f.q) + '" placeholder="Search name, skill, interest…" aria-label="Search members"></div>' +
-    '<select class="sel fsel' + (f.role ? ' on' : '') + '" data-filter="net.role" aria-label="Role">' + options([['', 'Any role']].concat(Object.keys(ROLES).map(function(r){ return [r, r]; })), f.role) + '</select>' +
-    '<select class="sel fsel' + (f.hours ? ' on' : '') + '" data-filter="net.hours" aria-label="Availability">' + options([['', 'Any availability']].concat(HOURS.map(function(h){ return [h, h]; })), f.hours) + '</select></div>' +
+    '<div class="fsel-row"><select class="sel fsel' + (f.role ? ' on' : '') + '" data-filter="net.role" aria-label="Role">' + options([['', 'Any role']].concat(Object.keys(ROLES).map(function(r){ return [r, r]; })), f.role) + '</select>' +
+    '<select class="sel fsel' + (f.hours ? ' on' : '') + '" data-filter="net.hours" aria-label="Availability">' + options([['', 'Any availability']].concat(HOURS.map(function(h){ return [h, h]; })), f.hours) + '</select></div></div>' +
     '<div id="list" aria-live="polite">' + netList() + '</div>';
 }
 function connectButtons(id){
@@ -1474,7 +1593,7 @@ function pMember(id){
         (m.portfolio ? '<h4>Work</h4><p><a class="link" href="' + esc(/^https?:\/\//.test(m.portfolio) ? m.portfolio : 'https://' + m.portfolio) + '" target="_blank" rel="noopener nofollow ugc">' + esc(m.portfolio) + ' ↗</a></p>' : '') + '</section>' +
       creditsSection(m.id) + '<section class="card"><div class="card-h"><h3>Recommendations</h3><button class="btn btn-line btn-sm" data-act="endorse" data-id="' + m.id + '">' + icon('star') + 'Recommend</button></div>' + (recs.length ? recs.map(function(e){ var f = P(e.from); return '<div class="row" style="align-items:flex-start">' + av(f, 'sm') + '<div class="grow"><div class="small muted">' + esc(e.from === 'me' ? 'You' : f.name) + ' recommends for <b>' + esc(e.skill) + '</b></div>' + (e.note ? '<p style="margin-top:4px">' + esc(e.note) + '</p>' : '') + '</div>' + (e.from === 'me' ? '<button class="link-btn" data-act="unendorse" data-id="' + e.id + '">Remove</button>' : '') + '</div>'; }).join('') : '<p class="small muted">No recommendations yet. Worked with ' + esc(first(m.name)) + '? Recommend a skill.</p>') + '</section>' +
       (theirIdeas.length || theirTeams.length ? '<section class="card"><div class="card-h"><h3>Projects</h3></div>' + theirIdeas.map(function(i){ return '<a class="row row-link" href="#/labs/' + i.id + '"><span class="type-dot t-startup">' + icon('flask') + '</span><div class="grow"><b>' + esc(i.title) + '</b><div class="small muted">Founder · ' + esc(i.stage) + '</div></div></a>'; }).join('') + theirTeams.filter(function(t){ return t.visibility === 'public' || myStatus(t) === 'active'; }).map(function(t){ var r = t.members.find(function(x){ return x.id === id; }); return '<a class="row row-link" href="#/teams/' + t.id + '"><span class="type-dot">' + icon('grid') + '</span><div class="grow"><b>' + esc(t.name) + '</b><div class="small muted">' + esc(r.role || t.kind) + '</div></div></a>'; }).join('') + '</section>' : '') +
-    '</div><div class="stack"><section class="combo"><span class="eyebrow" style="color:var(--sand)">You + ' + esc(first(m.name)) + '</span><h3 style="margin:10px 0 6px;font-size:20px">' + (covered.length ? 'Together you cover ' + esc(covered.join(', ')) + '.' : 'A new combination.') + '</h3><p class="small muted" style="margin-bottom:14px">Combined skills</p>' +
+    '</div><div class="stack"><section class="combo"><span class="eyebrow" style="color:var(--sage)">You + ' + esc(first(m.name)) + '</span><h3 style="margin:10px 0 6px;font-size:20px">' + (covered.length ? 'Together you cover ' + esc(covered.join(', ')) + '.' : 'A new combination.') + '</h3><p class="small muted" style="margin-bottom:14px">Combined skills</p>' +
       '<div class="tags">' + combined.slice(0, 10).map(function(s){ return '<span class="tag">' + esc(s) + '</span>'; }).join('') + missing.map(function(r){ return '<span class="tag miss">Missing: ' + esc(r) + '</span>'; }).join('') + '</div>' +
       (missing.length ? '<a class="btn btn-sand btn-sm" style="margin-top:16px" href="#/network" data-act="find-role" data-v="' + esc(missing[0]) + '">Find ' + esc(missing[0].toLowerCase()) + ' help</a>' : '') + '</section>' +
       '<section class="card"><div class="kv"><div><span>Availability</span><b>' + esc(m.hours || '—') + '</b></div><div><span>Arrangement</span><b>' + esc(m.arrangement || '—') + '</b></div><div><span>Roles</span><b>' + esc(rolesOf(m.skills).join(', ') || '—') + '</b></div></div></section>' +
@@ -1499,7 +1618,7 @@ function oppList(){
     var hits = skillHits(S.me.skills, o.skills), app = S.applications[o.id], rc = (S.received[o.id] || []).length;
     return '<a class="ocard" href="#/opportunities/' + o.id + '">' + typeDot(o.type) + '<div style="min-width:0"><div class="meta-line"><span class="eyebrow">' + TYPE[o.type].label + '</span><span class="small muted">· ' + esc(o.by) + '</span>' + sampleTag() + '</div><h4>' + esc(o.title) + '</h4>' + tags(o.skills, hits) +
       '<div class="meta">' + compPill(o) + (o.comp ? '<span>' + icon('coin') + ' ' + esc(o.comp) + '</span>' : '') + (o.commit ? '<span>' + icon('clock') + ' ' + esc(o.commit) + '</span>' : '') + (o.where ? '<span>' + icon('pin') + ' ' + esc(o.where) + '</span>' : '') + '</div></div>' +
-      '<div class="side-col">' + (o.mine ? '<span class="pill ' + (o.status === 'published' ? 'ok' : o.status === 'pending' ? 'sd' : 'ln') + '">' + esc(o.status === 'pending' ? 'In review' : o.status) + '</span>' + (rc ? '<span class="pill dk">' + rc + ' applicant' + (rc > 1 ? 's' : '') + '</span>' : '') : '') + (hits.length >= 2 ? '<span class="pill ok">Strong match</span>' : hits.length ? '<span class="pill">Good match</span>' : '') + (app ? '<span class="pill dk">' + esc(APP_STATUS[app.status]) + '</span>' : '') + (S.saved[o.id] ? '<span class="pill ln">' + icon('bookmark') + 'Saved</span>' : '') + '<span class="small muted">' + esc(ago(o.created)) + '</span></div></a>';
+      '<div class="side-col">' + (o.mine ? '<span class="pill ' + (o.status === 'published' ? 'go' : o.status === 'pending' ? 'sd' : 'ln') + '">' + esc(o.status === 'pending' ? 'In review' : o.status) + '</span>' + (rc ? '<span class="pill dk">' + rc + ' applicant' + (rc > 1 ? 's' : '') + '</span>' : '') : '') + (hits.length >= 2 ? '<span class="pill go">Strong match</span>' : hits.length ? '<span class="pill">Good match</span>' : '') + (app ? '<span class="pill dk">' + esc(APP_STATUS[app.status]) + '</span>' : '') + (S.saved[o.id] ? '<span class="pill ln">' + icon('bookmark') + 'Saved</span>' : '') + '<span class="small muted">' + esc(ago(o.created)) + '</span></div></a>';
   }).join('') + '</div>';
 }
 function pOpps(){
@@ -1610,7 +1729,7 @@ function pTeam(id, tab){
         (lead && m.id !== 'me' && m.status === 'active' ? '<button class="btn btn-line btn-sm" data-act="member-edit" data-team="' + t.id + '" data-id="' + m.id + '">Edit</button>' : '') +
         (lead && m.id !== 'me' ? '<button class="btn btn-ghost btn-sm" data-act="remove-member" data-team="' + t.id + '" data-id="' + m.id + '">Remove</button>' : '') +
         (m.id !== 'me' ? '<a class="btn btn-line btn-sm" href="#/network/' + m.id + '">Profile</a>' : '') + '</div>'; }).join('') +
-      '<div style="margin-top:18px" class="combo"><span class="eyebrow" style="color:var(--sand)">Team coverage</span><div class="tags" style="margin-top:12px">' + (function(){ var all = []; mems.forEach(function(m){ all = all.concat(P(m.id).skills || []); }); var cov = rolesOf(all); return ['Design', 'Development', 'Marketing', 'Sales', 'Operations', 'Research'].map(function(r){ return '<span class="tag ' + (cov.indexOf(r) > -1 ? '' : 'miss') + '">' + (cov.indexOf(r) > -1 ? '✓ ' : 'Missing: ') + r + '</span>'; }).join(''); })() + '</div><a class="btn btn-sand btn-sm" style="margin-top:14px" href="#/tools/team-builder?team=' + t.id + '">Find people for missing roles</a></div></section>' +
+      '<div style="margin-top:18px" class="combo"><span class="eyebrow" style="color:var(--sage)">Team coverage</span><div class="tags" style="margin-top:12px">' + (function(){ var all = []; mems.forEach(function(m){ all = all.concat(P(m.id).skills || []); }); var cov = rolesOf(all); return ['Design', 'Development', 'Marketing', 'Sales', 'Operations', 'Research'].map(function(r){ return '<span class="tag ' + (cov.indexOf(r) > -1 ? '' : 'miss') + '">' + (cov.indexOf(r) > -1 ? '✓ ' : 'Missing: ') + r + '</span>'; }).join(''); })() + '</div><a class="btn btn-sand btn-sm" style="margin-top:14px" href="#/tools/team-builder?team=' + t.id + '">Find people for missing roles</a></div></section>' +
       '<div class="team-actions">' + (lead ? '<button class="btn btn-line btn-sm" data-act="team-settings" data-id="' + t.id + '">Team settings</button>' : '') + (t.kind !== 'Workstream' || true ? '<button class="btn btn-ghost btn-sm" data-act="leave-team" data-id="' + t.id + '" data-msg="You left the team" data-confirm="Leave ' + esc(t.name) + '?">Leave team</button>' : '') + '</div>';
   }
   return '<a class="back" href="#/teams">' + icon('left') + 'Teams</a>' +
@@ -1627,9 +1746,9 @@ function ideaCard(i){
   var owner = i.owner ? P(i.owner) : null;
   if (i.kind === 'initiative') {
     var pct = i.goalTarget ? Math.round(i.goalCurrent / i.goalTarget * 100) : 0;
-    return '<a class="icard feat" href="#/labs/' + i.id + '"><div class="meta-line" style="justify-content:space-between"><span class="pill sd">Community initiative</span>' + (S.following[i.id] ? '<span class="small" style="color:var(--sage)">You’re in</span>' : '') + '</div><h3>' + esc(i.title) + '</h3><p class="tl">' + esc(i.tagline) + '</p><div><div class="bar"><i style="width:' + pct + '%"></i></div><div class="small" style="margin-top:8px;color:var(--sage)">' + i.goalCurrent + ' of ' + i.goalTarget + ' ' + esc(i.goalLabel) + '</div></div><div class="foot"><span>' + WORKSTREAMS.length + ' workstreams</span><span>' + i.interested + ' taking part</span></div></a>';
+    return '<a class="icard feat" href="#/labs/' + i.id + '"><div class="meta-line" style="justify-content:space-between"><span class="pill go">Community initiative</span>' + (S.following[i.id] ? '<span class="small" style="color:var(--sage)">You’re in</span>' : '') + '</div><h3>' + esc(i.title) + '</h3><p class="tl">' + esc(i.tagline) + '</p><div><div class="bar"><i style="width:' + pct + '%"></i></div><div class="small" style="margin-top:8px;color:var(--sage)">' + i.goalCurrent + ' of ' + i.goalTarget + ' ' + esc(i.goalLabel) + '</div></div><div class="foot"><span>' + WORKSTREAMS.length + ' workstreams</span><span>' + i.interested + ' taking part</span></div></a>';
   }
-  return '<a class="icard" href="#/labs/' + i.id + '"><div class="meta-line" style="justify-content:space-between"><span class="pill ' + (i.stage === 'Idea' ? 'ln' : i.stage === 'Validation' ? '' : 'ok') + '">' + esc(i.stage) + '</span>' + (S.following[i.id] ? '<span class="small muted">Interested</span>' : '') + sampleTag() + '</div>' +
+  return '<a class="icard" href="#/labs/' + i.id + '"><div class="meta-line" style="justify-content:space-between"><span class="pill ' + (i.stage === 'Idea' ? 'ln' : i.stage === 'Validation' ? '' : 'go') + '">' + esc(i.stage) + '</span>' + (S.following[i.id] ? '<span class="small muted">Interested</span>' : '') + sampleTag() + '</div>' +
     '<h3>' + esc(i.title) + '</h3><p class="tl">' + esc(i.tagline) + '</p>' + stageTrack(i.stage) +
     (i.looking.length ? '<div><span class="small muted">Looking for</span><div class="tags" style="margin-top:6px">' + i.looking.map(function(l){ return '<span class="tag">' + esc(l) + '</span>'; }).join('') + '</div></div>' : '') +
     '<div class="foot"><span style="display:flex;gap:8px;align-items:center">' + (owner ? av(owner, 'sm') + esc(i.owner === 'me' ? 'You' : owner.name) : 'Cleverherd') + '</span><span>' + i.interested + ' interested</span></div></a>';
@@ -1698,7 +1817,7 @@ function pInitiative(i, tab){
       '<p class="note"><b>Please read:</b> joining an initiative doesn’t guarantee compensation, commissions or ownership. Any paid or ownership-related work is agreed separately, in writing, with the client and the people involved before it begins.</p></div></div>';
   }
   return '<a class="back" href="#/labs">' + icon('left') + 'Labs</a>' +
-    '<section class="init-hero"><div><span class="eyebrow" style="color:var(--sand)">Community initiative</span><h1>' + esc(i.title) + '</h1><p>' + esc(i.tagline) + '</p><div class="ib-actions">' + (joined ? '<span class="pill sd">You’re in: ' + esc(mine.join(', ') || 'interested') + '</span><button class="btn btn-line-l btn-sm" data-act="join-initiative" data-id="' + i.id + '">Change workstreams</button><button class="btn btn-ghost btn-sm" style="color:var(--sage)" data-act="leave-initiative" data-id="' + i.id + '">Leave</button>' : '<button class="btn btn-sand" data-act="join-initiative" data-id="' + i.id + '">Join the initiative</button>') + '</div></div>' +
+    '<section class="init-hero"><div><span class="eyebrow" style="color:var(--sage)">Community initiative</span><h1>' + esc(i.title) + '</h1><p>' + esc(i.tagline) + '</p><div class="ib-actions">' + (joined ? '<span class="pill go">You’re in: ' + esc(mine.join(', ') || 'interested') + '</span><button class="btn btn-line-l btn-sm" data-act="join-initiative" data-id="' + i.id + '">Change workstreams</button><button class="btn btn-ghost btn-sm" style="color:var(--sage)" data-act="leave-initiative" data-id="' + i.id + '">Leave</button>' : '<button class="btn btn-sand" data-act="join-initiative" data-id="' + i.id + '">Join the initiative</button>') + '</div></div>' +
       '<div class="ib-goal"><b>' + i.goalCurrent + '<span>/' + i.goalTarget + '</span></b><small>' + esc(i.goalLabel) + '</small><div class="bar"><i style="width:' + pct + '%"></i></div><small>' + i.interested + (i.interested === 1 ? ' member' : ' members') + ' taking part</small></div></section>' +
     '<div class="tabs" role="tablist">' + tabs.map(function(x){ return '<a href="#/labs/' + i.id + '/' + x[0] + '" role="tab" aria-selected="' + (tab === x[0]) + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</a>'; }).join('') + '</div>' + body;
 }
@@ -1722,7 +1841,7 @@ function pIdea(id, tab){
   else if (tab === 'funding') {
     if (i.fundingOpen) {
       var pct = i.goal ? Math.min(100, Math.round(i.funding / i.goal * 100)) : 0;
-      body = '<div class="split"><section class="fund-box"><span class="eyebrow" style="color:var(--sand)">Early-stage support · non-binding</span><div class="fund-head"><div><b>' + money(i.funding) + '</b><span> indicated' + (i.goal ? ' of ' + money(i.goal) : '') + '</span></div><span>' + i.supporters + ' potential supporters</span></div><div class="bar"><i style="width:' + pct + '%"></i></div>' +
+      body = '<div class="split"><section class="fund-box"><span class="eyebrow" style="color:var(--sage)">Early-stage support · non-binding</span><div class="fund-head"><div><b>' + money(i.funding) + '</b><span> indicated' + (i.goal ? ' of ' + money(i.goal) : '') + '</span></div><span>' + i.supporters + ' potential supporters</span></div><div class="bar"><i style="width:' + pct + '%"></i></div>' +
         '<form data-form="pledge" data-id="' + i.id + '" style="margin-top:22px"><p style="font-weight:600;margin-bottom:10px">' + (pledge ? 'You’ve indicated ' + money(pledge) + '. Change it:' : 'Indicate how much you might contribute') + '</p><div class="amts" role="radiogroup" aria-label="Amount">' + [10, 50, 250, 500].map(function(a){ return '<label><input type="radio" name="amt" value="' + a + '"' + (pledge === a ? ' checked' : '') + '><span>' + money(a) + '</span></label>'; }).join('') + '</div>' +
         '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><button class="btn btn-sand" type="submit">' + (pledge ? 'Update interest' : 'Indicate interest') + '</button>' + (pledge ? '<button type="button" class="btn btn-ghost" style="color:var(--sage)" data-act="unpledge" data-id="' + i.id + '">Remove</button>' : '') + '</div></form>' +
         '<p class="note" style="margin-top:18px">This is a non-binding indication of interest, not a payment, investment or commitment. Supporters don’t receive ownership or a financial return. No money is collected through Cleverherd.</p></section>' +
@@ -1733,8 +1852,8 @@ function pIdea(id, tab){
   } else if (tab === 'validate' && isOwner) body = validatorForm(i);
   else body = commentsBlock(i);
   return '<a class="back" href="#/labs">' + icon('left') + 'Labs</a>' +
-    '<div class="hero-card" style="display:block"><div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start"><div><div class="meta-line"><span class="pill sd">Labs · ' + esc(i.stage) + '</span><span class="small muted">' + esc(i.cat) + '</span>' + sampleTag() + '</div><h1 style="margin-top:12px;font-size:clamp(28px,3.4vw,40px)">' + esc(i.title) + '</h1><p class="muted" style="margin-top:4px;font-size:16px">' + esc(i.tagline) + '</p></div>' +
-      '<div class="actions">' + (isOwner ? '<span class="pill ok">Your idea</span>' : '<button class="btn ' + (S.following[i.id] ? 'done' : 'btn-ink') + '" data-act="follow" data-id="' + i.id + '" aria-pressed="' + !!S.following[i.id] + '">' + (S.following[i.id] ? icon('check') + 'Interested' : icon('star') + 'I’m interested') + '</button><button class="btn btn-line" data-act="offer" data-id="' + i.id + '">Offer skills</button>') + '</div></div>' +
+    '<div class="hero-card" style="display:block"><div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start"><div><div class="meta-line"><span class="pill go">Labs · ' + esc(i.stage) + '</span><span class="small muted">' + esc(i.cat) + '</span>' + sampleTag() + '</div><h1 style="margin-top:12px;font-size:clamp(28px,3.4vw,40px)">' + esc(i.title) + '</h1><p class="muted" style="margin-top:4px;font-size:16px">' + esc(i.tagline) + '</p></div>' +
+      '<div class="actions">' + (isOwner ? '<span class="pill go">Your idea</span>' : '<button class="btn ' + (S.following[i.id] ? 'done' : 'btn-ink') + '" data-act="follow" data-id="' + i.id + '" aria-pressed="' + !!S.following[i.id] + '">' + (S.following[i.id] ? icon('check') + 'Interested' : icon('star') + 'I’m interested') + '</button><button class="btn btn-line" data-act="offer" data-id="' + i.id + '">Offer skills</button>') + '</div></div>' +
       '<div style="margin-top:22px">' + stageTrack(i.stage, true) + '</div></div>' +
     '<div class="tabs" role="tablist">' + tabs.map(function(x){ return '<a href="#/labs/' + i.id + '/' + x[0] + '" role="tab" aria-selected="' + (tab === x[0]) + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</a>'; }).join('') + '</div>' + body;
 }
@@ -1745,7 +1864,7 @@ function pIdea(id, tab){
 function pInvest(){
   var tab = UI.inv, open = S.ideas.filter(function(i){ return i.fundingOpen && i.kind === 'idea'; }), body;
   if (tab === 'support') {
-    body = '<p class="note" style="margin-bottom:18px">Early-stage support is non-binding: you indicate what you might contribute, and founders learn whether people want their project to exist. No money is collected, and supporters don’t receive ownership or returns.</p>' + (open.length ? '<div class="g3">' + open.map(function(i){ var pct = i.goal ? Math.min(100, Math.round(i.funding / i.goal * 100)) : 0; return '<a class="icard" href="#/labs/' + i.id + '/funding"><div class="meta-line" style="justify-content:space-between"><span class="pill">' + esc(i.stage) + '</span>' + (S.pledges[i.id] ? '<span class="pill ok">You: ' + money(S.pledges[i.id]) + '</span>' : '') + sampleTag() + '</div><h3>' + esc(i.title) + '</h3><p class="tl">' + esc(i.tagline) + '</p><div><div class="bar"><i style="width:' + pct + '%"></i></div><div style="display:flex;justify-content:space-between;margin-top:8px" class="small"><b>' + money(i.funding) + ' indicated</b><span class="muted">' + (i.goal ? 'of ' + money(i.goal) : '') + '</span></div></div><div class="foot"><span>' + i.supporters + ' supporters</span><span>Support →</span></div></a>'; }).join('') + '</div>' :
+    body = '<p class="note" style="margin-bottom:18px">Early-stage support is non-binding: you indicate what you might contribute, and founders learn whether people want their project to exist. No money is collected, and supporters don’t receive ownership or returns.</p>' + (open.length ? '<div class="g3">' + open.map(function(i){ var pct = i.goal ? Math.min(100, Math.round(i.funding / i.goal * 100)) : 0; return '<a class="icard" href="#/labs/' + i.id + '/funding"><div class="meta-line" style="justify-content:space-between"><span class="pill">' + esc(i.stage) + '</span>' + (S.pledges[i.id] ? '<span class="pill go">You: ' + money(S.pledges[i.id]) + '</span>' : '') + sampleTag() + '</div><h3>' + esc(i.title) + '</h3><p class="tl">' + esc(i.tagline) + '</p><div><div class="bar"><i style="width:' + pct + '%"></i></div><div style="display:flex;justify-content:space-between;margin-top:8px" class="small"><b>' + money(i.funding) + ' indicated</b><span class="muted">' + (i.goal ? 'of ' + money(i.goal) : '') + '</span></div></div><div class="foot"><span>' + i.supporters + ' supporters</span><span>Support →</span></div></a>'; }).join('') + '</div>' :
       emptyBox('No projects are open for support yet', 'When a Labs project reaches validation and passes review, it can open early, non-binding support here. Until then, the most valuable thing you can give is your skills.', '<a class="btn btn-ink btn-sm" href="#/labs">Explore Labs</a>'));
   } else if (tab === 'mine') {
     var mine = Object.keys(S.pledges);
@@ -1786,7 +1905,7 @@ function pProfile(edit){
   var m = S.me, p = meP();
   if (edit) {
     return '<a class="back" href="#/profile">' + icon('left') + 'Profile</a><div class="ph"><div><span class="eyebrow">Edit profile</span><h1>Your profile</h1></div></div>' +
-      '<form class="card form" data-form="profile" style="max-width:780px" novalidate><div class="two">' + field('pf-n', 'Full name', '<input class="in" id="pf-n" name="name" value="' + esc(m.name) + '" required maxlength="80">') + field('pf-t', 'Professional title', '<input class="in" id="pf-t" name="title" value="' + esc(m.title) + '" maxlength="100">') + '</div>' +
+      '<form class="card form" data-form="profile" style="max-width:780px" novalidate><div class="photo-row">' + av(p, 'lg') + '<div><b>Profile photo</b><p class="small muted">A clear, friendly photo helps people recognise you. Square crops work best.</p><div class="actions" style="margin-top:8px"><button type="button" class="btn btn-line btn-sm" data-act="photo-pick">' + icon('camera') + (m.avatar ? 'Change photo' : 'Add photo') + '</button>' + (m.avatar ? '<button type="button" class="btn btn-ghost btn-sm" data-act="photo-remove">Remove</button>' : '') + '</div></div></div><div class="two">' + field('pf-n', 'Full name', '<input class="in" id="pf-n" name="name" value="' + esc(m.name) + '" required maxlength="80">') + field('pf-t', 'Professional title', '<input class="in" id="pf-t" name="title" value="' + esc(m.title) + '" maxlength="100">') + '</div>' +
       '<div class="two">' + field('pf-l', 'Location', '<input class="in" id="pf-l" name="location" value="' + esc(m.location) + '" maxlength="100">') + field('pf-p', 'Portfolio or LinkedIn', '<input class="in" id="pf-p" name="portfolio" type="text" inputmode="url" placeholder="https://" value="' + esc(m.portfolio) + '" maxlength="300">') + '</div>' +
       field('pf-i', 'One-line introduction', '<input class="in" id="pf-i" name="intro" value="' + esc(m.intro) + '" maxlength="200" placeholder="What you do and what you’re looking for">') +
       field('pf-b', 'About you', '<textarea class="in" id="pf-b" name="bio" maxlength="1500">' + esc(m.bio) + '</textarea>', 'Experience, the kind of work you do best, and what you want to build.') +
@@ -1797,15 +1916,27 @@ function pProfile(edit){
       '<p class="err" role="alert"></p><div style="display:flex;gap:10px"><button class="btn btn-ink" type="submit">Save profile</button><a class="btn btn-line" href="#/profile">Cancel</a></div></form>';
   }
   var c = completeness(), tips = profileTips(), recs = S.endorsements.filter(function(e){ return e.to === 'me'; });
-  return '<div class="hero-card">' + av(p, 'lg') + '<div class="grow"><h1>' + esc(m.name) + '</h1><p class="muted" style="margin-top:4px">' + esc(m.title || 'Add a title') + '</p><p class="small muted meta-icons">' + (m.location ? '<span>' + icon('pin') + ' ' + esc(m.location) + (m.showLocation ? '' : ' (hidden from others)') + '</span>' : '') + (m.hours ? '<span>' + icon('clock') + ' ' + esc(m.hours) + '</span>' : '') + (!m.listed ? '<span>' + icon('lock') + ' Not listed in directory</span>' : '') + '</p></div><div class="actions"><a class="btn btn-ink" href="#/profile/edit">Edit profile</a><a class="btn btn-line" href="#/settings">Privacy & settings</a></div></div>' +
+  return '<div class="hero-card"><button type="button" class="av-edit" data-act="photo-menu" aria-label="' + (m.avatar ? 'Change or remove your profile photo' : 'Add a profile photo') + '">' + av(p, 'lg') + '<span class="av-cam" aria-hidden="true">' + icon('camera') + '</span></button><div class="grow"><h1>' + esc(m.name) + '</h1><p class="muted" style="margin-top:4px">' + esc(m.title || 'Add a title') + '</p><p class="small muted meta-icons">' + (m.location ? '<span>' + icon('pin') + ' ' + esc(m.location) + (m.showLocation ? '' : ' (hidden from others)') + '</span>' : '') + (m.hours ? '<span>' + icon('clock') + ' ' + esc(m.hours) + '</span>' : '') + (!m.listed ? '<span>' + icon('lock') + ' Not listed in directory</span>' : '') + '</p></div><div class="actions"><a class="btn btn-ink" href="#/profile/edit">Edit profile</a><a class="btn btn-line" href="#/settings">Privacy & settings</a></div></div>' +
     '<div class="split"><div class="stack"><section class="card prose">' + (m.intro ? '<p class="lead-intro">“' + esc(m.intro) + '”</p>' : '') + '<h4>About</h4><p>' + esc(m.bio || 'Add a short bio so people know what you do.') + '</p><h4>Skills</h4>' + tags(m.skills) + '<h4>Interests</h4>' + tags(m.interests) + '<h4>Looking for</h4>' + tags(m.looking) + '<h4>Roles you cover</h4>' + tags(rolesOf(m.skills)) + (m.portfolio ? '<h4>Work</h4><p>' + esc(m.portfolio) + '</p>' : '') + '</section>' +
       creditsSection('me') + '<section class="card"><div class="card-h"><h3>Recommendations you’ve received</h3></div>' + (recs.length ? recs.map(function(e){ var f = P(e.from); return '<div class="row" style="align-items:flex-start">' + av(f, 'sm') + '<div class="grow"><div class="small muted">' + esc(f.name) + ' · <b>' + esc(e.skill) + '</b></div>' + (e.note ? '<p style="margin-top:4px">' + esc(e.note) + '</p>' : '') + '</div></div>'; }).join('') : '<p class="small muted">None yet. They come from people you’ve worked with.</p>') + '</section></div>' +
     '<div class="stack"><section class="card"><div class="card-h"><h3>Profile strength</h3><span class="small muted">' + c + '%</span></div><div class="bar"><i style="width:' + c + '%"></i></div>' + (tips.length ? '<ul class="tips">' + tips.slice(0, 4).map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : '<p class="small muted" style="margin-top:10px">Looking great.</p>') + '</section>' +
       '<section class="card"><div class="kv"><div><span>Arrangement</span><b>' + esc(m.arrangement || '—') + '</b></div><div><span>Teams</span><b>' + myTeams().length + '</b></div><div><span>Ideas shared</span><b>' + S.ideas.filter(function(i){ return i.owner === 'me'; }).length + '</b></div><div><span>People you’ve invited</span><b>' + (S.referrals || 0) + '</b></div></div></section></div></div>';
 }
+// Appearance: 'light' | 'dark' | 'system', stored per device.
+function themePref(){ try { return localStorage.getItem('ch-theme') || 'light'; } catch (e) { return 'light'; } }
+function applyTheme(){
+  var t = themePref(), dark = t === 'dark' || (t === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', dark ? '#0e1b19' : '#162927');
+}
+function setTheme(t){ try { localStorage.setItem('ch-theme', t); } catch (e) {} applyTheme(); toast(t === 'dark' ? 'Dark mode on' : t === 'light' ? 'Light mode on' : 'Matching your device'); }
+if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){ if (themePref() === 'system') applyTheme(); }); } catch (e) {} }
 function pSettings(){
   var m = S.me;
   return '<div class="ph"><div><span class="eyebrow">Settings</span><h1>Account & privacy</h1></div></div><div class="split"><div class="stack">' +
+    '<section class="card form"><div class="card-h"><h3>Appearance</h3></div><div class="chips" role="radiogroup" aria-label="Theme">' +
+      [['light', 'Light'], ['dark', 'Dark'], ['system', 'Match my device']].map(function(o){ return '<label class="chip-radio"><input type="radio" name="theme" value="' + o[0] + '"' + (themePref() === o[0] ? ' checked' : '') + ' data-change="theme"><span>' + o[1] + '</span></label>'; }).join('') +
+      '</div><p class="small muted">Saved on this device.</p></section>' +
     '<form class="card form" data-form="privacy"><div class="card-h"><h3>Privacy</h3></div>' +
       '<label class="switch"><input type="checkbox" name="listed"' + (m.listed ? ' checked' : '') + '><span><b>Show me in the member directory</b><small>When off, people can’t find you by browsing or search. Teammates and people you message still see your name and profile.</small></span></label>' +
       '<label class="switch"><input type="checkbox" name="showLocation"' + (m.showLocation ? ' checked' : '') + '><span><b>Show my location to other members</b><small>Your email address is never shown to other members.</small></span></label>' +
@@ -1940,7 +2071,7 @@ function pToolTeam(){
   return '<a class="back" href="' + (t ? '#/teams/' + t.id + '/members' : '#/tools') + '">' + icon('left') + (t ? t.name : 'Toolkit') + '</a><div class="ph"><div><span class="eyebrow">Skill gap finder</span><h1>What are you missing?</h1><p>Pick the roles ' + (t ? esc(t.name) : 'your project') + ' needs. We’ll compare them with ' + (t ? 'the team’s' : 'your') + ' skills and suggest members who fill the gaps.</p></div></div>' +
     '<div class="split"><div class="stack"><section class="card"><div class="card-h"><h3>Roles this project needs</h3></div><div class="togs" data-change-group="need">' + Object.keys(ROLES).map(function(r){ return '<label><input type="checkbox" name="need" value="' + r + '"' + (need.indexOf(r) > -1 ? ' checked' : '') + ' data-change="need"><span>' + r + '</span></label>'; }).join('') + '</div></section>' +
       (gaps.length ? cands.map(function(c){ return '<section class="card"><div class="card-h"><h3>' + esc(c.r) + '</h3><span class="pill sd">Missing</span></div>' + (c.people.length ? c.people.map(function(m){ return '<div class="row">' + av(m) + '<div class="grow"><a class="row-link" href="#/network/' + m.id + '"><b>' + esc(m.name) + '</b></a><div class="small muted">' + esc(m.title) + (m.hours ? ' · ' + esc(m.hours) : '') + '</div></div><button class="btn btn-line btn-sm" data-act="message" data-id="' + m.id + '">Message</button>' + (t && isLead(t) ? '<button class="btn btn-ink btn-sm" data-act="quick-invite" data-team="' + t.id + '" data-id="' + m.id + '" data-v="' + esc(c.r) + '">Invite</button>' : '') + '</div>'; }).join('') : '<p class="small muted">No members with this skill yet. <a class="link" href="#/invite">Invite someone</a> or post an <a class="link" href="#" data-act="post-opp">open role</a>.</p>') + '</section>'; }).join('') : '<section class="card"><p><b>No gaps.</b> ' + (t ? 'The team' : 'You') + ' cover every role you selected.</p></section>') + '</div>' +
-    '<div class="stack"><section class="combo"><span class="eyebrow" style="color:var(--sand)">Coverage</span><div class="tags" style="margin-top:12px">' + need.map(function(r){ return '<span class="tag ' + (have.indexOf(r) > -1 ? '' : 'miss') + '">' + (have.indexOf(r) > -1 ? '✓ ' : 'Missing: ') + r + '</span>'; }).join('') + '</div></section></div></div>';
+    '<div class="stack"><section class="combo"><span class="eyebrow" style="color:var(--sage)">Coverage</span><div class="tags" style="margin-top:12px">' + need.map(function(r){ return '<span class="tag ' + (have.indexOf(r) > -1 ? '' : 'miss') + '">' + (have.indexOf(r) > -1 ? '✓ ' : 'Missing: ') + r + '</span>'; }).join('') + '</div></section></div></div>';
 }
 
 /* =====================================================================
@@ -1972,7 +2103,7 @@ function pAdmin(){
       (r.status === 'open' ? '<button class="btn btn-ink btn-sm" data-act="resolve-report" data-id="' + r.id + '" data-v="resolved">Mark resolved</button><button class="btn btn-ghost btn-sm" data-act="resolve-report" data-id="' + r.id + '" data-v="dismissed">Dismiss</button>' : '') + '</div></section>'; }).join('') + '</div>' : emptyBox('No reports', 'When members report content, it appears here.');
   } else if (tab === 'members') {
     var mem = A.members || [];
-    body = mem.length ? '<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Status</th><th></th></tr></thead><tbody>' + mem.map(function(m){ return '<tr><td><b>' + esc(m.name) + '</b>' + (m.is_admin ? ' <span class="pill">admin</span>' : '') + '<div class="small muted">' + esc(m.title || '') + (m.onboarded ? '' : ' · profile incomplete') + (m.listed ? '' : ' · unlisted') + '</div></td><td class="small">' + esc(m.email) + '</td><td class="small muted">' + esc(fmtDate(m.created_at)) + '</td><td>' + (m.status === 'suspended' ? '<span class="pill sd">Suspended</span>' : '<span class="pill ok">Active</span>') + '</td><td class="r">' + (m.id !== MYID ? '<button class="btn btn-line btn-sm" data-act="suspend" data-id="' + m.id + '" data-v="' + (m.status === 'suspended' ? '' : '1') + '">' + (m.status === 'suspended' ? 'Reinstate' : 'Suspend') + '</button>' : '') + '</td></tr>'; }).join('') + '</tbody></table></div></section>' : emptyBox(LIVE ? 'No members yet' : 'Member list', LIVE ? 'Registrations appear here.' : 'In the live platform this lists every registration with email and join date.');
+    body = mem.length ? '<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Status</th><th></th></tr></thead><tbody>' + mem.map(function(m){ return '<tr><td><b>' + esc(m.name) + '</b>' + (m.is_admin ? ' <span class="pill">admin</span>' : '') + '<div class="small muted">' + esc(m.title || '') + (m.onboarded ? '' : ' · profile incomplete') + (m.listed ? '' : ' · unlisted') + '</div></td><td class="small">' + esc(m.email) + '</td><td class="small muted">' + esc(fmtDate(m.created_at)) + '</td><td>' + (m.status === 'suspended' ? '<span class="pill bad">Suspended</span>' : '<span class="pill go">Active</span>') + '</td><td class="r">' + (m.id !== MYID ? '<button class="btn btn-line btn-sm" data-act="suspend" data-id="' + m.id + '" data-v="' + (m.status === 'suspended' ? '' : '1') + '">' + (m.status === 'suspended' ? 'Reinstate' : 'Suspend') + '</button>' : '') + '</td></tr>'; }).join('') + '</tbody></table></div></section>' : emptyBox(LIVE ? 'No members yet' : 'Member list', LIVE ? 'Registrations appear here.' : 'In the live platform this lists every registration with email and join date.');
   } else if (tab === 'initiative') {
     var i = initiative();
     body = i ? '<div class="split"><section class="card"><div class="card-h"><h3>' + esc(i.title) + '</h3></div><form class="form" data-form="init-progress" data-id="' + i.id + '">' + field('ig', 'Paying projects secured (only count real, confirmed projects)', '<input class="in" id="ig" name="goalCurrent" type="number" min="0" max="' + i.goalTarget + '" value="' + i.goalCurrent + '">') + '<button class="btn btn-ink" type="submit" style="justify-self:start">Update progress</button></form>' +
@@ -2417,6 +2548,7 @@ document.addEventListener('change', function(e){
   if (e.target.matches('select[data-filter]')) return filterInput(e);
   var c = e.target.closest('[data-change]'); if (!c) return;
   if (c.dataset.change === 'app-status') act(function(){ return api.setAppStatus(c.dataset.id, c.value); }, 'Applicant status updated');
+  if (c.dataset.change === 'theme') { setTheme(c.value); return; }
   if (c.dataset.change === 'opp-type') { UI.opp.type = c.value; refresh(); return; }
   if (c.dataset.change === 'labs-stage') { UI.labs.stage = c.value; refresh(); return; }
   if (c.dataset.change === 'idea-stage') act(function(){ return api.updateIdea(c.dataset.id, {stage:c.value}); }, 'Stage updated');
@@ -2501,13 +2633,13 @@ function stopSync(){ if (syncTimer) clearInterval(syncTimer); syncTimer = null; 
    ===================================================================== */
 var PSTATUS = {
   draft: ['Draft', 'ln'], budget_agreed: ['Budget agreed', ''], proposal_sent: ['With client', 'sd'], changes_requested: ['Changes requested', 'sd'],
-  approved: ['Approved — awaiting payment', 'sd'], active: ['In progress', 'ok'], completed: ['Completed', 'dk'], cancelled: ['Cancelled', 'ln']
+  approved: ['Approved — awaiting payment', 'sd'], active: ['In progress', 'go'], completed: ['Completed', 'ok'], cancelled: ['Cancelled', 'ln']
 };
 var PLANS = {upfront: 'Full payment up front', deposit_balance: 'Deposit, then balance on completion', milestones: 'Pay per milestone on approval'};
 var METHODS = {fixed: 'Fixed amount', percent: '% of team budget', hourly: 'Hourly (estimate)', milestone: 'Fixed amount at a milestone', commission: 'Sales / referral commission (% of price)'};
-var INV_STATUS = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'sd'], void: ['Void', 'ln'], refunded: ['Refunded', 'ln'], partially_refunded: ['Partly refunded', 'ln'], disputed: ['Disputed', 'sd']};
-var PO_STATUS = {eligible: ['Ready to release', 'sd'], processing: ['Processing', ''], paid: ['Sent', 'ok'], failed: ['Failed', 'sd'], on_hold: ['On hold', 'ln'], reversed: ['Reversed', 'ln']};
-var MS_STATUS = {planned: ['Planned', 'ln'], in_progress: ['In progress', ''], submitted: ['With client for review', 'sd'], revision_requested: ['Revision requested', 'sd'], approved: ['Approved', 'ok']};
+var INV_STATUS = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'bad'], void: ['Void', 'ln'], refunded: ['Refunded', 'ln'], partially_refunded: ['Partly refunded', 'ln'], disputed: ['Disputed', 'bad']};
+var PO_STATUS = {eligible: ['Ready to release', 'sd'], processing: ['Processing', ''], paid: ['Sent', 'ok'], failed: ['Failed', 'bad'], on_hold: ['On hold', 'sd'], reversed: ['Reversed', 'ln']};
+var MS_STATUS = {planned: ['Planned', 'ln'], in_progress: ['In progress', 'go'], submitted: ['With client for review', 'sd'], revision_requested: ['Revision requested', 'sd'], approved: ['Approved', 'ok']};
 
 function cents$(c){ c = Math.round(Number(c) || 0); return (c < 0 ? '−$' : '$') + (Math.abs(c) / 100).toLocaleString('en-US', {minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2}); }
 function toCents(v){ var n = parseFloat(String(v || '').replace(/[$,\s]/g, '')); return isFinite(n) ? Math.round(n * 100) : 0; }
@@ -3247,6 +3379,59 @@ FORMS['task-edit'] = function(d, f){
 };
 var _taskDel = ACT['task-del'];
 ACT['task-del'] = function(d){ if (modalOpen()) closeModal(); return _taskDel(d); };
+
+/* =====================================================================
+   Profile photo: pick an image, crop to a centred square, shrink to 256px
+   in the browser, preview, then save it on the profile (inline, ~20-40KB).
+   ===================================================================== */
+var PHOTO_MAX = 110000;   // characters of data URL; the database allows 120,000
+function photoInput(){
+  var i = document.getElementById('photoIn');
+  if (!i) {
+    i = document.createElement('input'); i.type = 'file'; i.id = 'photoIn'; i.accept = 'image/*'; i.hidden = true;
+    i.addEventListener('change', function(){ var f = i.files && i.files[0]; i.value = ''; if (f) photoPrepare(f); });
+    document.body.appendChild(i);
+  }
+  return i;
+}
+function photoPrepare(file){
+  if (!/^image\//.test(file.type || '') && !/\.(jpe?g|png|webp|heic|heif|gif)$/i.test(file.name || '')) return toast('Choose an image file (JPG, PNG or WebP).', 'error');
+  if (file.size > 20 * 1024 * 1024) return toast('That image is over 20MB. Try a smaller one.', 'error');
+  var url = URL.createObjectURL(file), img = new Image();
+  img.onload = function(){
+    try {
+      var side = Math.min(img.naturalWidth, img.naturalHeight), size = Math.min(256, side);
+      var c = document.createElement('canvas'); c.width = c.height = size;
+      var g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+      g.fillStyle = '#ffffff'; g.fillRect(0, 0, size, size);
+      g.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
+      var q = 0.86, data = c.toDataURL('image/jpeg', q);
+      while (data.length > PHOTO_MAX && q > 0.4) { q -= 0.08; data = c.toDataURL('image/jpeg', q); }
+      if (data.length > PHOTO_MAX) return toast('Couldn’t make that image small enough. Try another photo.', 'error');
+      photoPreview(data);
+    } catch (e) { toast('Couldn’t read that image. Try a JPG or PNG.', 'error'); }
+    finally { URL.revokeObjectURL(url); }
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); toast('Couldn’t open that image. Try a JPG or PNG (some HEIC photos aren’t supported).', 'error'); };
+  img.src = url;
+}
+function photoPreview(data){
+  UI.photoDraft = data;
+  openModal('<h2>Your new photo</h2><p class="sub">This is how it will appear next to your name.</p>' +
+    '<div class="photo-preview"><span class="av has-photo av-xl"><img src="' + data + '" alt="Preview of your new profile photo"></span><span class="av has-photo"><img src="' + data + '" alt=""></span><span class="av has-photo sm"><img src="' + data + '" alt=""></span></div>' +
+    '<div class="modal-actions"><button type="button" class="btn btn-ghost" data-act="photo-pick">Choose another</button><button type="button" class="btn btn-line" data-act="close">Cancel</button><button type="button" class="btn btn-ink" data-act="photo-save">Save photo</button></div>');
+}
+ACT['photo-pick'] = function(){ if (modalOpen()) closeModal(); photoInput().click(); };
+ACT['photo-menu'] = function(){
+  if (!S.me.avatar) return ACT['photo-pick']();
+  openModal('<h2>Profile photo</h2><div class="photo-preview"><span class="av has-photo av-xl"><img src="' + S.me.avatar + '" alt="Your current profile photo"></span></div>' +
+    '<div class="modal-actions"><button type="button" class="btn btn-ghost danger-text" data-act="photo-remove">Remove photo</button><button type="button" class="btn btn-line" data-act="close">Cancel</button><button type="button" class="btn btn-ink" data-act="photo-pick">' + icon('camera') + 'Change photo</button></div>');
+};
+ACT['photo-save'] = function(){
+  var data = UI.photoDraft; if (!data) return; closeModal(); UI.photoDraft = null;
+  act(function(){ return api.saveProfile({avatar: data}); }, 'Photo updated');
+};
+ACT['photo-remove'] = function(){ if (modalOpen()) closeModal(); act(function(){ return api.saveProfile({avatar: null}); }, 'Photo removed'); };
 
 
 boot();

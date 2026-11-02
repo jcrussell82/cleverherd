@@ -32,8 +32,8 @@ p{margin:0}a{color:inherit}
 .card > p + p{margin-top:10px}
 .eyebrow{font:700 11.5px var(--h);letter-spacing:.12em;text-transform:uppercase;color:var(--forest)}
 .pill{display:inline-block;font:700 10.5px var(--h);letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;background:var(--bone);color:var(--forest);white-space:nowrap}
-.pill.ok{background:var(--forest);color:var(--bone)}.pill.sd{background:var(--sand);color:var(--ink)}
-.top .pill{background:rgba(231,226,214,.14);color:var(--bone)}.top .pill.sd{background:var(--sand);color:var(--ink)}.top .pill.ok{background:var(--sage);color:var(--ink)}
+.pill.ok{background:var(--forest);color:var(--bone)}.pill.sd{background:var(--sand);color:var(--ink)}.pill.go{background:var(--sage);color:var(--ink)}.pill.bad{background:#f6dcd5;color:#8a2f1f}.pill.ln{background:transparent;border:1px solid rgba(17,43,41,.25)}
+.top .pill{background:rgba(231,226,214,.14);color:var(--bone)}.top .pill.sd{background:var(--sand);color:var(--ink)}.top .pill.go{background:var(--sage);color:var(--ink)}.top .pill.ok{background:var(--bone);color:var(--ink)}.top .pill.ln{background:transparent;border:1px solid rgba(231,226,214,.4);color:var(--bone)}
 .muted{color:var(--forest)}.small{font-size:13px;line-height:1.55}
 .note{font-size:13.5px;line-height:1.55;color:var(--forest);background:var(--paper);border-left:3px solid var(--sand);padding:12px 14px;border-radius:0 12px 12px 0}
 .note.test{background:#fff7e6;border-color:#d39b2a;color:#5c4210}
@@ -132,9 +132,9 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     catch (e) { toast(e.message, true); }
     finally { busy = false; document.body.style.cursor = ''; }
   }
-  var STATUS = {proposal_sent: ['Awaiting your review', 'sd'], changes_requested: ['Being updated by the team', ''], approved: ['Approved — payment due', 'sd'], active: ['In progress', 'ok'], completed: ['Completed', 'ok'], cancelled: ['Cancelled', ''], draft: ['Being prepared', ''], budget_agreed: ['Being prepared', '']};
-  var MS = {planned: ['Planned', ''], in_progress: ['In progress', ''], submitted: ['Ready for your review', 'sd'], revision_requested: ['Revision requested', ''], approved: ['Approved', 'ok']};
-  var INV = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'sd'], refunded: ['Refunded', ''], partially_refunded: ['Partly refunded', ''], disputed: ['Disputed', 'sd']};
+  var STATUS = {proposal_sent: ['Awaiting your review', 'sd'], changes_requested: ['Being updated by the team', ''], approved: ['Approved — payment due', 'sd'], active: ['In progress', 'go'], completed: ['Completed', 'ok'], cancelled: ['Cancelled', 'ln'], draft: ['Being prepared', ''], budget_agreed: ['Being prepared', '']};
+  var MS = {planned: ['Planned', ''], in_progress: ['In progress', 'go'], submitted: ['Ready for your review', 'sd'], revision_requested: ['Revision requested', ''], approved: ['Approved', 'ok']};
+  var INV = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'bad'], refunded: ['Refunded', 'ln'], partially_refunded: ['Partly refunded', 'ln'], disputed: ['Disputed', 'bad']};
   var pill = function(map, k){ var v = map[k] || [k, '']; return '<span class="pill ' + v[1] + '">' + esc(v[0]) + '</span>'; };
 
   var LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
