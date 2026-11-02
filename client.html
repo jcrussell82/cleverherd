@@ -257,12 +257,17 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     var mt = document.querySelector('#msg textarea'); if (mt) mt.addEventListener('input', function(){ mt.style.height = '48px'; mt.style.height = Math.min(mt.scrollHeight + 3, 180) + 'px'; });
     document.querySelectorAll('form.ms').forEach(function(f){ f.addEventListener('submit', function(e){ e.preventDefault(); var approve = (e.submitter && e.submitter.value) !== 'revise', note = new FormData(f).get('note') || '';
       if (!approve && String(note).trim().length < 3) { toast('Describe what needs to change.', true); return; }
-      run(function(){ return rpc('client_milestone_decision', {t: TOKEN, m: f.dataset.id, approve: approve, who: store('ch-client-name') || D.project.client_name, note: note}); }, approve ? 'Milestone approved' : 'Revision requested');
+      run(async function(){ var res = await rpc('client_milestone_decision', {t: TOKEN, m: f.dataset.id, approve: approve, who: store('ch-client-name') || D.project.client_name, note: note}); if (approve) nudgePayouts(); return res; }, approve ? 'Milestone approved' : 'Revision requested');
     }); });
     var mf = $('#msg'); if (mf) mf.addEventListener('submit', function(e){ e.preventDefault(); var body = String(new FormData(mf).get('body') || '').trim(); if (!body) return;
       run(function(){ return rpc('client_message', {t: TOKEN, who: store('ch-client-name') || D.project.client_name || 'Client', body: body}); }, 'Message sent'); });
     var fb = $('#fb'); if (fb) fb.addEventListener('submit', function(e){ e.preventDefault(); var d = new FormData(fb); if (!d.get('rating')) { toast('Choose a rating.', true); return; }
       run(function(){ return rpc('client_feedback', {t: TOKEN, rating: +d.get('rating'), comment: d.get('comment') || '', publish: !!d.get('publish'), who: (store('ch-client-name') || D.project.client_name || '').split(' ')[0]}); }, 'Thank you!'); });
+  }
+  // An approval can make team payouts due; the payment service sends them (fire and forget).
+  function nudgePayouts(){
+    try { var h = headers(); if (!h.Authorization) h.Authorization = 'Bearer ' + CONFIG.supabaseAnonKey;
+      fetch(CONFIG.supabaseUrl + '/functions/v1/payments', {method: 'POST', headers: h, body: JSON.stringify({action: 'auto', token: TOKEN})}).catch(function(){}); } catch (e) {}
   }
   // Ask the payment service to check with Stripe directly (backup for slow or missing webhooks).
   async function sync(){

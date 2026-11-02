@@ -2600,6 +2600,11 @@ async function start(){
   UI.booting = false;
   if (/^#\/(login|signup|verify|forgot)?$/.test(location.hash) || !location.hash) location.replace('#/home');
   render(); startSync();
+  // Back from Stripe's payout setup: ask Stripe for the latest status (and send anything waiting).
+  if (QS.get('payouts') && typeof payFn === 'function') {
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    payFn('account_status').then(function(r){ toast(r && r.payouts_enabled ? 'Payouts are set up' : 'Stripe still needs a few details'); return loadLive(); }).then(refresh).catch(function(){});
+  }
 }
 var syncTimer = null, channel = null;
 function quietRefresh(){
@@ -2638,7 +2643,7 @@ var PSTATUS = {
 var PLANS = {upfront: 'Full payment up front', deposit_balance: 'Deposit, then balance on completion', milestones: 'Pay per milestone on approval'};
 var METHODS = {fixed: 'Fixed amount', percent: '% of team budget', hourly: 'Hourly (estimate)', milestone: 'Fixed amount at a milestone', commission: 'Sales / referral commission (% of price)'};
 var INV_STATUS = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'bad'], void: ['Void', 'ln'], refunded: ['Refunded', 'ln'], partially_refunded: ['Partly refunded', 'ln'], disputed: ['Disputed', 'bad']};
-var PO_STATUS = {eligible: ['Ready to release', 'sd'], processing: ['Processing', ''], paid: ['Sent', 'ok'], failed: ['Failed', 'bad'], on_hold: ['On hold', 'sd'], reversed: ['Reversed', 'ln']};
+var PO_STATUS = {eligible: ['Queued', 'sd'], processing: ['Processing', ''], paid: ['Sent', 'ok'], failed: ['Failed', 'bad'], on_hold: ['On hold', 'sd'], reversed: ['Reversed', 'ln']};
 var MS_STATUS = {planned: ['Planned', 'ln'], in_progress: ['In progress', 'go'], submitted: ['With client for review', 'sd'], revision_requested: ['Revision requested', 'sd'], approved: ['Approved', 'ok']};
 
 function cents$(c){ c = Math.round(Number(c) || 0); return (c < 0 ? '−$' : '$') + (Math.abs(c) / 100).toLocaleString('en-US', {minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2}); }
@@ -2766,7 +2771,7 @@ function commerceAttention(){
     pr.milestones.filter(function(m){ return m.status === 'revision_requested'; }).forEach(function(m){
       out.push('<a class="row row-link" href="#/projects/' + pr.id + '/milestones"><span class="type-dot">' + icon('target') + '</span><div class="grow"><b>Revision requested: ' + esc(m.title) + '</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Open</span></a>');
     });
-    if (isProjLead(pr) && pr.payouts.some(function(o){ return o.status === 'eligible'; }) && S.settings.payments_enabled) out.push('<a class="row row-link" href="#/projects/' + pr.id + '/payments"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Payouts ready to release</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Release</span></a>');
+    if (isProjLead(pr) && pr.payouts.some(function(o){ return o.status === 'failed'; }) && S.settings.payments_enabled) out.push('<a class="row row-link" href="#/projects/' + pr.id + '/payments"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>A payout needs attention</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Review</span></a>');
   });
   var waiting = S.myPayouts.filter(function(o){ return o.status === 'eligible'; });
   if (waiting.length && !(S.payoutAccount && S.payoutAccount.payouts_enabled)) out.push('<a class="row row-link" href="#/earnings"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Set up payouts to receive ' + cents$(waiting.reduce(function(t, o){ return t + o.amount; }, 0)) + '</b><div class="small muted">Takes a few minutes with Stripe</div></div><span class="btn btn-ink btn-sm">Set up</span></a>');
@@ -2845,7 +2850,7 @@ function nextStep(pr){
   if (pr.status === 'proposal_sent') return ['Proposal is with ' + esc(pr.clientName || 'the client') + ' for review.', lead ? '<button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button>' : ''];
   if (pr.status === 'approved') return ['The client approved. Work starts once the first payment is received.', '<a class="btn btn-line btn-sm" href="#/projects/' + pr.id + '/payments">View invoices</a>'];
   if (pr.status === 'active') { var nm = pr.milestones.find(function(m){ return m.status !== 'approved'; }); return [nm ? 'Next milestone: ' + esc(nm.title) + ' (' + MS_STATUS[nm.status][0].toLowerCase() + ').' : 'All milestones approved — waiting for the final payment.', '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/milestones">Open milestones</a>']; }
-  if (pr.status === 'completed') return ['Completed' + (pr.payouts.some(function(o){ return o.status === 'eligible'; }) ? ' — payouts are ready to release.' : '.'), '<a class="btn btn-line btn-sm" href="#/projects/' + pr.id + '/payments">Payments</a>'];
+  if (pr.status === 'completed') return ['Completed' + (pr.payouts.some(function(o){ return o.status === 'eligible'; }) ? ' — payouts are on their way.' : '.'), '<a class="btn btn-line btn-sm" href="#/projects/' + pr.id + '/payments">Payments</a>'];
   return ['', ''];
 }
 function pProject(id, tab){
@@ -2962,12 +2967,13 @@ function projPayments(pr){
       '<p class="small muted">Invoices are created automatically: ' + (pr.plan === 'milestones' ? 'one for each milestone when the client approves it.' : pr.plan === 'upfront' ? 'the full amount when the client approves the proposal.' : 'the deposit when the client approves, and the balance when all milestones are approved.') + '</p>') +
     (inv.some(function(i){ return i.status === 'open'; }) ? '<p class="small muted" style="margin-top:10px">' + (s.payments_enabled ? 'The client pays from their project page by card or bank (via Stripe).' : 'Online payments aren’t switched on yet — an admin can record payments received another way.') + '</p>' : '') + '</section>';
   var pays = pr.payouts;
-  var poCard = '<section class="card"><div class="card-h"><h3>Payouts to the team</h3>' + (lead && s.payments_enabled && pays.some(function(o){ return o.status === 'eligible' || o.status === 'failed'; }) ? '<button class="btn btn-ink btn-sm" data-act="payouts-release" data-id="' + pr.id + '">Release payouts</button>' : '') + '</div>' +
+  var poCard = '<section class="card"><div class="card-h"><h3>Payouts to the team</h3>' + (lead && s.payments_enabled && pays.some(function(o){ return o.status === 'eligible' || o.status === 'failed'; }) ? '<button class="btn btn-line btn-sm" data-act="payouts-release" data-id="' + pr.id + '">Send now</button>' : '') + '</div>' +
+    (s.payments_enabled ? '<p class="small muted" style="margin:-4px 0 10px">Payouts are sent automatically once the work is approved and the client’s payment has cleared.' + (lead ? ' Use “Send now” to retry one that’s stuck.' : '') + '</p>' : '') +
     (pays.length ? pays.map(function(o){ return '<div class="row"><div class="grow"><b>' + esc(o.member ? nameOf(o.member) : 'Former member') + '</b> <span class="small muted">' + esc(o.role) + '</span>' + (o.note ? '<div class="small muted">' + esc(o.note) + '</div>' : '') + '</div><b>' + cents$(o.amount) + '</b>' + pill(PO_STATUS, o.status) + (admin && o.status === 'on_hold' ? '<button class="link-btn" data-act="po-unhold" data-id="' + o.id + '">Release hold</button>' : '') + (admin && (o.status === 'eligible' || o.status === 'failed') ? '<button class="link-btn" data-act="po-paid" data-id="' + o.id + '">Mark paid outside Stripe</button>' : '') + '</div>'; }).join('') :
       '<p class="small muted">' + (pr.plan === 'milestones' ? 'Shares tied to a milestone become payable once that milestone is approved and paid; everything else when the project is complete and fully paid.' : 'Payouts become available once the project is complete and fully paid.') + '</p>') +
     (myAllocs(pr).length && !(S.payoutAccount && S.payoutAccount.payouts_enabled) ? '<div class="note" style="margin-top:12px">To receive your share, <a class="link" href="#/earnings">set up payouts</a> with Stripe.</div>' : '') + '</section>';
   return '<div class="split"><div class="stack">' + invCard + poCard + '</div><div class="stack">' + numbersCard(pr) +
-    '<p class="note">Client payments are processed by Stripe and held in Cleverherd’s Stripe balance until the work they cover is approved; then contributor payouts are released to each member’s own Stripe account. Refunds or disputes put unreleased payouts on hold. This is not an escrow service.</p></div></div>';
+    '<p class="note">Client payments are processed by Stripe and held in Cleverherd’s Stripe balance until the work they cover is approved; then contributor payouts are sent automatically to each member’s own Stripe account. Refunds or disputes put unreleased payouts on hold. This is not an escrow service.</p></div></div>';
 }
 function projClient(pr){
   var lead = isProjLead(pr);
@@ -2987,7 +2993,8 @@ function pEarnings(){
   var agreed = 0; S.projects.forEach(function(p){ if (['approved', 'active'].indexOf(p.status) > -1) myAllocs(p).forEach(function(a){ if (!pays.some(function(o){ return o.projectId === p.id; })) agreed += a.value; }); });
   var acctCard = '<section class="card"><div class="card-h"><h3>Payout account</h3>' + (acct ? (acct.payouts_enabled ? '<span class="pill ok">Ready</span>' : '<span class="pill sd">Setup incomplete</span>') : '') + '</div>' +
     (acct ? (acct.payouts_enabled ? '<p class="small muted" style="margin-bottom:12px">Payouts go to the bank account you added in Stripe.</p><div class="share-row"><button class="btn btn-line btn-sm" data-act="payout-dashboard">Open Stripe dashboard</button><button class="btn btn-ghost btn-sm" data-act="payout-refresh">Refresh status</button></div>' : '<p class="small muted" style="margin-bottom:12px">Stripe still needs a few details before you can be paid.</p><div class="share-row"><button class="btn btn-ink btn-sm" data-act="payout-setup">Continue setup</button><button class="btn btn-ghost btn-sm" data-act="payout-refresh">Refresh status</button></div>') :
-      '<p class="small muted" style="margin-bottom:12px">To receive payouts, verify your identity and add a bank account with Stripe, Cleverherd’s payment provider. Cleverherd never sees your bank details.</p>' + (S.settings.payments_enabled ? '<button class="btn btn-ink btn-sm" data-act="payout-setup">Set up payouts</button>' : '<p class="small">Online payouts aren’t switched on yet.</p>')) + '</section>';
+      '<p class="small muted" style="margin-bottom:12px">To receive payouts, verify your identity and add a bank account with Stripe, Cleverherd’s payment provider. Cleverherd never sees your bank details.</p>' + (S.settings.payments_enabled ? '<button class="btn btn-ink btn-sm" data-act="payout-setup">Set up payouts</button>' : '<p class="small">Online payouts aren’t switched on yet.</p>')) +
+    (UI.payoutErr ? '<p class="err on small" role="alert" style="margin-top:12px;font-weight:500">' + esc(UI.payoutErr) + '</p>' : '') + '</section>';
   return '<div class="ph"><div><span class="eyebrow">Earnings</span><h1>Your earnings</h1><p>Money from paid Cleverherd projects. Only you can see these amounts.</p></div></div>' +
     (testMode() ? '<p class="note" style="margin-bottom:16px"><b>Test mode.</b> No real money is paid out yet.</p>' : '') +
     '<div class="g4" style="margin-bottom:20px"><div class="stat"><b>' + cents$(sum(['paid'])) + '</b><small>Paid out</small></div><div class="stat"><b>' + cents$(sum(['eligible', 'failed', 'processing'])) + '</b><small>Ready / in progress</small></div><div class="stat"><b>' + cents$(sum(['on_hold'])) + '</b><small>On hold</small></div><div class="stat"><b>' + cents$(agreed) + '</b><small>Agreed, not yet earned</small></div></div>' +
@@ -3059,13 +3066,21 @@ var PACT = {
   'inv-offline': function(d){ openModal('<h2>Record a payment</h2><p class="sub">For payments received outside Stripe (bank transfer, check). This marks the invoice paid.</p><form class="form" data-form="inv-offline" data-id="' + d.id + '">' + field('io-n', 'Reference', '<input class="in" id="io-n" name="note" maxlength="300" placeholder="e.g. Wire 2026-11-03" required>') + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Mark paid</button></div></form>'); },
   'inv-void': function(d){ confirmBox('Void this invoice?', 'The client will no longer be able to pay it.', 'Void', function(){ act(function(){ return papi.rpc('admin_void_invoice', {inv: d.id}); }, 'Invoice voided'); }, true); },
   'inv-refund': function(d){ openModal('<h2>Refund through Stripe</h2><p class="sub">Unreleased payouts for this project go on hold.</p><form class="form" data-form="inv-refund" data-id="' + d.id + '">' + field('ir-a', 'Amount (USD)', '<input class="in" id="ir-a" name="amount" inputmode="decimal" value="' + dollars(+d.amount) + '">') + '<div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-danger" type="submit">Refund</button></div></form>'); },
-  'payouts-release': function(d){ confirmBox('Release payouts?', 'Sends each ready payout to the member’s Stripe account. Members who haven’t finished payout setup are skipped until they do.', 'Release', function(){ act(function(){ return payFn('release', {project_id: d.id}); }, null, function(res){ var r = (res && res.results) || []; var paid = r.filter(function(x){ return x.status === 'paid'; }).length; toast(paid + ' payout' + (paid === 1 ? '' : 's') + ' sent' + (r.length > paid ? ' · ' + (r.length - paid) + ' waiting' : '')); refresh(); }); }); },
+  'payouts-release': function(d){ confirmBox('Send payouts now?', 'Payouts normally go out automatically. This retries now, including any that failed. Members who haven’t finished payout setup are skipped until they do, and payouts still waiting on the client’s payment to clear stay queued.', 'Send now', function(){ act(function(){ return payFn('release', {project_id: d.id}); }, null, function(res){ var r = (res && res.results) || []; var paid = r.filter(function(x){ return x.status === 'paid'; }).length; toast(paid + ' payout' + (paid === 1 ? '' : 's') + ' sent' + (r.length > paid ? ' · ' + (r.length - paid) + ' waiting' : '')); refresh(); }); }); },
   'po-unhold': function(d){ act(function(){ return papi.rpc('admin_release_hold', {o: d.id}); }, 'Hold released'); },
   'po-paid': function(d){ confirmBox('Mark as paid outside Stripe?', 'Use only if you paid this member another way.', 'Mark paid', function(){ act(function(){ return papi.rpc('admin_mark_payout_paid', {o: d.id, note: ''}); }, 'Recorded'); }); },
-  'payout-setup': async function(){ try { document.body.classList.add('busy'); var r = await payFn('onboard'); location.href = r.url; } catch (e) { document.body.classList.remove('busy'); toast(friendly(e), 'error'); } },
+  'payout-setup': async function(d, el){ var b = el && el.closest ? el : null; if (b) { b.disabled = true; b.dataset.label = b.textContent; b.textContent = 'Opening Stripe…'; } UI.payoutErr = '';
+    try { document.body.classList.add('busy'); var r = await payFn('onboard'); location.href = r.url; }
+    catch (e) { document.body.classList.remove('busy'); UI.payoutErr = payoutSetupError(e); render(); toast('Couldn’t open payout setup', 'error'); } },
   'payout-refresh': function(){ act(function(){ return payFn('account_status'); }, 'Status updated'); },
   'payout-dashboard': async function(){ try { var r = await payFn('dashboard'); window.open(r.url, '_blank', 'noopener'); } catch (e) { toast(friendly(e), 'error'); } }
 };
+// Stripe refuses to create member payout accounts until Cleverherd's own Connect setup is finished.
+function payoutSetupError(e){
+  var m = String((e && e.message) || e || '');
+  if (/connect|platform profile|platform-profile|signed up|branding|responsibilit|loss/i.test(m)) return 'Stripe hasn’t finished setting up Cleverherd’s payouts yet, so member accounts can’t be created. ' + (S.me.isAdmin ? 'Admin: finish Connect setup in the Stripe dashboard. Stripe said: “' + m + '”' : 'The Cleverherd team has been asked to fix this. Please try again later.');
+  return friendly(e);
+}
 function shareLinkModal(pr, token){
   if (!token) { toast('No client link yet — send the proposal first.', 'error'); return; }
   var url = clientUrl(token), body = 'Hi ' + (pr.clientName || '') + ',\n\nHere is our proposal for ' + pr.title + '. You can review the scope, milestones and price, approve it, and pay securely here:\n\n' + url + '\n\nLet us know if you have any questions.\n\n' + S.me.name;
@@ -3168,7 +3183,7 @@ var PFORMS = {
   'project-delete': function(d, f){ var tid = (proj(f.dataset.id) || {}).teamId; closeModal(); act(function(){ return papi.rpc('project_delete', {p: f.dataset.id}); }, 'Project deleted', function(){ go('#/teams/' + tid + '/projects'); }); },
   'team-archive': function(d, f){ closeModal(); act(function(){ return api.archiveTeam(f.dataset.id, true); }, 'Team archived', function(){ go('#/teams'); }); },
   'team-delete': function(d, f){ var t = team(f.dataset.id); if (trim(d.name) !== t.name) return setErr(f, 'Type the team name exactly as shown to confirm.', '[name=name]'); closeModal(); act(function(){ return api.deleteTeam(t.id); }, 'Team deleted', function(){ go('#/teams'); }); },
-  'inv-offline': function(d, f){ if (!trim(d.note)) return; closeModal(); var inv = f.dataset.id; act(async function(){ await papi.rpc('admin_record_offline_payment', {inv: inv, note: trim(d.note)}); payFn('ga_offline', {invoice_id: inv}).catch(function(){}); }, 'Payment recorded'); },
+  'inv-offline': function(d, f){ if (!trim(d.note)) return; closeModal(); var inv = f.dataset.id; act(async function(){ await papi.rpc('admin_record_offline_payment', {inv: inv, note: trim(d.note)}); var ip = S.projects.find(function(p){ return p.invoices.some(function(i){ return i.id === inv; }); }); payFn('ga_offline', {invoice_id: inv, project_id: ip ? ip.id : undefined}).catch(function(){}); }, 'Payment recorded'); },
   'inv-refund': function(d, f){ var c = toCents(d.amount); if (c <= 0) return; closeModal(); act(function(){ return payFn('refund', {invoice_id: f.dataset.id, amount_cents: c}); }, 'Refund sent to Stripe — status updates in a moment'); },
   'admin-fees': function(d){ act(function(){ return papi.settings({marketplace_fee_pct: parseFloat(d.marketplace) || 0, managed_fee_pct: parseFloat(d.managed) || 0, processing_pct: parseFloat(d.ppct) || 0, processing_fixed_cents: parseInt(d.pfixed, 10) || 0, default_deposit_pct: parseInt(d.deposit, 10) || 0, payments_enabled: !!d.enabled}); }, 'Settings saved'); }
 };
