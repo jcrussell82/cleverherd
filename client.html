@@ -87,6 +87,26 @@ textarea.in{min-height:84px;resize:vertical}
 .foot a{color:inherit}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bone);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;display:none;max-width:calc(100vw - 32px);z-index:9}
 .toast.on{display:block}.toast.bad{background:#6e2416}
+/* Guidance: what the client should do next */
+.chip-go{font:700 12px var(--h);letter-spacing:.01em;padding:6px 12px;border-radius:99px;border:0;background:#b4e6b8;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip-go::after{content:"→";font-weight:700}
+.chip-go:hover{background:#a3dba8}
+.callout{display:flex;align-items:center;justify-content:space-between;gap:14px 18px;flex-wrap:wrap;padding:16px 18px;border-radius:16px;background:#eef6ee;border:1px solid rgba(51,86,77,.18)}
+.callout p{flex:1 1 220px;line-height:1.5}
+.callout .btn{flex:none}
+.also{display:block;width:100%;margin-top:14px;padding:12px 14px;border-radius:12px;border:1px dashed rgba(51,86,77,.35);background:transparent;color:var(--forest);font:600 14px var(--b);text-align:left;cursor:pointer}
+.also:hover{background:#eef6ee}
+.ms-row.attn{margin:6px -12px;padding:16px 12px;border-radius:14px;background:#f7f3ea;box-shadow:inset 0 0 0 1.5px var(--sand)}
+.flash{animation:flash 1.6s ease-out 1}
+@keyframes flash{0%,35%{box-shadow:0 0 0 4px rgba(180,230,184,.95)}100%{box-shadow:0 0 0 4px rgba(180,230,184,0)}}
+.ms-row.attn.flash{animation:flash-in 1.6s ease-out 1}
+@keyframes flash-in{0%,35%{box-shadow:inset 0 0 0 1.5px var(--sand),0 0 0 4px rgba(180,230,184,.95)}100%{box-shadow:inset 0 0 0 1.5px var(--sand),0 0 0 4px rgba(180,230,184,0)}}
+.float-next{position:fixed;right:20px;bottom:20px;z-index:40;display:inline-flex;align-items:center;gap:8px;max-width:calc(100vw - 40px);padding:13px 18px;border-radius:99px;border:0;background:var(--ink);color:var(--bone);font:700 14px var(--h);box-shadow:0 14px 30px -12px rgba(17,43,41,.55);cursor:pointer}
+.float-next span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.float-next i{font-style:normal;color:#b4e6b8}
+.float-next[hidden]{display:none}
+@media (max-width:640px){.float-next{left:16px;right:16px;bottom:16px;justify-content:center}.has-float .toast{bottom:84px}}
+@media (prefers-reduced-motion:reduce){.flash,.ms-row.attn.flash{animation:none}}
 ul{padding-left:18px;margin:0}
 .form > *,.two > *{min-width:0}
 input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-height:46px}
@@ -99,6 +119,7 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
 <main class="wrap" id="main" aria-live="polite"></main>
 <footer class="foot">Cleverherd · Independent minds. Collective momentum. · Questions? <a href="mailto:hello@cleverherd.com">hello@cleverherd.com</a> · <a href="index.html#/privacy">Privacy</a> · <a href="index.html#/terms">Terms</a></footer>
 <div class="toast" id="toast" role="status"></div>
+<button type="button" class="float-next" id="floatNext" hidden><span></span> <i aria-hidden="true">↓</i></button>
 <script>
 (function(){
   'use strict';
@@ -126,9 +147,9 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     if (!r.ok) throw new Error(j.error || 'Payments are unavailable right now.');
     return j.url;
   }
-  async function run(fn, ok){
+  async function run(fn, ok, after){
     if (busy) return; busy = true; document.body.style.cursor = 'progress';
-    try { var res = await fn(); if (res && res.project) { D = res; render(); } if (ok) toast(ok); }
+    try { var res = await fn(); if (res && res.project) { D = res; render(); } if (ok) toast(ok); if (after) after(); }
     catch (e) { toast(e.message, true); }
     finally { busy = false; document.body.style.cursor = ''; }
   }
@@ -151,16 +172,39 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     var mi = inv.filter(function(i){ return i.kind === 'milestone'; });
     return (x.milestones || []).map(function(m, k){ return {t: m.title, d: 'When you approve this milestone', a: m.amount_cents, i: mi.filter(function(i){ return i.description.indexOf(m.title) > -1; })[0] || null}; });
   }
+  // What the client needs to do, most urgent first.
+  function todo(){
+    var p = D.project, pr = D.proposal;
+    return {
+      pay: D.invoices.filter(function(i){ return i.status === 'open' || i.status === 'failed'; })[0] || null,
+      review: (['approved', 'active'].indexOf(p.status) > -1 ? D.milestones.filter(function(m){ return m.status === 'submitted'; }) : []),
+      proposal: !!(pr && pr.status === 'sent' && p.status === 'proposal_sent')
+    };
+  }
+  // Scroll an element into view and flash it so the eye lands on it.
+  function guide(el){
+    if (typeof el === 'string') el = document.querySelector(el);
+    if (!el) return false;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'center'});
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+    var f = el.matches('button, a, textarea') ? el : el.querySelector('button, textarea'); if (f) setTimeout(function(){ try { f.focus({preventScroll: true}); } catch (e) {} }, reduce ? 0 : 450);
+    return true;
+  }
   function nextStep(p, pr, test){
     var payable = D.invoices.filter(function(i){ return i.status === 'open' || i.status === 'failed'; })[0];
     var processing = D.invoices.some(function(i){ return i.status === 'processing'; });
-    if (payable && D.payments.enabled) return '<div class="next"><span class="eyebrow">Your next step</span>' +
+    var rev = todo().review;
+    var revLine = rev.length ? '<button type="button" class="also" data-go="ms-' + rev[0].id + '">Also: ' + (rev.length === 1 ? esc(rev[0].title) + ' is ready for your review' : rev.length + ' milestones are ready for your review') + ' <span aria-hidden="true">↓</span></button>' : '';
+    if (payable && D.payments.enabled) return '<div class="next" id="pay"><span class="eyebrow">Your next step</span>' +
       (payable.status === 'failed' ? '<p class="note" style="margin-bottom:12px">The last payment attempt didn’t go through. You can try again.</p>' : '') +
       '<button class="btn pay" data-pay="' + payable.id + '">' + LOCK + 'Pay ' + money(payable.amount_cents) + '</button>' +
       '<p class="secure">' + esc(payable.description) + ' · Invoice ' + esc(payable.number) + '</p>' +
       '<p class="secure">Card and bank payments are processed securely by Stripe. Cleverherd never sees your card details.</p>' +
-      (test ? '<p class="note test" style="margin-top:14px"><b>Test mode.</b> No money is charged. Use card 4242 4242 4242 4242 with any future date and any CVC.</p>' : '') + '</div>';
-    if (payable) return '<div class="next"><p class="note">Payment of ' + money(payable.amount_cents) + ' is due. The team will tell you how to pay — online card payment isn’t available for this project yet.</p></div>';
+      (test ? '<p class="note test" style="margin-top:14px"><b>Test mode.</b> No money is charged. Use card 4242 4242 4242 4242 with any future date and any CVC.</p>' : '') + revLine + '</div>';
+    if (payable) return '<div class="next" id="pay"><p class="note">Payment of ' + money(payable.amount_cents) + ' is due. The team will tell you how to pay — online card payment isn’t available for this project yet.</p>' + revLine + '</div>';
+    if (rev.length) return '<div class="next" id="nextrev"><span class="eyebrow">Your next step</span><div class="callout"><p><b>' + (rev.length === 1 ? esc(rev[0].title) + ' is ready for your review' : rev.length + ' milestones are ready for your review') + '</b><br><span class="small">Look over the work, then approve it or ask for a revision.</span></p>' +
+      '<button type="button" class="btn" data-go="ms-' + rev[0].id + '">Review ' + (rev.length === 1 ? 'milestone' : 'milestones') + ' <span aria-hidden="true">↓</span></button></div></div>';
     if (processing) return '<div class="next"><p class="note">Your payment is processing. Bank payments can take a few days to clear; this page will update when it does.</p></div>';
     if (pr && pr.status === 'sent' && p.status === 'proposal_sent') return '<div class="next"><span class="eyebrow">Your next step</span><p style="margin-bottom:14px">Review the proposal below, then approve it or ask for changes.</p>' + decisionForm(p) + '</div>';
     if (p.status === 'completed') return '<div class="next"><p class="note good">This project is complete. Thank you!</p></div>';
@@ -197,7 +241,10 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     var p = D.project, pr = D.proposal, snap = pr ? pr.snapshot : null, test = D.payments.mode !== 'live';
     document.title = (p.title || 'Your project') + ' — Cleverherd';
     $('#title').textContent = p.title;
-    $('#sub').innerHTML = '<span>From ' + esc(p.team) + ' on Cleverherd</span>' + pill(STATUS, p.status);
+    var td = todo();
+    $('#sub').innerHTML = '<span>From ' + esc(p.team) + ' on Cleverherd</span>' + pill(STATUS, p.status) +
+      (td.pay ? '<button type="button" class="chip-go" data-go="pay">' + (td.pay.status === 'failed' ? 'Payment failed — retry' : 'Payment due · ' + money(td.pay.amount_cents)) + '</button>' : '') +
+      (td.review.length ? '<button type="button" class="chip-go" data-go="ms-' + td.review[0].id + '">' + (td.review.length === 1 ? '1 milestone to review' : td.review.length + ' milestones to review') + '</button>' : '');
     var out = [];
     if (p.status === 'cancelled') out.push('<section class="card"><h2>This project was cancelled</h2><p class="muted">Contact the team if you have questions.</p></section>');
     if (snap || D.invoices.length) out.push(summaryHtml(p, pr, snap, test));
@@ -217,8 +264,8 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     }
     // Milestones
     if (['approved', 'active', 'completed'].indexOf(p.status) > -1 && D.milestones.length) {
-      out.push('<section class="card"><h2>Milestones</h2>' + D.milestones.map(function(m){
-        return '<div class="row" style="align-items:flex-start"><div class="grow"><b>' + esc(m.title) + '</b> ' + pill(MS, m.status) + '<div class="small muted" style="margin-top:4px">' + (m.due_date ? 'Due ' + esc(date(m.due_date)) : '') + (m.approved_at ? ' · approved ' + esc(date(m.approved_at)) : '') + '</div>' +
+      out.push('<section class="card" id="milestones"><h2>Milestones</h2>' + D.milestones.map(function(m){
+        return '<div class="row ms-row' + (m.status === 'submitted' ? ' attn' : '') + '" id="ms-' + m.id + '" style="align-items:flex-start"><div class="grow"><b>' + esc(m.title) + '</b> ' + pill(MS, m.status) + '<div class="small muted" style="margin-top:4px">' + (m.due_date ? 'Due ' + esc(date(m.due_date)) : '') + (m.approved_at ? ' · approved ' + esc(date(m.approved_at)) : '') + '</div>' +
           (m.deliverables.length ? '<ul style="margin-top:10px">' + m.deliverables.map(function(d){ return '<li>' + (d.url ? '<a href="' + esc(d.url) + '" target="_blank" rel="noopener noreferrer">' + esc(d.title) + ' ↗</a>' : esc(d.title)) + (d.note ? ' — <span class="small muted">' + esc(d.note) + '</span>' : '') + '</li>'; }).join('') + '</ul>' : '') +
           (m.status === 'revision_requested' ? '<p class="small muted" style="margin-top:8px">You asked: “' + esc(m.revision_note) + '”</p>' : '') +
           (m.status === 'submitted' ? '<form class="form ms" data-id="' + m.id + '" novalidate style="margin-top:14px"><label>Feedback <small class="muted">(required if requesting a revision)</small><textarea class="in" name="note" rows="2" maxlength="2000"></textarea></label><div class="actions"><button class="btn" type="submit" name="d" value="approve">Approve milestone</button><button class="btn line" type="submit" name="d" value="revise">Request a revision</button></div></form>' : '') +
@@ -237,7 +284,29 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     }
     $('#main').innerHTML = out.join('');
     bind();
+    floatNext();
   }
+  // A small "Next step" button that appears whenever the next action is off-screen.
+  var floatObs = null;
+  function floatNext(){
+    var btn = $('#floatNext'), t = todo(), target = null, label = '';
+    if (t.pay) { target = $('#pay'); label = 'Next: pay ' + money(t.pay.amount_cents); }
+    else if (t.review.length) { target = $('#ms-' + t.review[0].id); label = 'Next: review ' + t.review[0].title; }
+    else if (t.proposal) { target = $('#approve'); label = 'Next: review the proposal'; }
+    if (floatObs) { floatObs.disconnect(); floatObs = null; }
+    if (!target || !('IntersectionObserver' in window)) { btn.hidden = true; document.body.classList.remove('has-float'); return; }
+    btn.querySelector('span').textContent = label; btn.dataset.go = target.id;
+    // Hide while either the target or the "Your next step" card at the top is on screen.
+    var arrow = btn.querySelector('i'), home = $('#nextrev') || $('#pay'), seen = new Map();
+    floatObs = new IntersectionObserver(function(es){
+      es.forEach(function(e){ seen.set(e.target, e); });
+      var visible = Array.from(seen.values()).some(function(e){ return e.isIntersecting; });
+      btn.hidden = visible; document.body.classList.toggle('has-float', !visible);
+      var te = seen.get(target); if (te && !visible) arrow.textContent = te.boundingClientRect.top < 0 ? '↑' : '↓';
+    }, {threshold: 0, rootMargin: '-18% 0px -18% 0px'});   // only counts once it reaches the middle of the screen
+    floatObs.observe(target); if (home && home !== target) floatObs.observe(home);
+  }
+  document.addEventListener('click', function(e){ var g = e.target.closest('[data-go]'); if (!g) return; e.preventDefault(); var el = document.getElementById(g.dataset.go); if (!el) return; guide(el.id === 'pay' ? (el.querySelector('[data-pay]') || el) : el); });
   function bind(){
     var ap = $('#approve'), ch = $('#changes');
     if (ap) {
@@ -245,7 +314,9 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
         if (!String(d.get('who') || '').trim()) { err.textContent = 'Type your full name.'; err.className = 'err on'; return; }
         if (!d.get('agree')) { err.textContent = 'Tick the box to confirm your approval.'; err.className = 'err on'; return; }
         store('ch-client-name', String(d.get('who')).trim());
-        run(function(){ return rpc('client_respond_proposal', {t: TOKEN, v: D.proposal.version, approve: true, who: d.get('who'), email: d.get('email'), note: d.get('note') || ''}); }, 'Approved — thank you!');
+        run(function(){ return rpc('client_respond_proposal', {t: TOKEN, v: D.proposal.version, approve: true, who: d.get('who'), email: d.get('email'), note: d.get('note') || ''}); }, null, function(){
+          var t = todo(); toast(t.pay ? 'Approved — thank you! Next: pay ' + money(t.pay.amount_cents) : 'Approved — thank you!'); if (t.pay) guide('#pay [data-pay]') || guide('#pay');
+        });
       });
       $('#askChanges').addEventListener('click', function(){ ap.hidden = true; ch.hidden = false; ch.querySelector('textarea').focus(); });
       $('#cancelChanges').addEventListener('click', function(){ ch.hidden = true; ap.hidden = false; });
@@ -257,7 +328,13 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     var mt = document.querySelector('#msg textarea'); if (mt) mt.addEventListener('input', function(){ mt.style.height = '48px'; mt.style.height = Math.min(mt.scrollHeight + 3, 180) + 'px'; });
     document.querySelectorAll('form.ms').forEach(function(f){ f.addEventListener('submit', function(e){ e.preventDefault(); var approve = (e.submitter && e.submitter.value) !== 'revise', note = new FormData(f).get('note') || '';
       if (!approve && String(note).trim().length < 3) { toast('Describe what needs to change.', true); return; }
-      run(async function(){ var res = await rpc('client_milestone_decision', {t: TOKEN, m: f.dataset.id, approve: approve, who: store('ch-client-name') || D.project.client_name, note: note}); if (approve) nudgePayouts(); return res; }, approve ? 'Milestone approved' : 'Revision requested');
+      run(async function(){ var res = await rpc('client_milestone_decision', {t: TOKEN, m: f.dataset.id, approve: approve, who: store('ch-client-name') || D.project.client_name, note: note}); if (approve) nudgePayouts(); return res; }, null, function(){
+        var t = todo();
+        if (!approve) { toast('Revision requested — the team will be in touch'); return; }
+        if (t.pay) { toast('Milestone approved. Next: pay ' + money(t.pay.amount_cents)); guide('#pay [data-pay]') || guide('#pay'); }
+        else if (t.review.length) { toast('Milestone approved. Next: ' + t.review[0].title); guide('#ms-' + t.review[0].id); }
+        else { toast(D.project.status === 'completed' ? 'Milestone approved — the project is complete' : 'Milestone approved — nothing else is due right now'); guide('.summary'); }
+      });
     }); });
     var mf = $('#msg'); if (mf) mf.addEventListener('submit', function(e){ e.preventDefault(); var body = String(new FormData(mf).get('body') || '').trim(); if (!body) return;
       run(function(){ return rpc('client_message', {t: TOKEN, who: store('ch-client-name') || D.project.client_name || 'Client', body: body}); }, 'Message sent'); });
