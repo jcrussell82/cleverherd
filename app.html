@@ -547,9 +547,25 @@ body.busy .content{opacity:.85;transition:opacity .2s}
 .v-res{margin-top:18px}
 .v-res h4.eyebrow{margin-bottom:6px}
 .split.wide-l{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-.proposal h2{font-size:24px;margin:6px 0 4px}
-.proposal h4{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--forest);margin:18px 0 6px}
+/* Proposal (team view) — same rhythm as the client page */
+.card:has(> .proposal){padding:30px 30px 32px}
+@media (max-width:640px){.card:has(> .proposal){padding:24px 20px 26px}}
+.proposal h2{font-size:26px;margin:10px 0 8px;line-height:1.15}
+.proposal > p.muted:first-of-type{margin-bottom:6px}
+.proposal h4{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--forest);margin:28px 0 10px}
+.proposal p{line-height:1.6}
+.proposal p + p{margin-top:6px}
 .proposal ul{margin:0;padding-left:18px}
+.proposal .ms-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.proposal .ms-list li{padding:14px 16px;border-radius:14px;background:var(--paper)}
+.proposal .ms-list li b{font-family:var(--h)}
+.proposal .ms-list li .small.muted{line-height:1.5}
+.proposal .ms-list li div.small{margin-top:4px}
+/* Versions sent */
+.ver + .ver{margin-top:4px}
+.ver-h{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+.ver p.small{margin-top:10px;line-height:1.55}
+.ver-agree{padding:12px 14px;border-radius:12px;background:var(--paper)}
 .in.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.55}
 .chip-radio{cursor:pointer}
 .chip-radio input{position:absolute;opacity:0;width:1px;height:1px}
@@ -1118,7 +1134,7 @@ async function loadLive(){
   if (!p) throw new Error('Your profile could not be loaded. Please sign out and in again.');
   var s = emptyState();
   s.session = true;
-  s.me = {name:p.name, title:p.title, location:p.location, showLocation:p.show_location, bio:p.bio, intro:p.intro, skills:p.skills || [], interests:p.interests || [], looking:p.looking || [], hours:p.hours, arrangement:p.arrangement, portfolio:p.portfolio, listed:p.listed, onboarded:p.onboarded, isAdmin:p.is_admin, status:p.status, email:(SESSION && SESSION.user.email) || '', joined:p.created_at, avatar:p.avatar || null};
+  s.me = {name:p.name, title:p.title, location:p.location, showLocation:p.show_location, bio:p.bio, intro:p.intro, skills:p.skills || [], interests:p.interests || [], looking:p.looking || [], hours:p.hours, arrangement:p.arrangement, portfolio:p.portfolio, listed:p.listed, onboarded:p.onboarded, isAdmin:p.is_admin, status:p.status, email:(SESSION && SESSION.user.email) || '', joined:p.created_at, avatar:p.avatar || null, emailPrefs:p.email_prefs || {}};
   s.intent = p.intent || 'find';
   s.members = r[1].filter(function(d){ return d.id !== MYID; }).map(function(d){ return {id:d.id, name:d.name, title:d.title, loc:d.location, color:colorFor(d.id), skills:d.skills || [], interests:d.interests || [], open:d.looking || [], hours:d.hours, arrangement:d.arrangement, bio:d.bio, intro:d.intro, portfolio:d.portfolio, listed:d.listed, joined:d.created_at, avatar:d.avatar || null}; });
   r[2].forEach(function(c){ var other = c.requester === MYID ? c.addressee : c.requester; s.connRows[other] = c.id; s.connections[other] = c.status === 'accepted' ? 'connected' : (c.requester === MYID ? 'pending' : 'incoming'); });
@@ -1180,7 +1196,7 @@ async function loadLive(){
    ===================================================================== */
 function chk(r){ if (r && r.error) throw r.error; return r && r.data; }
 var live = {
-  saveProfile: function(f){ var row = {}; var map = {name:'name', title:'title', location:'location', bio:'bio', intro:'intro', skills:'skills', interests:'interests', looking:'looking', hours:'hours', arrangement:'arrangement', portfolio:'portfolio', showLocation:'show_location', listed:'listed', onboarded:'onboarded', intent:'intent', avatar:'avatar'}; Object.keys(f).forEach(function(k){ if (map[k]) row[map[k]] = f[k]; }); return SB.from('profiles').update(row).eq('id', MYID).then(chk); },
+  saveProfile: function(f){ var row = {}; var map = {name:'name', title:'title', location:'location', bio:'bio', intro:'intro', skills:'skills', interests:'interests', looking:'looking', hours:'hours', arrangement:'arrangement', portfolio:'portfolio', showLocation:'show_location', listed:'listed', onboarded:'onboarded', intent:'intent', avatar:'avatar', emailPrefs:'email_prefs'}; Object.keys(f).forEach(function(k){ if (map[k]) row[map[k]] = f[k]; }); return SB.from('profiles').update(row).eq('id', MYID).then(chk); },
   connect: function(id){ return SB.from('connections').insert({requester:MYID, addressee:id}).then(chk); },
   acceptConn: function(id){ return SB.from('connections').update({status:'accepted'}).eq('id', S.connRows[id]).then(chk); },
   removeConn: function(id){ return SB.from('connections').delete().eq('id', S.connRows[id]).then(chk); },
@@ -1931,6 +1947,7 @@ function applyTheme(){
 }
 function setTheme(t){ try { localStorage.setItem('ch-theme', t); } catch (e) {} applyTheme(); toast(t === 'dark' ? 'Dark mode on' : t === 'light' ? 'Light mode on' : 'Matching your device'); }
 if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){ if (themePref() === 'system') applyTheme(); }); } catch (e) {} }
+var EMAIL_CATS = [['team', 'Teams & connections', 'Team invitations and join requests, connection requests.'], ['messages', 'Messages', 'When someone sends you a new message.'], ['opportunities', 'Opportunities & Labs', 'Applications to your posts, decisions on yours, interest in your ideas.'], ['projects', 'Paid projects & payouts', 'Shares to review, client decisions, payments received and payouts sent.']];
 function pSettings(){
   var m = S.me;
   return '<div class="ph"><div><span class="eyebrow">Settings</span><h1>Account & privacy</h1></div></div><div class="split"><div class="stack">' +
@@ -1941,6 +1958,9 @@ function pSettings(){
       '<label class="switch"><input type="checkbox" name="listed"' + (m.listed ? ' checked' : '') + '><span><b>Show me in the member directory</b><small>When off, people can’t find you by browsing or search. Teammates and people you message still see your name and profile.</small></span></label>' +
       '<label class="switch"><input type="checkbox" name="showLocation"' + (m.showLocation ? ' checked' : '') + '><span><b>Show my location to other members</b><small>Your email address is never shown to other members.</small></span></label>' +
       '<button class="btn btn-ink" type="submit" style="justify-self:start">Save privacy settings</button></form>' +
+    '<form class="card form" data-form="emailprefs"><div class="card-h"><h3>Email notifications</h3></div><p class="small muted" style="margin-top:-4px">We email ' + esc(m.email || 'you') + ' when something needs you. Message emails are sent at most once an hour per person and never include the message itself.</p>' +
+      EMAIL_CATS.map(function(c){ var on = !m.emailPrefs || m.emailPrefs[c[0]] !== false; return '<label class="switch"><input type="checkbox" name="' + c[0] + '"' + (on ? ' checked' : '') + '><span><b>' + c[1] + '</b><small>' + c[2] + '</small></span></label>'; }).join('') +
+      '<button class="btn btn-ink" type="submit" style="justify-self:start">Save email preferences</button></form>' +
     (LIVE ? '<form class="card form" data-form="password" novalidate><div class="card-h"><h3>Password</h3></div>' + field('np', 'New password', '<input class="in" id="np" name="password" type="password" autocomplete="new-password" minlength="8" required>', 'At least 8 characters.') + '<p class="err" role="alert"></p><button class="btn btn-line" type="submit" style="justify-self:start">Change password</button></form>' : '') +
     '<section class="card"><div class="card-h"><h3>Your data</h3></div><p class="small muted" style="margin-bottom:12px">Download a copy of your profile and the content you’ve created.</p><button class="btn btn-line btn-sm" data-act="export">Download my data</button></section>' +
     '<section class="card danger"><div class="card-h"><h3>Delete account</h3></div><p class="small" style="margin-bottom:12px">Permanently deletes your account, profile, messages, ideas and team memberships. This can’t be undone.</p><button class="btn btn-danger btn-sm" data-act="delete-account">Delete my account</button></section></div>' +
@@ -2509,6 +2529,7 @@ var FORMS = {
     act(function(){ return api.saveProfile({name:trim(d.name), title:trim(d.title), location:trim(d.location), portfolio:trim(d.portfolio), intro:trim(d.intro), bio:trim(d.bio), skills:skills, interests:list(d.interests), looking:list(d.looking), hours:d.hours, arrangement:d.arrangement}); }, 'Profile saved', function(){ go('#/profile'); });
   },
   privacy: function(d){ act(function(){ return api.saveProfile({listed:!!d.listed, showLocation:!!d.showLocation}); }, 'Privacy settings saved'); },
+  emailprefs: function(d){ var p = {}; EMAIL_CATS.forEach(function(c){ p[c[0]] = !!d[c[0]]; }); S.me.emailPrefs = p; act(function(){ return api.saveProfile({emailPrefs: p}); }, 'Email preferences saved'); },
   validate: function(d, f){
     var v = {}; VQ.forEach(function(x){ v[x[0]] = +d[x[0]] || 0; }); ['customer', 'alternatives_text', 'title', 'tagline', 'problem', 'solution'].forEach(function(k){ if (d[k] !== undefined) v[k] = trim(d[k]); });
     if (VQ.filter(function(x){ return v[x[0]]; }).length < 4) { toast('Rate at least four questions to see results.', 'error'); return; }
@@ -2923,9 +2944,9 @@ function proposalPreview(pr, snap){
   return '<div class="proposal"><span class="eyebrow">Proposal</span><h2>' + esc(x.title) + '</h2><p class="muted">For ' + esc([x.client_name, x.client_company].filter(Boolean).join(', ') || 'client') + ' · from ' + esc(x.team) + (x.valid_until ? ' · valid until ' + esc(fmtDate(x.valid_until)) : '') + '</p>' +
     (x.summary ? '<h4>Summary</h4><p style="white-space:pre-line">' + esc(x.summary) + '</p>' : '') +
     '<h4>Scope</h4><p style="white-space:pre-line">' + esc(x.scope || '—') + '</p>' +
-    '<h4>Milestones</h4><ul>' + (x.milestones || []).map(function(m){ return '<li><b>' + esc(m.title) + '</b>' + (m.due_date ? ' — by ' + esc(fmtDate(m.due_date)) : '') + (x.payment_plan === 'milestones' ? ' · ' + cents$(m.amount_cents) : '') + (m.description ? '<br><span class="small muted">' + esc(m.description) + '</span>' : '') + '</li>'; }).join('') + '</ul>' +
+    '<h4>Milestones</h4><ul class="ms-list">' + (x.milestones || []).map(function(m){ return '<li><b>' + esc(m.title) + '</b>' + (m.due_date ? '<span class="small muted"> · by ' + esc(fmtDate(m.due_date)) + '</span>' : '') + (x.payment_plan === 'milestones' ? '<span class="small muted"> · ' + cents$(m.amount_cents) + '</span>' : '') + (m.description ? '<div class="small muted">' + esc(m.description) + '</div>' : '') + '</li>'; }).join('') + '</ul>' +
     (x.timeline ? '<h4>Timeline</h4><p style="white-space:pre-line">' + esc(x.timeline) + '</p>' : '') +
-    '<h4>Price</h4><p><b>' + cents$(x.total_cents) + '</b> — includes Cleverherd’s platform fee (' + x.fee_pct + '%). No other fees for the client.</p><p class="small">' + esc(sched) + '</p>' +
+    '<h4>Price</h4><p><b>' + cents$(x.total_cents) + '</b> — includes Cleverherd’s platform fee (' + x.fee_pct + '%). No other fees for the client.</p><p class="small muted">' + esc(sched) + '</p>' +
     (x.terms ? '<h4>Terms</h4><p style="white-space:pre-line">' + esc(x.terms) + '</p>' : '') + '</div>';
 }
 function projProposal(pr){
@@ -2938,7 +2959,7 @@ function projProposal(pr){
     field('pp-valid', 'Valid until <small>(optional)</small>', '<input class="in" id="pp-valid" name="valid" type="date" value="' + esc(pr.validUntil || '') + '">') +
     '<button class="btn btn-ink" type="submit" style="justify-self:start">Save proposal</button></form>' : '';
   var send = lead && pr.status === 'budget_agreed' ? '<section class="card"><div class="card-h"><h3>Ready to send</h3></div><p class="small muted" style="margin-bottom:12px">The client gets a private link to review and approve — no account needed. You can send it from your own email.</p><button class="btn btn-ink" data-act="project-send" data-id="' + pr.id + '">' + icon('send') + 'Send proposal</button></section>' : '';
-  var hist = pr.proposals.length ? '<section class="card"><div class="card-h"><h3>Versions sent</h3></div>' + pr.proposals.map(function(v){ return '<div class="row" style="align-items:flex-start"><div class="grow"><b>Version ' + v.version + '</b> <span class="pill ' + (v.status === 'approved' ? 'ok' : v.status === 'sent' ? 'sd' : 'ln') + '">' + esc(v.status.replace('_', ' ')) + '</span><div class="small muted">Sent ' + esc(fmtDate(v.sent_at)) + (v.responded_at ? ' · ' + (v.status === 'approved' ? 'approved by ' : 'response from ') + esc(v.responder_name || 'client') + ' on ' + esc(fmtDate(v.responded_at)) : '') + '</div>' + (v.response_note ? '<p class="small" style="margin-top:6px">“' + esc(v.response_note) + '”</p>' : '') + (v.agreement_text ? '<p class="small muted" style="margin-top:6px">Recorded agreement: ' + esc(v.agreement_text) + '</p>' : '') + '</div></div>'; }).join('') + (lead && pr.status === 'proposal_sent' ? '<div class="share-row"><button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button></div>' : '') + '</section>' : '';
+  var hist = pr.proposals.length ? '<section class="card"><div class="card-h"><h3>Versions sent</h3></div>' + pr.proposals.map(function(v){ return '<div class="row ver" style="align-items:flex-start"><div class="grow"><div class="ver-h"><b>Version ' + v.version + '</b><span class="pill ' + (v.status === 'approved' ? 'ok' : v.status === 'sent' ? 'sd' : 'ln') + '">' + esc(v.status.replace('_', ' ')) + '</span></div><div class="small muted">Sent ' + esc(fmtDate(v.sent_at)) + (v.responded_at ? ' · ' + (v.status === 'approved' ? 'approved by ' : 'response from ') + esc(v.responder_name || 'client') + ' on ' + esc(fmtDate(v.responded_at)) : '') + '</div>' + (v.response_note ? '<p class="small">“' + esc(v.response_note) + '”</p>' : '') + (v.agreement_text ? '<p class="small muted ver-agree">Recorded agreement: ' + esc(v.agreement_text) + '</p>' : '') + '</div></div>'; }).join('') + (lead && pr.status === 'proposal_sent' ? '<div class="share-row"><button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button></div>' : '') + '</section>' : '';
   return '<div class="split wide-l"><div class="stack">' + (form || '') + send + hist + '</div><div class="stack"><section class="card">' + proposalPreview(pr, !editable(pr) && last ? last.snapshot : null) + '</section><p class="small muted">' + (editable(pr) ? 'Preview of what the client will see.' : 'The version the client has.') + ' Internal shares are never shown to the client.</p></div></div>';
 }
 function projMilestones(pr){
