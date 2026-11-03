@@ -98,6 +98,10 @@ textarea.in{min-height:84px;resize:vertical}
 .callout .btn{flex:none}
 .also{display:block;width:100%;margin-top:14px;padding:12px 14px;border-radius:12px;border:1px dashed rgba(51,86,77,.35);background:transparent;color:var(--forest);font:600 14px var(--b);text-align:left;cursor:pointer}
 .also:hover{background:#eef6ee}
+.co{padding:18px 0;border-top:1px solid var(--line, rgba(0,0,0,.08))}
+.co:first-of-type{border-top:0;padding-top:6px}
+.co.attn{margin:6px -12px;padding:18px 12px;border-radius:14px;background:#f7f3ea;box-shadow:inset 0 0 0 1.5px var(--sand);border-top:0}
+.co-price{display:flex;gap:8px 18px;flex-wrap:wrap;margin:10px 0 4px;font-size:14px}
 .ms-row.attn{margin:6px -12px;padding:16px 12px;border-radius:14px;background:#f7f3ea;box-shadow:inset 0 0 0 1.5px var(--sand)}
 .flash{animation:flash 1.6s ease-out 1}
 @keyframes flash{0%,35%{box-shadow:0 0 0 4px rgba(180,230,184,.95)}100%{box-shadow:0 0 0 4px rgba(180,230,184,0)}}
@@ -157,23 +161,29 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     finally { busy = false; document.body.style.cursor = ''; }
   }
   var STATUS = {proposal_sent: ['Awaiting your review', 'sd'], changes_requested: ['Being updated by the team', ''], approved: ['Approved — payment due', 'sd'], active: ['In progress', 'go'], completed: ['Completed', 'ok'], cancelled: ['Cancelled', 'ln'], draft: ['Being prepared', ''], budget_agreed: ['Being prepared', '']};
+  var CO_ST = {sent: ['Waiting for you', 'sd'], approved: ['Approved', 'ok'], declined: ['Declined', 'ln']};
   var MS = {planned: ['Planned', ''], in_progress: ['In progress', 'go'], submitted: ['Ready for your review', 'sd'], revision_requested: ['Revision requested', ''], approved: ['Approved', 'ok']};
   var INV = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'bad'], refunded: ['Refunded', 'ln'], partially_refunded: ['Partly refunded', 'ln'], disputed: ['Disputed', 'bad']};
   var pill = function(map, k){ var v = map[k] || [k, '']; return '<span class="pill ' + v[1] + '">' + esc(v[0]) + '</span>'; };
 
   var LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
   // The payment schedule as a list of steps, each matched to its invoice (if issued).
+  function approvedCOs(){ return (D.change_orders || []).filter(function(c){ return c.status === 'approved'; }); }
   function schedule(x){
-    var inv = D.invoices, byKind = function(k){ return inv.filter(function(i){ return i.kind === k; })[0]; };
-    if (x.payment_plan === 'upfront') return [{t: 'Full payment', d: 'When you approve the proposal', a: x.total_cents, i: byKind('full')}];
+    var inv = D.invoices, byKind = function(k){ return inv.filter(function(i){ return i.kind === k; })[0]; }, byId = function(id){ return inv.filter(function(i){ return i.id === id; })[0] || null; };
+    var cos = approvedCOs(), own = cos.filter(function(c){ return c.billing === 'invoice'; });
+    var coRows = own.map(function(c){ return {t: 'Change order #' + c.number, d: 'When you approved it', a: c.amount_cents, i: byId(c.invoice_id)}; });
+    if (x.payment_plan === 'upfront') return [{t: 'Full payment', d: 'When you approve the proposal', a: x.base_cents, i: byKind('full')}].concat(coRows);
     if (x.payment_plan === 'deposit_balance') {
-      var dep = Math.round(x.total_cents * (x.deposit_pct || 0) / 100), out = [];
+      var dep = Math.round(x.base_cents * (x.deposit_pct || 0) / 100), out = [], bal = byKind('balance');
+      var extra = cos.filter(function(c){ return c.billing === 'balance'; }).length;
       if (dep) out.push({t: 'Deposit (' + x.deposit_pct + '%)', d: 'When you approve the proposal', a: dep, i: byKind('deposit')});
-      out.push({t: dep ? 'Balance' : 'Full payment', d: 'When all milestones are approved', a: x.total_cents - dep, i: byKind('balance') || byKind('full')});
-      return out;
+      out.push({t: dep ? 'Balance' : 'Full payment', d: 'When all milestones are approved' + (extra ? ' · includes ' + (extra === 1 ? 'a change order' : extra + ' change orders') : ''),
+        a: bal ? bal.amount_cents : x.total_cents - dep - own.reduce(function(t, c){ return t + c.amount_cents; }, 0), i: bal || byKind('full')});
+      return out.concat(coRows);
     }
     var mi = inv.filter(function(i){ return i.kind === 'milestone'; });
-    return (x.milestones || []).map(function(m, k){ return {t: m.title, d: 'When you approve this milestone', a: m.amount_cents, i: mi.filter(function(i){ return i.description.indexOf(m.title) > -1; })[0] || null}; });
+    return (x.milestones || []).map(function(m, k){ return {t: m.title, d: 'When you approve this milestone', a: m.amount_cents, i: mi.filter(function(i){ return (m.id && i.milestone_id === m.id) || i.description.indexOf(m.title) > -1; })[0] || null}; });
   }
   // What the client needs to do, most urgent first.
   function todo(){
@@ -181,7 +191,8 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     return {
       pay: D.invoices.filter(function(i){ return i.status === 'open' || i.status === 'failed'; })[0] || null,
       review: (['approved', 'active'].indexOf(p.status) > -1 ? D.milestones.filter(function(m){ return m.status === 'submitted'; }) : []),
-      proposal: !!(pr && pr.status === 'sent' && p.status === 'proposal_sent')
+      proposal: !!(pr && pr.status === 'sent' && p.status === 'proposal_sent'),
+      change: (['approved', 'active'].indexOf(p.status) > -1 ? (D.change_orders || []).filter(function(c){ return c.status === 'sent'; }) : [])
     };
   }
   // Scroll an element into view and flash it so the eye lands on it.
@@ -206,6 +217,9 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
       '<p class="secure">Card and bank payments are processed securely by Stripe. Cleverherd never sees your card details.</p>' +
       (test ? '<p class="note test" style="margin-top:14px"><b>Test mode.</b> No money is charged. Use card 4242 4242 4242 4242 with any future date and any CVC.</p>' : '') + revLine + '</div>';
     if (payable) return '<div class="next" id="pay"><p class="note">Payment of ' + money(payable.amount_cents) + ' is due. The team will tell you how to pay — online card payment isn’t available for this project yet.</p>' + revLine + '</div>';
+    var chg = todo().change;
+    if (chg.length) return '<div class="next" id="nextrev"><span class="eyebrow">Your next step</span><div class="callout"><p><b>' + (chg.length === 1 ? 'Change order #' + chg[0].number + ': ' + esc(chg[0].title) : chg.length + ' change orders') + ' — please review</b><br><span class="small">' + (chg.length === 1 && chg[0].amount_cents ? 'Adds ' + money(chg[0].amount_cents) + ' to the project price. ' : '') + 'Approve it or decline it.</span></p>' +
+      '<button type="button" class="btn" data-go="co-' + chg[0].id + '">Review change <span aria-hidden="true">↓</span></button></div>' + revLine + '</div>';
     if (rev.length) return '<div class="next" id="nextrev"><span class="eyebrow">Your next step</span><div class="callout"><p><b>' + (rev.length === 1 ? esc(rev[0].title) + ' is ready for your review' : rev.length + ' milestones are ready for your review') + '</b><br><span class="small">Look over the work, then approve it or ask for a revision.</span></p>' +
       '<button type="button" class="btn" data-go="ms-' + rev[0].id + '">Review ' + (rev.length === 1 ? 'milestone' : 'milestones') + ' <span aria-hidden="true">↓</span></button></div></div>';
     if (processing) return '<div class="next"><p class="note">Your payment is processing. Bank payments can take a few days to clear; this page will update when it does.</p></div>';
@@ -223,13 +237,32 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
       '<form class="form" id="changes" hidden novalidate><label>What would you like changed?<textarea class="in" name="note" required maxlength="2000"></textarea></label><div class="actions"><button class="btn" type="submit">Send to the team</button><button class="btn line" type="button" id="cancelChanges">Back</button></div></form>';
   }
   function summaryHtml(p, pr, snap, test){
-    var x = snap || {total_cents: p.total_cents, fee_pct: p.fee_pct, payment_plan: p.payment_plan, deposit_pct: p.deposit_pct, milestones: D.milestones};
+    var x = Object.assign({}, snap || {total_cents: p.total_cents, fee_pct: p.fee_pct, payment_plan: p.payment_plan, deposit_pct: p.deposit_pct, milestones: D.milestones});
+    var started = ['approved', 'active', 'completed'].indexOf(p.status) > -1, nco = approvedCOs().filter(function(c){ return c.amount_cents > 0; }).length;
+    x.base_cents = x.total_cents;   // the price in the proposal
+    if (started) { x.total_cents = p.total_cents; if (x.payment_plan === 'milestones') x.milestones = D.milestones; }
     var rows = schedule(x).map(function(r){ return '<li><div class="what"><b>' + esc(r.t) + '</b><span>' + (r.i && r.i.paid_at ? 'Paid ' + esc(date(r.i.paid_at)) : esc(r.d)) + '</span></div><span class="amt">' + money(r.a) + '</span>' + (r.i ? pill(INV, r.i.status) : '<span class="pill">Later</span>') + '</li>'; }).join('');
     return '<section class="card summary" aria-labelledby="sumh">' +
       (JUST_PAID ? '<p class="note good" style="margin-bottom:18px">Thank you — we’re confirming your payment with Stripe. This page updates automatically.</p>' : THANKS ? '<p class="note good" style="margin-bottom:18px"><b>Payment received.</b> Thank you!</p>' : '') +
       '<span class="eyebrow" id="sumh">Project total</span><div class="total">' + money(x.total_cents) + '</div>' +
-      '<p class="small muted">Includes Cleverherd’s ' + x.fee_pct + '% platform fee. No other fees.</p>' +
+      '<p class="small muted">' + (started && nco ? 'Proposal ' + money(x.base_cents) + ' + ' + (nco === 1 ? 'one approved change order' : nco + ' approved change orders') + '. ' : '') + 'Includes Cleverherd’s ' + x.fee_pct + '% platform fee. No other fees.</p>' +
       '<ul class="sched" aria-label="Payment schedule">' + rows + '</ul>' + nextStep(p, pr, test) + '</section>';
+  }
+  var CO_BILL = {invoice: 'Invoiced on its own', balance: 'Added to your balance due on completion', milestone: 'Billed when you approve this milestone', none: ''};
+  function coHtml(p, c){
+    var open = c.status === 'sent' && ['approved', 'active'].indexOf(p.status) > -1, newTotal = p.total_cents + (c.status === 'sent' ? c.amount_cents : 0);
+    var when = p.payment_plan === 'milestones' ? 'billed when you approve the new milestone' : (p.payment_plan === 'upfront' || D.invoices.some(function(i){ return i.kind === 'balance'; })) ? 'invoiced as soon as you approve it' : 'added to your balance due on completion';
+    return '<div class="co' + (open ? ' attn' : '') + '" id="co-' + c.id + '"><b>Change order #' + c.number + ' · ' + esc(c.title) + '</b> ' + pill(CO_ST, c.status) +
+      '<p class="prose" style="margin-top:8px">' + esc(c.description) + '</p>' +
+      '<div class="co-price">' + (c.amount_cents ? '<span>Adds <b>' + money(c.amount_cents) + '</b></span>' + (open ? '<span>New project total <b>' + money(newTotal) + '</b></span>' : c.total_after ? '<span class="muted">Project total after: ' + money(c.total_after) + '</span>' : '') : '<span>No change to the price</span>') + (c.due_date ? '<span class="muted">Due ' + esc(date(c.due_date)) + '</span>' : '') + '</div>' +
+      (open ? (c.amount_cents ? '<p class="small muted">If you approve, this is ' + when + '. It becomes a new milestone you’ll review like the others.</p>' : '<p class="small muted">If you approve, it becomes a new milestone you’ll review like the others.</p>') +
+        '<form class="form co-form" data-id="' + c.id + '" novalidate style="margin-top:14px"><div class="two"><label>Your full name<input class="in" name="who" autocomplete="name" value="' + esc(store('ch-client-name') || p.client_name) + '"></label><label>Email<input class="in" name="email" type="email" autocomplete="email" value="' + esc(p.client_email) + '"></label></div>' +
+        '<label class="check"><input type="checkbox" name="agree"> <span>I approve change order #' + c.number + (p.client_company ? ' on behalf of ' + esc(p.client_company) : '') + (c.amount_cents ? ', adding ' + money(c.amount_cents) + ' to the project price (new total ' + money(newTotal) + ').' : '. It doesn’t change the price.') + '</span></label>' +
+        '<label>Note to the team <small class="muted">(required if you decline)</small><textarea class="in" name="note" rows="2" maxlength="2000"></textarea></label><p class="err" role="alert"></p>' +
+        '<div class="actions"><button class="btn" type="submit" name="d" value="approve">Approve change</button><button class="btn line" type="submit" name="d" value="decline">Decline</button></div>' +
+        '<p class="small muted">Your approval, name and the time are recorded as your agreement to this change.</p></form>'
+      : c.status === 'approved' ? '<p class="small muted">Approved by ' + esc(c.responder_name) + ' on ' + esc(date(c.responded_at)) + (CO_BILL[c.billing] ? ' · ' + CO_BILL[c.billing] : '') + '.</p>'
+      : c.status === 'declined' ? '<p class="small muted">You declined this on ' + esc(date(c.responded_at)) + (c.response_note ? ': “' + esc(c.response_note) + '”' : '') + '</p>' : '') + '</div>';
   }
   function proposalHtml(x){
     return (x.summary ? '<p class="prose">' + esc(x.summary) + '</p>' : '') +
@@ -247,6 +280,7 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     var td = todo();
     $('#sub').innerHTML = '<span>From ' + esc(p.team) + ' on Cleverherd</span>' + pill(STATUS, p.status) +
       (td.pay ? '<button type="button" class="chip-go" data-go="pay">' + (td.pay.status === 'failed' ? 'Payment failed — retry' : 'Payment due · ' + money(td.pay.amount_cents)) + '</button>' : '') +
+      (td.change.length ? '<button type="button" class="chip-go" data-go="co-' + td.change[0].id + '">' + (td.change.length === 1 ? 'Change order to review' : td.change.length + ' change orders to review') + '</button>' : '') +
       (td.review.length ? '<button type="button" class="chip-go" data-go="ms-' + td.review[0].id + '">' + (td.review.length === 1 ? '1 milestone to review' : td.review.length + ' milestones to review') + '</button>' : '');
     var out = [];
     if (p.status === 'cancelled') out.push('<section class="card"><h2>This project was cancelled</h2><p class="muted">Contact the team if you have questions.</p></section>');
@@ -258,7 +292,10 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
       else if (pr.status === 'changes_requested') resp = '<p class="note" style="margin-top:22px">You asked for changes on ' + esc(date(pr.responded_at)) + '. The team will send an updated proposal.</p>';
       else if (pr.status === 'superseded') resp = '<p class="note" style="margin-top:22px">The team is updating this proposal.</p>';
       out.push('<section class="card" id="proposal"><h2>Proposal' + (pr.version > 1 ? ' <span class="small muted">(version ' + pr.version + ')</span>' : '') + '</h2>' + proposalHtml(snap) + resp + '</section>');
-    } else if (p.status !== 'cancelled') out.push('<section class="card"><h2>Your proposal is being prepared</h2><p class="muted">You’ll be able to review it here soon.</p></section>');
+    }
+    var cos = D.change_orders || [];
+    if (cos.length) out.push('<section class="card" id="cos"><h2>Change orders</h2><p class="small muted" style="margin:-4px 0 6px">Extra work the team has proposed since you approved the project.</p>' + cos.slice().reverse().map(function(c){ return coHtml(p, c); }).join('') + '</section>');
+    if (!snap && p.status !== 'cancelled') out.push('<section class="card"><h2>Your proposal is being prepared</h2><p class="muted">You’ll be able to review it here soon.</p></section>');
     // Invoices
     if (D.invoices.length) {
       out.push('<section class="card"><h2>Invoices</h2>' + D.invoices.map(function(i){
@@ -297,6 +334,7 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
   function floatNext(){
     var btn = $('#floatNext'), t = todo(), target = null, label = '';
     if (t.pay) { target = $('#pay'); label = 'Next: pay ' + money(t.pay.amount_cents); }
+    else if (t.change.length) { target = $('#co-' + t.change[0].id); label = 'Next: review change order #' + t.change[0].number; }
     else if (t.review.length) { target = $('#ms-' + t.review[0].id); label = 'Next: review ' + t.review[0].title; }
     else if (t.proposal) { target = $('#approve'); label = 'Next: review the proposal'; }
     if (floatObs) { floatObs.disconnect(); floatObs = null; }
@@ -345,6 +383,20 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
         if (t.pay) { toast('Milestone approved. Next: pay ' + money(t.pay.amount_cents)); guide('#pay [data-pay]') || guide('#pay'); }
         else if (t.review.length) { toast('Milestone approved. Next: ' + t.review[0].title); guide('#ms-' + t.review[0].id); }
         else { toast(D.project.status === 'completed' ? 'Milestone approved — the project is complete' : 'Milestone approved — nothing else is due right now'); guide('.summary'); }
+      });
+    }); });
+    document.querySelectorAll('form.co-form').forEach(function(f){ f.addEventListener('submit', function(e){ e.preventDefault();
+      var approve = (e.submitter && e.submitter.value) !== 'decline', d = new FormData(f), err = f.querySelector('.err'), say = function(m){ err.textContent = m; err.className = 'err on'; };
+      if (approve) {
+        if (String(d.get('who') || '').trim().length < 2) return say('Type your full name.');
+        if (!d.get('agree')) return say('Tick the box to confirm your approval.');
+        store('ch-client-name', String(d.get('who')).trim());
+      } else if (String(d.get('note') || '').trim().length < 3) return say('Tell the team why you’re declining, or what you’d change.');
+      run(function(){ return rpc('client_respond_change_order', {t: TOKEN, co: f.dataset.id, approve: approve, who: d.get('who') || D.project.client_name, email: d.get('email') || D.project.client_email, note: d.get('note') || ''}); }, null, function(){
+        var t = todo();
+        if (!approve) { toast('Declined — the team has been told'); return; }
+        if (t.pay) { toast('Change approved. Next: pay ' + money(t.pay.amount_cents)); guide('#pay [data-pay]') || guide('#pay'); }
+        else { toast('Change approved — it’s now a milestone. Thank you!'); guide('#co-' + f.dataset.id); }
       });
     }); });
     var mf = $('#msg'); if (mf) mf.addEventListener('submit', function(e){ e.preventDefault(); var body = String(new FormData(mf).get('body') || '').trim(); if (!body) return;

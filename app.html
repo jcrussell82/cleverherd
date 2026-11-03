@@ -688,6 +688,7 @@ td.share-acts .link-btn:first-child{margin-left:0}
 .review-row{align-items:flex-start}
 .review-row .pill{vertical-align:1px;margin-left:4px}
 @media (max-width:640px){.tbl td.small{min-width:150px}}
+.co-row{align-items:flex-start}
 
 /* =====================================================================
    Dark mode for the member platform (Settings → Appearance).
@@ -2674,6 +2675,8 @@ var PLANS = {upfront: 'Full payment up front', deposit_balance: 'Deposit, then b
 var METHODS = {fixed: 'Fixed amount', percent: '% of team budget', hourly: 'Hourly (estimate)', milestone: 'Fixed amount at a milestone', commission: 'Sales / referral commission (% of price)'};
 var INV_STATUS = {open: ['Due', 'sd'], processing: ['Processing', ''], paid: ['Paid', 'ok'], failed: ['Payment failed', 'bad'], void: ['Void', 'ln'], refunded: ['Refunded', 'ln'], partially_refunded: ['Partly refunded', 'ln'], disputed: ['Disputed', 'bad']};
 var PO_STATUS = {eligible: ['Queued', 'sd'], processing: ['Processing', ''], paid: ['Sent', 'ok'], failed: ['Failed', 'bad'], on_hold: ['On hold', 'sd'], reversed: ['Reversed', 'ln']};
+var CO_STATUS = {sent: ['With client', 'sd'], approved: ['Approved', 'ok'], declined: ['Declined', 'ln'], withdrawn: ['Withdrawn', 'ln']};
+var CO_BILLING = {invoice: 'Invoiced on its own when approved', balance: 'Added to the balance due on completion', milestone: 'Billed when the client approves its milestone', none: 'No change to the price'};
 var MS_STATUS = {planned: ['Planned', 'ln'], in_progress: ['In progress', 'go'], submitted: ['With client for review', 'sd'], revision_requested: ['Revision requested', 'sd'], approved: ['Approved', 'ok']};
 
 function cents$(c){ c = Math.round(Number(c) || 0); return (c < 0 ? '−$' : '$') + (Math.abs(c) / 100).toLocaleString('en-US', {minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2}); }
@@ -2755,7 +2758,8 @@ async function loadCommerce(s){
       q(SB.from('project_events').select('*').order('created_at', {ascending: false}).limit(400)),
       q(SB.from('project_credits').select('*').order('created_at', {ascending: false})),
       q(SB.from('project_feedback').select('*')),
-      q(SB.from('share_reviews').select('*').order('created_at', {ascending: false})).catch(function(){ return []; })   // before the shares update is run
+      q(SB.from('share_reviews').select('*').order('created_at', {ascending: false})).catch(function(){ return []; }),   // before the shares update is run
+      q(SB.from('project_change_orders').select('*').order('number', {ascending: true})).catch(function(){ return []; })   // before the change-orders update is run
     ]);
   } catch (e) { console.warn('Paid projects unavailable:', e && e.message); return; }
   s.settings = r[0];
@@ -2771,6 +2775,7 @@ async function loadCommerce(s){
       terms: p.terms, validUntil: p.valid_until, status: p.status, archived: !!p.archived_at, createdBy: M(p.created_by), createdAt: p.created_at, lockedAt: p.budget_locked_at,
       approvedAt: p.approved_at, completedAt: p.completed_at, milestones: ms, allocs: allocs,
       proposals: by(r[5], p.id), invoices: by(r[6], p.id).map(function(i){ return {id: i.id, number: i.number, kind: i.kind, description: i.description, amount: +i.amount_cents, status: i.status, issuedAt: i.issued_at, due: i.due_date, paidAt: i.paid_at, refunded: +i.amount_refunded_cents, method: i.method, note: i.note, intent: i.stripe_payment_intent}; }),
+      changeOrders: by(r[14] || [], p.id).map(function(c){ return {id: c.id, number: c.number, title: c.title, description: c.description, amount: +c.amount_cents, due: c.due_date, status: c.status, billing: c.billing, by: c.created_by ? M(c.created_by) : null, at: c.created_at, respondedAt: c.responded_at, responder: c.responder_name, note: c.response_note, totalBefore: c.total_before == null ? null : +c.total_before, totalAfter: c.total_after == null ? null : +c.total_after}; }),
       reviews: by(r[13] || [], p.id).map(function(v){ return {id: v.id, allocationId: v.allocation_id, member: v.member ? M(v.member) : null, requestedBy: v.requested_by ? M(v.requested_by) : null, reason: v.reason, status: v.status, before: +v.amount_before, after: v.amount_after == null ? null : +v.amount_after, note: v.decision_note, at: v.created_at, decidedAt: v.decided_at}; }),
       payouts: by(r[7], p.id).map(function(o){ return {id: o.id, allocationId: o.allocation_id, member: o.member ? M(o.member) : null, role: o.role, amount: +o.amount_cents, status: o.status, note: o.note, paidAt: o.paid_at, transfer: o.stripe_transfer_id}; }),
       messages: by(r[9], p.id).map(function(m){ return {fromClient: m.from_client, by: m.author ? M(m.author) : null, name: m.client_name, body: m.body, at: m.created_at}; }),
@@ -2945,6 +2950,8 @@ function eventLabel(e){
     share_withdrawn: 'Share offer withdrawn' + (d.member ? ' — ' + d.member : ''), share_lapsed: 'Share offer lapsed (never accepted)' + (d.member ? ' — ' + d.member : ''),
     share_released: 'Share released — ' + cents$(d.amount) + (d.role ? ' (' + d.role + ')' : ''), review_requested: 'Share review requested' + (d.member ? ' — ' + d.member : ''),
     share_adjusted: 'Share changed by Cleverherd review' + (d.member ? ' — ' + d.member : '') + ': ' + cents$(d.from) + ' → ' + cents$(d.to), review_closed: 'Share review closed' + (d.changed ? '' : ' — no change'),
+    change_order_sent: 'Change order #' + d.number + ' sent — ' + d.title + (d.amount ? ' (+' + cents$(d.amount) + ')' : ''), change_order_approved: 'Client approved change order #' + d.number + (d.by ? ' (' + d.by + ')' : '') + (d.amount ? ' — price now ' + cents$(d.total) : ''),
+    change_order_declined: 'Client declined change order #' + d.number, change_order_withdrawn: 'Change order #' + d.number + ' withdrawn',
     reserve_shared: 'Unused team reserve shared among contributors — ' + cents$(d.amount), reserve_unassigned: 'Team reserve left unassigned — ' + cents$(d.amount)})[e.kind] || e.kind;
 }
 function projBudget(pr){
@@ -3033,9 +3040,48 @@ function projMilestones(pr){
       (ed ? '<div class="share-row"><button class="link-btn" data-act="ms-edit" data-project="' + pr.id + '" data-id="' + m.id + '">Edit</button><button class="link-btn" data-act="ms-del" data-id="' + m.id + '">Remove</button></div>' : '') + '</section>';
   }).join('');
   var sum = pr.milestones.reduce(function(t, m){ return t + m.amount; }, 0);
-  return (ed ? '<div class="ph" style="margin-bottom:16px"><div><p style="margin:0">Milestones are what the client reviews and approves. ' + (pr.plan === 'milestones' ? 'With per-milestone payment, amounts must add up to the price (' + cents$(sum) + ' of ' + cents$(pr.total) + ').' : '') + '</p></div><button class="btn btn-ink btn-sm" data-act="ms-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add milestone</button></div>' : '') +
+  return coCard(pr) + (ed ? '<div class="ph" style="margin-bottom:16px"><div><p style="margin:0">Milestones are what the client reviews and approves. ' + (pr.plan === 'milestones' ? 'With per-milestone payment, amounts must add up to the price (' + cents$(sum) + ' of ' + cents$(pr.total) + ').' : '') + '</p></div><button class="btn btn-ink btn-sm" data-act="ms-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add milestone</button></div>' : '') +
     (pr.milestones.length ? '<div class="stack">' + list + '</div>' : emptyBox('No milestones yet', 'Break the work into a few checkpoints the client can approve.')) +
     (working ? '<p class="note" style="margin-top:16px">Add links to delivered work, then submit the milestone. The client approves it or asks for a revision from their project page.</p>' : '');
+}
+// Change orders: extra work (and price) the client approves after the proposal.
+function coCard(pr){
+  var cos = pr.changeOrders || [], lead = isProjLead(pr), working = inWork(pr);
+  if (!cos.length && !(lead && working)) return '';
+  var rows = cos.filter(function(c){ return c.status !== 'withdrawn' || lead; }).slice().reverse().map(function(c){
+    return '<div class="row co-row" id="co-' + c.id + '"><div class="grow"><b>#' + c.number + ' · ' + esc(c.title) + '</b> ' + pill(CO_STATUS, c.status) +
+      '<p class="small" style="white-space:pre-line;margin-top:6px">' + esc(c.description) + '</p>' +
+      '<div class="small muted">' + (c.amount ? '+' + cents$(c.amount) : 'No price change') + (c.due ? ' · due ' + esc(fmtDate(c.due)) : '') + ' · sent ' + esc(ago(c.at)) +
+        (c.status === 'approved' ? ' · approved by ' + esc(c.responder) + ' ' + esc(ago(c.respondedAt)) + (c.billing ? ' · ' + esc(CO_BILLING[c.billing] || '') : '') : '') + '</div>' +
+      (c.status === 'declined' && c.note ? '<p class="note" style="margin-top:8px"><b>Client:</b> ' + esc(c.note) + '</p>' : '') + '</div>' +
+      (lead && c.status === 'sent' ? '<div class="btn-pair"><button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button><button class="link-btn" data-act="co-withdraw" data-id="' + c.id + '">Withdraw</button></div>' : '') + '</div>';
+  }).join('');
+  return '<section class="card" style="margin-bottom:16px"><div class="card-h"><h3>Change orders</h3>' + (lead && working ? '<button class="btn btn-ink btn-sm" data-act="co-new" data-project="' + pr.id + '">' + icon('plus') + 'New change order</button>' : '') + '</div>' +
+    (rows || '<p class="small muted">Client wants something extra? Send a change order: they approve the new work and price on their project page, and it becomes a new milestone.</p>') + '</section>';
+}
+// Rough effect of a change order on the team budget (same formula as the database).
+function coTeamPart(pr, amt){
+  if (!amt) return 0;
+  var s = S.settings || {processing_pct: 2.9, processing_fixed_cents: 30};
+  var extraPay = pr.plan === 'milestones' || pr.plan === 'upfront' || (pr.plan === 'deposit_balance' && pr.invoices.some(function(i){ return i.kind === 'balance' && i.status !== 'void'; })) ? 1 : 0;
+  return amt - Math.round(amt * pr.feePct / 100) - Math.round(amt * Number(s.processing_pct) / 100) - Number(s.processing_fixed_cents) * extraPay;
+}
+function coModal(pr){
+  var bal = pr.invoices.some(function(i){ return i.kind === 'balance' && i.status !== 'void'; });
+  var when = pr.plan === 'milestones' ? 'billed when the client approves the new milestone' : pr.plan === 'upfront' || bal ? 'invoiced to the client as soon as they approve' : 'added to the balance due on completion';
+  openModal('<h2>New change order</h2><p class="sub">The client approves it on their project page. Current price ' + cents$(pr.total) + '.</p><form class="form" data-form="co-send" data-project="' + pr.id + '" novalidate>' +
+    field('co-t', 'Title', '<input class="in" id="co-t" name="title" maxlength="140" placeholder="e.g. Add an online shop">', 'Becomes a new milestone.') +
+    field('co-d', 'What changes for the client', '<textarea class="in" id="co-d" name="description" rows="4" maxlength="4000" placeholder="What you’ll deliver, and anything that changes in the original scope or timeline."></textarea>') +
+    '<div class="two">' + field('co-a', 'Extra price (USD)', '<input class="in" id="co-a" name="amount" inputmode="decimal" placeholder="0 for a scope-only change">', 'Includes Cleverherd’s ' + pr.feePct + '% fee, like the original price.') + field('co-due', 'Due date (optional)', '<input class="in" id="co-due" name="due" type="date">') + '</div>' +
+    '<p class="alloc-prev"><span>New project price</span><b id="coPrev">' + cents$(pr.total) + '</b></p><p class="small muted" id="coTeam"></p>' +
+    '<p class="small muted">The extra amount is ' + when + '. Everyone’s agreed shares stay as they are; the team’s part goes to the team reserve, where you can offer it to contributors from the Budget tab.</p>' +
+    '<p class="err" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Send to client</button></div></form>');
+}
+function coModalSync(){
+  var f = $('form[data-form="co-send"]'); if (!f) return;
+  var pr = proj(f.dataset.project), amt = Math.max(0, toCents(fd(f).amount)), t = coTeamPart(pr, amt);
+  $('#coPrev').textContent = cents$(pr.total + amt);
+  $('#coTeam').textContent = amt ? 'About ' + cents$(Math.max(0, t)) + ' of it goes to the team reserve, after the fee and estimated card processing.' : '';
 }
 function projPayments(pr){
   var lead = isProjLead(pr), admin = S.me.isAdmin, s = S.settings;
@@ -3115,6 +3161,8 @@ var PACT = {
   'alloc-del': function(d){ act(function(){ return papi.deleteAlloc(d.id); }, 'Share removed'); },
   'alloc-edit': function(d){ allocModal(proj(d.project), d.id); },
   'share-add': function(d){ addShareModal(proj(d.project)); },
+  'co-new': function(d){ coModal(proj(d.project)); },
+  'co-withdraw': function(d){ confirmBox('Withdraw this change order?', 'The client won’t be able to approve it. You can send a new one any time.', 'Withdraw', function(){ act(function(){ return papi.rpc('project_withdraw_change_order', {co: d.id}); }, 'Change order withdrawn'); }); },
   'share-decline': function(d){ confirmBox('Decline this share?', 'The money goes back to the team reserve and the lead is told. You can be offered a share again later.', 'Decline', function(){ act(function(){ return papi.rpc('allocation_decline', {a: d.id, reason: ''}); }, 'Share declined'); }); },
   'share-withdraw': function(d){ confirmBox('Withdraw this offer?', 'They haven’t accepted it yet. The money goes back to the team reserve and they’re told by email.', 'Withdraw', function(){ act(function(){ return papi.rpc('project_withdraw_share', {a: d.id}); }, 'Offer withdrawn'); }); },
   'share-release': function(d){ releaseModal(proj(d.project), d.id); },
@@ -3285,6 +3333,13 @@ var PFORMS = {
     if (f.dataset.id) delete row.project_id;
     closeModal(); act(function(){ return papi.saveAlloc(f.dataset.id, row); }, 'Share saved — they’ll be asked to accept it');
   },
+  'co-send': function(d, f){
+    var pr = proj(f.dataset.project), amt = trim(d.amount) === '' ? 0 : toCents(d.amount);
+    if (trim(d.title).length < 2) return setErr(f, 'Give the change a short title.', '[name=title]');
+    if (trim(d.description).length < 10) return setErr(f, 'Describe what will change for the client.', '[name=description]');
+    if (amt < 0 || (amt > 0 && amt < 100)) return setErr(f, 'Enter 0 for a scope-only change, or at least $1.', '[name=amount]');
+    closeModal(); act(function(){ return papi.rpc('project_send_change_order', {p: pr.id, title: trim(d.title), description: trim(d.description), amount: amt, due: d.due || null}); }, 'Change order sent — the client has been emailed');
+  },
   'share-add': function(d, f){
     var pr = proj(f.dataset.project), amt = toCents(d.amount), left = budgetOf(pr).left;
     if (!d.member) return setErr(f, 'Choose who you’re adding.', '[name=member]');
@@ -3335,7 +3390,7 @@ document.addEventListener('change', function(e){
   var c = e.target.closest('[data-change="credit-public"]'); if (c) act(function(){ return papi.credit(c.dataset.id, c.checked); }, c.checked ? 'Shown on your profile' : 'Hidden from your profile');
   if (e.target.name === 'plan' && e.target.closest('form[data-form="project-details"]')) { var dep = $('#pd-dep'); if (dep) dep.disabled = e.target.value !== 'deposit_balance'; }
 });
-document.addEventListener('input', function(e){ if (e.target.closest('form[data-form="alloc"]')) allocModalSync(); });
+document.addEventListener('input', function(e){ if (e.target.closest('form[data-form="alloc"]')) allocModalSync(); if (e.target.closest('form[data-form="co-send"]')) coModalSync(); });
 
 /* Message boxes: start one line high and grow with the text (up to the CSS max). */
 document.addEventListener('input', function (e) {
