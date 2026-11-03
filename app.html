@@ -687,8 +687,23 @@ td.share-acts .link-btn{margin-left:10px}
 td.share-acts .link-btn:first-child{margin-left:0}
 .review-row{align-items:flex-start}
 .review-row .pill{vertical-align:1px;margin-left:4px}
-@media (max-width:640px){.tbl td.small{min-width:150px}}
+/* Team budget split on phones: each share becomes a small card, so nothing hides off to the side. */
+@media (max-width:640px){
+  .tbl-wrap:has(.tbl-shares){overflow:visible}
+  .tbl-shares,.tbl-shares tbody{display:block}
+  .tbl-shares thead{display:none}
+  .tbl-shares tr{display:grid;grid-template-columns:1fr auto;grid-template-areas:"who amt" "how how" "state acts";gap:6px 12px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .tbl-shares tr:last-child{border-bottom:0}
+  .tbl-shares td{display:block;padding:0;border:0;min-width:0}
+  .tbl-shares td:nth-child(1){grid-area:who}
+  .tbl-shares td:nth-child(2){grid-area:how}
+  .tbl-shares td:nth-child(3){grid-area:amt;align-self:center}
+  .tbl-shares td:nth-child(4){grid-area:state;align-self:center}
+  .tbl-shares td:nth-child(5){grid-area:acts;align-self:center;text-align:right;min-width:0}
+  .tbl-shares td:nth-child(5):empty,.tbl-shares td:nth-child(4):empty{display:none}
+}
 .co-row{align-items:flex-start}
+.kv b{white-space:nowrap}
 
 /* =====================================================================
    Dark mode for the member platform (Settings → Appearance).
@@ -2985,7 +3000,7 @@ function projBudget(pr){
     if (lead && work && pendingAdded(a)) acts.push('<button class="link-btn" data-act="share-withdraw" data-id="' + a.id + '">Withdraw</button>');
     if (a.lockedAt && a.source !== 'reserve' && pr.status !== 'cancelled') {
       var canRelease = mineA && work && a.value > 0 && !allocEarned(pr, a) && !rv;
-      if (canRelease) acts.push('<button class="link-btn" data-act="share-release" data-project="' + pr.id + '" data-id="' + a.id + '">Release…</button>');
+      if (canRelease) acts.push('<button class="link-btn" data-act="share-release" data-project="' + pr.id + '" data-id="' + a.id + '">Release share</button>');
       if (((lead && !mineA) || (mineA && !canRelease)) && !rv) acts.push('<button class="link-btn" data-act="share-review" data-project="' + pr.id + '" data-id="' + a.id + '">Request review</button>');
       if (admin && rv) acts.push('<button class="btn btn-ink btn-sm" data-act="share-decide" data-project="' + pr.id + '" data-id="' + rv.id + '">Decide review</button>');
     }
@@ -2994,7 +3009,7 @@ function projBudget(pr){
   }).join('');
   var canAdd = lead && work && b.left > 0 && mems.length;
   var allocCard = '<section class="card"><div class="card-h"><h3>Team budget split</h3>' + (ed && mems.length ? '<button class="btn btn-ink btn-sm" data-act="alloc-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add a share</button>' : canAdd ? '<button class="btn btn-ink btn-sm" data-act="share-add" data-project="' + pr.id + '">' + icon('plus') + 'Add a contributor</button>' : '') + '</div>' +
-    (pr.allocs.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Member</th><th>How</th><th class="r">Amount</th><th>Agreement</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="small muted">No shares yet. ' + (ed ? 'Add a share for each person, including yourself.' : '') + '</p>') +
+    (pr.allocs.length ? '<div class="tbl-wrap"><table class="tbl tbl-shares"><thead><tr><th>Member</th><th>How</th><th class="r">Amount</th><th>Agreement</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="small muted">No shares yet. ' + (ed ? 'Add a share for each person, including yourself.' : '') + '</p>') +
     '<div class="budget-bar" aria-label="Allocated ' + cents$(b.alloc) + ' of ' + cents$(b.net) + '"><i style="width:' + (b.net ? Math.min(100, b.alloc / b.net * 100) : 0) + '%"></i></div><p class="small muted">' + cents$(b.alloc) + ' of ' + cents$(b.net) + ' allocated · ' + cents$(b.left) + (editable(pr) ? ' unallocated' : ' team reserve') + '</p>' +
     (ed ? '<div class="share-row">' + '<button class="btn btn-ink" data-act="project-lock" data-id="' + pr.id + '">Agree budget</button><span class="small muted" style="align-self:center">Locks the price, milestones and shares so the proposal can be sent.</span></div>' : '') +
     (lead && ['budget_agreed', 'proposal_sent', 'changes_requested'].indexOf(pr.status) > -1 && !editable(pr) ? '<div class="share-row"><button class="btn btn-line" data-act="project-reopen" data-id="' + pr.id + '">Reopen for changes</button><span class="small muted" style="align-self:center">' + (pr.status === 'proposal_sent' ? 'Withdraws the proposal the client has.' : '') + '</span></div>' : '') +
