@@ -87,6 +87,8 @@ textarea.in{min-height:84px;resize:vertical}
 .foot a{color:inherit}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bone);padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;display:none;max-width:calc(100vw - 32px);z-index:9}
 .toast.on{display:block}.toast.bad{background:#6e2416}
+.email-pref{text-align:center;margin:8px 0 24px;line-height:1.6}
+.linkish{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--forest);text-decoration:underline;cursor:pointer}
 /* Guidance: what the client should do next */
 .chip-go{font:700 12px var(--h);letter-spacing:.01em;padding:6px 12px;border-radius:99px;border:0;background:#b4e6b8;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .chip-go::after{content:"→";font-weight:700}
@@ -126,7 +128,8 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
   var CONFIG = {"supabaseUrl": "https://wqzpnukifcyuroeoqopc.supabase.co", "supabaseAnonKey": "sb_publishable_C-vp7mfq_bvpc1SjxEkRjA_6mEt3Tdl", "contactEmail": "hello@cleverherd.com"};
   var hp = new URLSearchParams(location.hash.slice(1));
   var TOKEN = hp.get('t') || '', JUST_PAID = hp.get('paid') === '1';
-  var D = null, busy = false, THANKS = false;
+  var GO = (hp.get('go') || '').replace(/[^A-Za-z0-9_-]/g, ''), EMAILS_OFF = hp.get('emails') === 'off';   // from email links
+  var D = null, busy = false, THANKS = false, EMAILS = null;
   var $ = function(s){ return document.querySelector(s); };
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var money = function(c){ c = Math.round(+c || 0); return '$' + (c / 100).toLocaleString('en-US', {minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2}); };
@@ -274,7 +277,7 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     }
     // Messages
     if (p.status !== 'cancelled') {
-      out.push('<section class="card"><h2>Messages with the team</h2><div class="msgs">' + (D.messages.length ? D.messages.map(function(m){ return '<div class="msg ' + (m.from_client ? 'me' : '') + '"><b class="small">' + esc(m.name) + '</b><br>' + esc(m.body) + '<small>' + esc(date(m.created_at)) + '</small></div>'; }).join('') : '<p class="small muted">No messages yet. Questions about the proposal or the work? Write to the team here.</p>') + '</div>' +
+      out.push('<section class="card" id="msgs"><h2>Messages with the team</h2><div class="msgs">' + (D.messages.length ? D.messages.map(function(m){ return '<div class="msg ' + (m.from_client ? 'me' : '') + '"><b class="small">' + esc(m.name) + '</b><br>' + esc(m.body) + '<small>' + esc(date(m.created_at)) + '</small></div>'; }).join('') : '<p class="small muted">No messages yet. Questions about the proposal or the work? Write to the team here.</p>') + '</div>' +
         '<form class="msg-form" id="msg" novalidate><textarea class="in" name="body" rows="1" maxlength="4000" placeholder="Write to the team…" aria-label="Message" required></textarea><button class="btn" type="submit">Send</button></form></section>');
     }
     // Feedback
@@ -282,6 +285,9 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
       var f = D.feedback;
       out.push('<section class="card"><h2>How did it go?</h2>' + (f ? '<p style="margin-bottom:10px">Thanks for your feedback (' + '★'.repeat(f.rating) + ').</p>' : '') + '<form class="form" id="fb" novalidate><div class="stars" role="radiogroup" aria-label="Rating">' + [1, 2, 3, 4, 5].map(function(n){ return '<label><input type="radio" name="rating" value="' + n + '"' + (f && f.rating === n ? ' checked' : '') + '><span aria-label="' + n + ' stars">★</span></label>'; }).join('') + '</div><label>Comments<textarea class="in" name="comment" maxlength="2000">' + esc(f ? f.comment : '') + '</textarea></label><label class="check"><input type="checkbox" name="publish"' + (f && f.publish ? ' checked' : '') + '> <span>The team may show my rating and comment on their Cleverherd profiles, with my first name.</span></label><div><button class="btn" type="submit">' + (f ? 'Update feedback' : 'Send feedback') + '</button></div></form></section>');
     }
+    if (EMAILS !== null && D.project.client_email) out.push('<p class="small muted email-pref" id="emailpref">' + (EMAILS
+      ? 'We email <b>' + esc(D.project.client_email) + '</b> when something here needs you. <button type="button" class="linkish" data-emails="off">Turn off email updates</button>'
+      : 'Email updates are off for this project. <button type="button" class="linkish" data-emails="on">Turn them back on</button>') + '</p>');
     $('#main').innerHTML = out.join('');
     bind();
     floatNext();
@@ -307,6 +313,11 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     floatObs.observe(target); if (home && home !== target) floatObs.observe(home);
   }
   document.addEventListener('click', function(e){ var g = e.target.closest('[data-go]'); if (!g) return; e.preventDefault(); var el = document.getElementById(g.dataset.go); if (!el) return; guide(el.id === 'pay' ? (el.querySelector('[data-pay]') || el) : el); });
+  async function setEmails(on){
+    try { EMAILS = await rpc('client_email_updates', {t: TOKEN, turn_on: on}); render(); toast(on ? 'Email updates are on' : 'Email updates turned off — you can turn them back on at the bottom of this page'); }
+    catch (e) { toast(e.message, true); }
+  }
+  document.addEventListener('click', function(e){ var b = e.target.closest('[data-emails]'); if (b) setEmails(b.dataset.emails === 'on'); });
   function bind(){
     var ap = $('#approve'), ch = $('#changes');
     if (ap) {
@@ -362,6 +373,14 @@ input[type=date].in{-webkit-appearance:none;appearance:none;display:block;min-he
     if (!TOKEN) { $('#sub').textContent = 'Open this page using the link from your project team.'; return; }
     try { D = await rpc('client_portal', {t: TOKEN}); render(); }
     catch (e) { $('#title').textContent = 'Link not valid'; $('#sub').textContent = e.message; return; }
+    try { EMAILS = await rpc('client_email_updates', {t: TOKEN}); render(); } catch (e) {}
+    if (EMAILS_OFF || GO) { try { history.replaceState(null, '', location.pathname + '#t=' + TOKEN); } catch (e) {} }
+    if (EMAILS_OFF) { EMAILS_OFF = false; if (EMAILS) await setEmails(false); else toast('Email updates are already off for this project'); guide('#emailpref'); }
+    else if (GO && !JUST_PAID) {
+      var target = GO === 'pay' ? ($('#pay [data-pay]') || $('#pay') || $('.summary')) : GO === 'proposal' ? ($('#approve') || $('#proposal')) : document.getElementById(GO);
+      setTimeout(function(){ guide(target || $('.summary')); }, 120);
+      GO = '';
+    }
     if (JUST_PAID) {
       // Back from Stripe: check with Stripe straight away, then keep checking for about a minute.
       var waits = [0, 2500, 4000, 6000, 8000, 10000, 15000, 15000], n = 0;
