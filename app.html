@@ -680,6 +680,15 @@ input[type=date].in::-webkit-date-and-time-value{text-align:left;margin:0}
 .photo-row{display:flex;gap:18px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line)}
 .photo-preview{display:flex;gap:18px;align-items:flex-end;justify-content:center;padding:18px 0 22px}
 
+/* Shares after approval */
+.btn-pair{display:flex;gap:6px;flex-wrap:wrap}
+td.share-acts{white-space:normal;min-width:120px}
+td.share-acts .link-btn{margin-left:10px}
+td.share-acts .link-btn:first-child{margin-left:0}
+.review-row{align-items:flex-start}
+.review-row .pill{vertical-align:1px;margin-left:4px}
+@media (max-width:640px){.tbl td.small{min-width:150px}}
+
 /* =====================================================================
    Dark mode for the member platform (Settings → Appearance).
    Strategy: re-point the surface/text variables, then fix the places where a
@@ -1309,7 +1318,7 @@ function friendly(e){
   if (/duplicate key|already exists|unique/i.test(m)) return 'That’s already done.';
   if (/violates check constraint/i.test(m)) return 'Something you entered is too long or not allowed. Please check and try again.';
   if (/Failed to fetch|NetworkError|network/i.test(m)) return 'Couldn’t reach the server. Check your connection and try again.';
-  return m.replace(/^(rate_limit|has_records|active_projects|wrong_status|has_payments|admin_required):\s*/, '');
+  return m.replace(/^[a-z_]{3,30}:\s*/, '');   // drop the error code, keep the explanation
 }
 /* Run an action: write, refresh from the server, re-render. */
 async function act(fn, okMsg, after){
@@ -2693,6 +2702,20 @@ function budgetOf(pr){
   var alloc = pr.allocs.reduce(function(t, a){ return t + a.value; }, 0);
   return {total: pr.total, fee: fee, proc: proc, net: net, alloc: alloc, left: net - alloc, nPay: nPay};
 }
+function inWork(pr){ return pr.status === 'approved' || pr.status === 'active'; }
+function pendingAdded(a){ return a.source === 'added' && !a.acceptedAt; }
+function openReview(pr, a){ return (pr.reviews || []).find(function(v){ return v.allocationId === a.id && v.status === 'open'; }); }
+function allocEarned(pr, a){ return pr.payouts.some(function(o){ return o.allocationId === a.id; }); }
+// How a share was set and what has happened to it since it was agreed.
+function shareNote(a){
+  if (a.source === 'reserve') return 'Unused team reserve, shared in proportion to agreed shares';
+  var x = [allocDetail(a)];
+  if (a.lockedAt && a.agreed != null && ['percent', 'commission', 'hourly'].indexOf(a.method) > -1) x.push('fixed at ' + cents$(a.agreed) + ' on approval');
+  if (a.source === 'added') x.push('added after approval');
+  if (a.released) x.push('released ' + cents$(a.released));
+  if (a.lockedAt && a.agreed != null && a.value !== a.agreed - a.released) x.push('changed by a Cleverherd review (agreed ' + cents$(a.agreed) + ')');
+  return x.join(' · ');
+}
 function allocPreview(pr, f){
   var b = budgetOf(pr);
   switch (f.method) {
@@ -2731,7 +2754,8 @@ async function loadCommerce(s){
       q(SB.from('project_messages').select('*').order('created_at', {ascending: true})),
       q(SB.from('project_events').select('*').order('created_at', {ascending: false}).limit(400)),
       q(SB.from('project_credits').select('*').order('created_at', {ascending: false})),
-      q(SB.from('project_feedback').select('*'))
+      q(SB.from('project_feedback').select('*')),
+      q(SB.from('share_reviews').select('*').order('created_at', {ascending: false})).catch(function(){ return []; })   // before the shares update is run
     ]);
   } catch (e) { console.warn('Paid projects unavailable:', e && e.message); return; }
   s.settings = r[0];
@@ -2739,14 +2763,16 @@ async function loadCommerce(s){
   s.projects = r[1].map(function(p){
     var ms = by(r[2], p.id).map(function(m){ return {id: m.id, title: m.title, description: m.description, due: m.due_date, amount: +m.amount_cents, status: m.status, submittedAt: m.submitted_at, approvedAt: m.approved_at, approvedBy: m.approved_by, revisionNote: m.revision_note, position: m.position,
       deliverables: r[4].filter(function(d){ return d.milestone_id === m.id; }).map(function(d){ return {id: d.id, title: d.title, url: d.url, note: d.note, by: M(d.submitted_by), at: d.created_at}; })}; });
-    var allocs = by(r[3], p.id).map(function(a){ return {id: a.id, member: a.member ? M(a.member) : null, role: a.role, method: a.method, fixed: +a.fixed_cents, percent: +a.percent, rate: +a.hourly_rate_cents, hours: +a.hours, milestoneId: a.milestone_id, milestone: ms.find(function(m){ return m.id === a.milestone_id; }), value: +a.value_cents, acceptedAt: a.accepted_at}; });
+    var allocs = by(r[3], p.id).map(function(a){ return {id: a.id, member: a.member ? M(a.member) : null, role: a.role, method: a.method, fixed: +a.fixed_cents, percent: +a.percent, rate: +a.hourly_rate_cents, hours: +a.hours, milestoneId: a.milestone_id, milestone: ms.find(function(m){ return m.id === a.milestone_id; }), value: +a.value_cents, acceptedAt: a.accepted_at,
+      lockedAt: a.locked_at || null, agreed: a.agreed_cents == null ? null : +a.agreed_cents, released: +(a.released_cents || 0), source: a.source || 'agreed'}; });
     return {id: p.id, teamId: p.team_id, opportunityId: p.opportunity_id, initiative: p.for_initiative, title: p.title, summary: p.summary,
       clientName: p.client_name, clientCompany: p.client_company, clientEmail: p.client_email, type: p.project_type, feePct: +p.fee_pct,
       currency: p.currency, total: +p.total_cents, plan: p.payment_plan, depositPct: +p.deposit_pct, scope: p.scope, timeline: p.timeline,
       terms: p.terms, validUntil: p.valid_until, status: p.status, archived: !!p.archived_at, createdBy: M(p.created_by), createdAt: p.created_at, lockedAt: p.budget_locked_at,
       approvedAt: p.approved_at, completedAt: p.completed_at, milestones: ms, allocs: allocs,
       proposals: by(r[5], p.id), invoices: by(r[6], p.id).map(function(i){ return {id: i.id, number: i.number, kind: i.kind, description: i.description, amount: +i.amount_cents, status: i.status, issuedAt: i.issued_at, due: i.due_date, paidAt: i.paid_at, refunded: +i.amount_refunded_cents, method: i.method, note: i.note, intent: i.stripe_payment_intent}; }),
-      payouts: by(r[7], p.id).map(function(o){ return {id: o.id, member: o.member ? M(o.member) : null, role: o.role, amount: +o.amount_cents, status: o.status, note: o.note, paidAt: o.paid_at, transfer: o.stripe_transfer_id}; }),
+      reviews: by(r[13] || [], p.id).map(function(v){ return {id: v.id, allocationId: v.allocation_id, member: v.member ? M(v.member) : null, requestedBy: v.requested_by ? M(v.requested_by) : null, reason: v.reason, status: v.status, before: +v.amount_before, after: v.amount_after == null ? null : +v.amount_after, note: v.decision_note, at: v.created_at, decidedAt: v.decided_at}; }),
+      payouts: by(r[7], p.id).map(function(o){ return {id: o.id, allocationId: o.allocation_id, member: o.member ? M(o.member) : null, role: o.role, amount: +o.amount_cents, status: o.status, note: o.note, paidAt: o.paid_at, transfer: o.stripe_transfer_id}; }),
       messages: by(r[9], p.id).map(function(m){ return {fromClient: m.from_client, by: m.author ? M(m.author) : null, name: m.client_name, body: m.body, at: m.created_at}; }),
       events: by(r[10], p.id), feedback: r[12].find(function(f){ return f.project_id === p.id; }) || null};
   });
@@ -2785,9 +2811,10 @@ function commerceAttention(){
   if (!commerceOn()) return [];
   var out = [];
   S.projects.forEach(function(pr){
-    if (editable(pr)) myAllocs(pr).filter(function(a){ return !a.acceptedAt; }).forEach(function(a){
+    myAllocs(pr).filter(function(a){ return !a.acceptedAt && (editable(pr) || (pendingAdded(a) && inWork(pr))); }).forEach(function(a){
       out.push('<a class="row row-link" href="#/projects/' + pr.id + '/budget"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Review your share: ' + cents$(a.value) + '</b><div class="small muted">' + esc(pr.title) + ' · ' + esc(a.role || METHODS[a.method]) + '</div></div><span class="btn btn-ink btn-sm">Accept</span></a>');
     });
+    if (S.me.isAdmin && (pr.reviews || []).some(function(v){ return v.status === 'open'; })) out.push('<a class="row row-link" href="#/projects/' + pr.id + '/budget"><span class="type-dot t-paid">' + icon('coin') + '</span><div class="grow"><b>Share review to decide</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Review</span></a>');
     if (isProjLead(pr) && pr.status === 'changes_requested') out.push('<a class="row row-link" href="#/projects/' + pr.id + '/proposal"><span class="type-dot t-paid">' + icon('brief') + '</span><div class="grow"><b>Client requested changes</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Review</span></a>');
     pr.milestones.filter(function(m){ return m.status === 'revision_requested'; }).forEach(function(m){
       out.push('<a class="row row-link" href="#/projects/' + pr.id + '/milestones"><span class="type-dot">' + icon('target') + '</span><div class="grow"><b>Revision requested: ' + esc(m.title) + '</b><div class="small muted">' + esc(pr.title) + '</div></div><span class="btn btn-ink btn-sm">Open</span></a>');
@@ -2855,6 +2882,8 @@ function stepper(pr){
 function nextStep(pr){
   var lead = isProjLead(pr), b = budgetOf(pr), mine = myAllocs(pr), x;
   if (pr.status === 'cancelled') return ['This project was cancelled.', ''];
+  var offered = mine.filter(pendingAdded);
+  if (offered.length && inWork(pr)) return ['You’ve been offered a share of ' + cents$(offered.reduce(function(t, a){ return t + a.value; }, 0)) + '. Accept it to join the work, or decline it.', '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/budget">Review my share</a>'];
   if (editable(pr)) {
     var pending = pr.allocs.filter(function(a){ return !a.acceptedAt; });
     var mineP = mine.filter(function(a){ return !a.acceptedAt; });
@@ -2897,21 +2926,26 @@ function numbersCard(pr){
     '<div><span>Card processing (est. ' + (S.settings ? S.settings.processing_pct : 2.9) + '% + ' + cents$(S.settings ? S.settings.processing_fixed_cents : 30) + ' × ' + b.nPay + ' payment' + (b.nPay > 1 ? 's' : '') + ')</span><b>−' + cents$(b.proc) + '</b></div>' +
     '<div><span><b>Team budget</b></span><b>' + cents$(b.net) + '</b></div>' +
     '<div><span>Allocated</span><b>' + cents$(b.alloc) + '</b></div>' +
-    '<div><span>Unallocated</span><b class="' + (b.left < 0 ? 'neg' : '') + '">' + cents$(b.left) + '</b></div></div>' +
-    '<p class="small muted" style="margin-top:12px">Unallocated money stays with Cleverherd if it isn’t assigned — allocate the whole team budget unless you mean to leave a buffer. Processing is an estimate; any difference is absorbed by Cleverherd.</p></section>';
+    '<div><span>Team reserve (unallocated)</span><b class="' + (b.left < 0 ? 'neg' : '') + '">' + cents$(b.left) + '</b></div></div>' +
+    '<p class="small muted" style="margin-top:12px">Anything not allocated is the team reserve. After the client approves, the lead can offer it to a new contributor. Whatever is still unused when the project completes is shared among the contributors in proportion to their agreed shares — Cleverherd doesn’t keep it. Processing is an estimate; any difference is absorbed by Cleverherd.</p></section>';
 }
 function projOverview(pr){
   var mine = myAllocs(pr), myTotal = mine.reduce(function(t, a){ return t + a.value; }, 0);
   var ev = pr.events.slice(0, 12);
   return '<div class="split"><div class="stack">' + numbersCard(pr) +
     '<section class="card"><div class="card-h"><h3>Activity</h3></div>' + (ev.length ? ev.map(function(e){ return '<div class="row"><div class="grow"><b>' + esc(eventLabel(e)) + '</b><div class="small muted">' + esc(e.actor) + ' · ' + esc(ago(e.created_at)) + '</div></div></div>'; }).join('') : '<p class="small muted">Nothing yet.</p>') + '</section></div>' +
-    '<div class="stack">' + (mine.length ? '<section class="card"><div class="card-h"><h3>Your share</h3><b>' + cents$(myTotal) + '</b></div>' + mine.map(function(a){ return '<div class="row"><div class="grow"><b>' + esc(a.role || 'Contributor') + '</b><div class="small muted">' + esc(allocDetail(a)) + '</div></div>' + (a.acceptedAt ? '<span class="pill ok">Accepted</span>' : '<span class="pill sd">Not accepted</span>') + '</div>'; }).join('') + '<p class="small muted" style="margin-top:10px">Paid out after the work it covers is approved and paid for by the client.</p></section>' : '') +
+    '<div class="stack">' + (mine.length ? '<section class="card"><div class="card-h"><h3>Your share</h3><b>' + cents$(myTotal) + '</b></div>' + mine.map(function(a){ return '<div class="row"><div class="grow"><b>' + esc(a.role || 'Contributor') + '</b><div class="small muted">' + esc(shareNote(a)) + '</div></div>' + (a.acceptedAt ? '<span class="pill ok">' + (a.source === 'reserve' ? 'Reserve share' : 'Accepted') + '</span>' : '<span class="pill sd">' + (pendingAdded(a) ? 'Offered' : 'Not accepted') + '</span>') + '</div>'; }).join('') + '<p class="small muted" style="margin-top:10px">Paid out after the work it covers is approved and paid for by the client.</p></section>' : '') +
     '<section class="card"><div class="kv"><div><span>Team</span><b>' + esc(projTeam(pr).name) + '</b></div><div><span>Payment plan</span><b>' + esc(PLANS[pr.plan]) + (pr.plan === 'deposit_balance' ? ' (' + pr.depositPct + '%)' : '') + '</b></div><div><span>Client email</span><b>' + esc(pr.clientEmail || '—') + '</b></div><div><span>Milestones</span><b>' + pr.milestones.filter(function(m){ return m.status === 'approved'; }).length + ' of ' + pr.milestones.length + ' approved</b></div></div></section>' +
     '<p class="note">Compensation is agreed by everyone before work starts. Contribution records don’t change payouts automatically, and Cleverherd isn’t an escrow service: client payments are held in Cleverherd’s Stripe balance and paid out once the work they cover is approved.</p></div></div>';
 }
 function eventLabel(e){
   var d = e.detail || {};
-  return ({budget_agreed: 'Budget agreed', allocation_accepted: 'Share accepted' + (d.role ? ' — ' + d.role : ''), proposal_sent: 'Proposal v' + d.version + ' sent to client', proposal_approved: 'Client approved proposal v' + d.version + (d.by ? ' (' + d.by + ')' : ''), changes_requested: 'Client requested changes', reopened: 'Budget reopened for changes', invoice_issued: 'Invoice ' + d.number + ' issued — ' + cents$(d.amount), payment_received: 'Payment received — ' + cents$(d.amount) + (d.method === 'offline' ? ' (recorded offline)' : ''), payment_failed: 'Payment failed', work_started: 'Work started', milestone_in_progress: 'Started: ' + d.milestone, milestone_submitted: 'Submitted for review: ' + d.milestone, milestone_approved: 'Client approved: ' + d.milestone, revision_requested: 'Revision requested: ' + d.milestone, completed: 'Project completed', payout_paid: 'Payout sent — ' + cents$(d.amount), payout_failed: 'Payout failed', payout_eligible: 'Payout waiting', refund: 'Refund issued', dispute_opened: 'Payment disputed', dispute_won: 'Dispute resolved in our favour', dispute_lost: 'Dispute lost', cancelled: 'Project cancelled', client_link_reset: 'Client link reset', feedback: 'Client left feedback (' + d.rating + '/5)', invoice_void: 'Invoice ' + d.number + ' voided'})[e.kind] || e.kind;
+  return ({budget_agreed: 'Budget agreed', allocation_accepted: 'Share accepted' + (d.role ? ' — ' + d.role : ''), proposal_sent: 'Proposal v' + d.version + ' sent to client', proposal_approved: 'Client approved proposal v' + d.version + (d.by ? ' (' + d.by + ')' : ''), changes_requested: 'Client requested changes', reopened: 'Budget reopened for changes', invoice_issued: 'Invoice ' + d.number + ' issued — ' + cents$(d.amount), payment_received: 'Payment received — ' + cents$(d.amount) + (d.method === 'offline' ? ' (recorded offline)' : ''), payment_failed: 'Payment failed', work_started: 'Work started', milestone_in_progress: 'Started: ' + d.milestone, milestone_submitted: 'Submitted for review: ' + d.milestone, milestone_approved: 'Client approved: ' + d.milestone, revision_requested: 'Revision requested: ' + d.milestone, completed: 'Project completed', payout_paid: 'Payout sent — ' + cents$(d.amount), payout_failed: 'Payout failed', payout_eligible: 'Payout waiting', refund: 'Refund issued', dispute_opened: 'Payment disputed', dispute_won: 'Dispute resolved in our favour', dispute_lost: 'Dispute lost', cancelled: 'Project cancelled', client_link_reset: 'Client link reset', feedback: 'Client left feedback (' + d.rating + '/5)', invoice_void: 'Invoice ' + d.number + ' voided',
+    shares_locked: 'Shares locked at their agreed amounts', share_added: 'Share offered' + (d.member ? ' to ' + d.member : '') + ' — ' + cents$(d.amount), share_declined: 'Share offer declined' + (d.role ? ' — ' + d.role : ''),
+    share_withdrawn: 'Share offer withdrawn' + (d.member ? ' — ' + d.member : ''), share_lapsed: 'Share offer lapsed (never accepted)' + (d.member ? ' — ' + d.member : ''),
+    share_released: 'Share released — ' + cents$(d.amount) + (d.role ? ' (' + d.role + ')' : ''), review_requested: 'Share review requested' + (d.member ? ' — ' + d.member : ''),
+    share_adjusted: 'Share changed by Cleverherd review' + (d.member ? ' — ' + d.member : '') + ': ' + cents$(d.from) + ' → ' + cents$(d.to), review_closed: 'Share review closed' + (d.changed ? '' : ' — no change'),
+    reserve_shared: 'Unused team reserve shared among contributors — ' + cents$(d.amount), reserve_unassigned: 'Team reserve left unassigned — ' + cents$(d.amount)})[e.kind] || e.kind;
 }
 function projBudget(pr){
   var lead = isProjLead(pr), ed = editable(pr) && lead, b = budgetOf(pr), t = projTeam(pr);
@@ -2923,20 +2957,44 @@ function projBudget(pr){
       '<div class="two">' + field('pd-cn', 'Client name', '<input class="in" id="pd-cn" name="clientName" value="' + esc(pr.clientName) + '" maxlength="120">') + field('pd-cc', 'Company', '<input class="in" id="pd-cc" name="clientCompany" value="' + esc(pr.clientCompany) + '" maxlength="120">') + '</div>' +
       field('pd-ce', 'Client email', '<input class="in" id="pd-ce" name="clientEmail" type="email" value="' + esc(pr.clientEmail) + '" maxlength="200">', 'Used for the proposal link and receipts. Never shown to other members.') +
       '<p class="err" role="alert"></p><button class="btn btn-ink" type="submit" style="justify-self:start">Save</button></form>' : '';
+  var work = inWork(pr), admin = S.me.isAdmin;
   var rows = pr.allocs.map(function(a){
-    var mineA = a.member === 'me';
-    return '<tr><td><div class="person">' + av(P(a.member || 'x'), 'sm') + '<span>' + esc(a.member ? nameOf(a.member) : 'Former member') + '<small class="muted" style="display:block">' + esc(a.role || '') + '</small></span></div></td><td class="small">' + esc(allocDetail(a)) + '</td><td class="r"><b>' + cents$(a.value) + '</b></td><td>' +
-      (a.acceptedAt ? '<span class="pill ok">Accepted</span>' : mineA && editable(pr) ? '<button class="btn btn-ink btn-sm" data-act="alloc-accept" data-id="' + a.id + '">Accept</button>' : '<span class="pill sd">Waiting</span>') + '</td><td class="r">' +
-      (ed ? '<button class="link-btn" data-act="alloc-edit" data-project="' + pr.id + '" data-id="' + a.id + '">Edit</button> <button class="link-btn" data-act="alloc-del" data-id="' + a.id + '">Remove</button>' : '') + '</td></tr>';
+    var mineA = a.member === 'me', rv = openReview(pr, a), acts = [];
+    var state = rv ? '<span class="pill sd">Under review</span>'
+      : a.acceptedAt ? '<span class="pill ok">' + (a.source === 'reserve' ? 'Added' : 'Accepted') + '</span>'
+      : mineA && (editable(pr) || (pendingAdded(a) && work)) ? '<div class="btn-pair"><button class="btn btn-ink btn-sm" data-act="alloc-accept" data-id="' + a.id + '">Accept</button>' + (pendingAdded(a) ? '<button class="btn btn-line btn-sm" data-act="share-decline" data-id="' + a.id + '">Decline</button>' : '') + '</div>'
+      : '<span class="pill sd">' + (pendingAdded(a) ? 'Offered' : 'Waiting') + '</span>';
+    if (ed) acts.push('<button class="link-btn" data-act="alloc-edit" data-project="' + pr.id + '" data-id="' + a.id + '">Edit</button>', '<button class="link-btn" data-act="alloc-del" data-id="' + a.id + '">Remove</button>');
+    if (lead && work && pendingAdded(a)) acts.push('<button class="link-btn" data-act="share-withdraw" data-id="' + a.id + '">Withdraw</button>');
+    if (a.lockedAt && a.source !== 'reserve' && pr.status !== 'cancelled') {
+      var canRelease = mineA && work && a.value > 0 && !allocEarned(pr, a) && !rv;
+      if (canRelease) acts.push('<button class="link-btn" data-act="share-release" data-project="' + pr.id + '" data-id="' + a.id + '">Release…</button>');
+      if (((lead && !mineA) || (mineA && !canRelease)) && !rv) acts.push('<button class="link-btn" data-act="share-review" data-project="' + pr.id + '" data-id="' + a.id + '">Request review</button>');
+      if (admin && rv) acts.push('<button class="btn btn-ink btn-sm" data-act="share-decide" data-project="' + pr.id + '" data-id="' + rv.id + '">Decide review</button>');
+    }
+    return '<tr><td><div class="person">' + av(P(a.member || 'x'), 'sm') + '<span>' + esc(a.member ? nameOf(a.member) : 'Former member') + '<small class="muted" style="display:block">' + esc(a.role || '') + '</small></span></div></td><td class="small">' + esc(shareNote(a)) + '</td><td class="r"><b>' + cents$(a.value) + '</b></td><td>' +
+      state + '</td><td class="r share-acts">' + acts.join(' ') + '</td></tr>';
   }).join('');
-  var allocCard = '<section class="card"><div class="card-h"><h3>Team budget split</h3>' + (ed && mems.length ? '<button class="btn btn-ink btn-sm" data-act="alloc-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add a share</button>' : '') + '</div>' +
+  var canAdd = lead && work && b.left > 0 && mems.length;
+  var allocCard = '<section class="card"><div class="card-h"><h3>Team budget split</h3>' + (ed && mems.length ? '<button class="btn btn-ink btn-sm" data-act="alloc-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add a share</button>' : canAdd ? '<button class="btn btn-ink btn-sm" data-act="share-add" data-project="' + pr.id + '">' + icon('plus') + 'Add a contributor</button>' : '') + '</div>' +
     (pr.allocs.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Member</th><th>How</th><th class="r">Amount</th><th>Agreement</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="small muted">No shares yet. ' + (ed ? 'Add a share for each person, including yourself.' : '') + '</p>') +
-    '<div class="budget-bar" aria-label="Allocated ' + cents$(b.alloc) + ' of ' + cents$(b.net) + '"><i style="width:' + (b.net ? Math.min(100, b.alloc / b.net * 100) : 0) + '%"></i></div><p class="small muted">' + cents$(b.alloc) + ' of ' + cents$(b.net) + ' allocated · ' + cents$(b.left) + ' unallocated</p>' +
+    '<div class="budget-bar" aria-label="Allocated ' + cents$(b.alloc) + ' of ' + cents$(b.net) + '"><i style="width:' + (b.net ? Math.min(100, b.alloc / b.net * 100) : 0) + '%"></i></div><p class="small muted">' + cents$(b.alloc) + ' of ' + cents$(b.net) + ' allocated · ' + cents$(b.left) + (editable(pr) ? ' unallocated' : ' team reserve') + '</p>' +
     (ed ? '<div class="share-row">' + '<button class="btn btn-ink" data-act="project-lock" data-id="' + pr.id + '">Agree budget</button><span class="small muted" style="align-self:center">Locks the price, milestones and shares so the proposal can be sent.</span></div>' : '') +
     (lead && ['budget_agreed', 'proposal_sent', 'changes_requested'].indexOf(pr.status) > -1 && !editable(pr) ? '<div class="share-row"><button class="btn btn-line" data-act="project-reopen" data-id="' + pr.id + '">Reopen for changes</button><span class="small muted" style="align-self:center">' + (pr.status === 'proposal_sent' ? 'Withdraws the proposal the client has.' : '') + '</span></div>' : '') +
     '</section>';
-  return '<div class="split"><div class="stack">' + allocCard + details + '</div><div class="stack">' + numbersCard(pr) +
-    '<p class="note">Agree compensation before work begins. Each person accepts their own share; changing the price or a share asks them to accept again. Shares can’t add up to more than the team budget.</p></div></div>';
+  var revs = pr.reviews || [];
+  var revCard = revs.length ? '<section class="card"><div class="card-h"><h3>Share reviews</h3></div>' + revs.map(function(v){
+      var who = v.member ? (v.member === 'me' ? 'Your' : first(nameOf(v.member)) + '’s') : 'A former member’s';
+      return '<div class="row review-row"><div class="grow"><b>' + esc(who) + ' share</b> ' + (v.status === 'open' ? '<span class="pill sd">Open</span>' : v.status === 'adjusted' ? '<span class="pill">Changed: ' + cents$(v.before) + ' → ' + cents$(v.after) + '</span>' : '<span class="pill ok">No change</span>') +
+        '<p class="small" style="margin-top:6px;white-space:pre-line">' + esc(v.reason) + '</p><div class="small muted">Requested by ' + esc(v.requestedBy ? (v.requestedBy === 'me' ? 'you' : nameOf(v.requestedBy)) : 'a former member') + ' · ' + esc(ago(v.at)) + '</div>' +
+        (v.status !== 'open' ? '<p class="small" style="margin-top:8px"><b>Cleverherd’s decision:</b> ' + esc(v.note) + '</p>' : '') + '</div>' +
+        (admin && v.status === 'open' ? '<button class="btn btn-ink btn-sm" data-act="share-decide" data-project="' + pr.id + '" data-id="' + v.id + '">Decide</button>' : '') + '</div>';
+    }).join('') + '</section>' : '';
+  var note = editable(pr) || ['budget_agreed', 'proposal_sent'].indexOf(pr.status) > -1
+    ? 'Agree compensation before work begins. Each person accepts their own share; changing the price or a share asks them to accept again. Shares can’t add up to more than the team budget. When the client approves, every share is locked at its dollar amount.'
+    : 'Agreed shares are locked at their dollar amounts and aren’t recalculated. Only the contributor can give up some or all of their own unpaid share. Any other change goes through a review decided by Cleverherd, with the reason recorded and everyone involved emailed. Money already paid out is never taken back.';
+  return '<div class="split"><div class="stack">' + allocCard + revCard + details + '</div><div class="stack">' + numbersCard(pr) +
+    '<p class="note">' + note + '</p></div></div>';
 }
 function proposalPreview(pr, snap){
   var x = snap || {title: pr.title, summary: pr.summary, scope: pr.scope, timeline: pr.timeline, terms: pr.terms, valid_until: pr.validUntil, client_name: pr.clientName, client_company: pr.clientCompany, team: projTeam(pr).name, total_cents: pr.total, fee_pct: pr.feePct, payment_plan: pr.plan, deposit_pct: pr.depositPct, milestones: pr.milestones.map(function(m){ return {title: m.title, description: m.description, due_date: m.due, amount_cents: m.amount}; })};
@@ -3056,6 +3114,12 @@ var PACT = {
   'alloc-accept': function(d){ act(function(){ return papi.rpc('allocation_accept', {a: d.id}); }, 'Share accepted'); },
   'alloc-del': function(d){ act(function(){ return papi.deleteAlloc(d.id); }, 'Share removed'); },
   'alloc-edit': function(d){ allocModal(proj(d.project), d.id); },
+  'share-add': function(d){ addShareModal(proj(d.project)); },
+  'share-decline': function(d){ confirmBox('Decline this share?', 'The money goes back to the team reserve and the lead is told. You can be offered a share again later.', 'Decline', function(){ act(function(){ return papi.rpc('allocation_decline', {a: d.id, reason: ''}); }, 'Share declined'); }); },
+  'share-withdraw': function(d){ confirmBox('Withdraw this offer?', 'They haven’t accepted it yet. The money goes back to the team reserve and they’re told by email.', 'Withdraw', function(){ act(function(){ return papi.rpc('project_withdraw_share', {a: d.id}); }, 'Offer withdrawn'); }); },
+  'share-release': function(d){ releaseModal(proj(d.project), d.id); },
+  'share-review': function(d){ reviewModal(proj(d.project), d.id); },
+  'share-decide': function(d){ decideModal(proj(d.project), d.id); },
   'ms-edit': function(d){ msModal(proj(d.project), d.id); },
   'ms-del': function(d){ act(function(){ return papi.deleteMilestone(d.id); }, 'Milestone removed'); },
   'ms-status': function(d){ act(function(){ return papi.rpc('milestone_update_status', {m: d.id, s: d.v}); }, d.v === 'submitted' ? 'Sent to the client for review' : 'Milestone started'); },
@@ -3145,6 +3209,41 @@ function allocModalSync(pr){
   $$('.am', f).forEach(function(el){ el.style.display = el.classList.contains('am-' + d.method) ? '' : 'none'; });
   var el = $('#allocPrev'); if (el) el.textContent = cents$(allocPreview(pr, d));
 }
+function addShareModal(pr){
+  var b = budgetOf(pr), mems = activeMembers(projTeam(pr));
+  var later = pr.plan === 'milestones' ? pr.milestones.filter(function(m){ return m.status !== 'approved'; }) : [];
+  openModal('<h2>Add a contributor</h2><p class="sub">Paid from the team reserve (' + cents$(b.left) + '). The client’s price doesn’t change.</p><form class="form" data-form="share-add" data-project="' + pr.id + '" novalidate>' +
+    '<div class="two">' + field('sa-m', 'Team member', '<select class="sel" id="sa-m" name="member">' + options([['', 'Choose…']].concat(mems.map(function(m){ return [m.id, nameOf(m.id)]; })), '') + '</select>') + field('sa-r', 'Role', '<input class="in" id="sa-r" name="role" maxlength="60" placeholder="e.g. Copywriting">') + '</div>' +
+    field('sa-a', 'Amount (USD)', '<input class="in" id="sa-a" name="amount" inputmode="decimal">', 'Up to ' + cents$(b.left) + '. A fixed amount — it won’t change once they accept.') +
+    (later.length ? field('sa-ms', 'Paid when', '<select class="sel" id="sa-ms" name="milestone">' + options([['', 'The project completes']].concat(later.map(function(m){ return [m.id, m.title + ' is approved and paid']; })), '') + '</select>') : '') +
+    '<p class="small muted">They’ll be emailed to accept or decline. Not on the team yet? Invite them from the team page first.</p>' +
+    '<p class="err" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Offer share</button></div></form>');
+}
+function releaseModal(pr, id){
+  var a = pr.allocs.find(function(x){ return x.id === id; });
+  openModal('<h2>Release your share</h2><p class="sub">' + esc(a.role || 'Contributor') + ' · ' + cents$(a.value) + ' not yet paid</p><form class="form" data-form="share-release" data-project="' + pr.id + '" data-id="' + id + '" novalidate>' +
+    field('sr-a', 'Amount to release (USD)', '<input class="in" id="sr-a" name="amount" inputmode="decimal" value="' + esc(dollars(a.value)) + '">', 'All of it if you’re stepping away, or part of it if someone else is taking over some of the work.') +
+    field('sr-n', 'Note for the team (optional)', '<textarea class="in" id="sr-n" name="reason" rows="3" maxlength="500"></textarea>') +
+    '<p class="small muted">You keep everything you don’t release. Released money goes back to the team reserve so the lead can offer it to someone else. This can’t be undone.</p>' +
+    '<p class="err" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Release</button></div></form>');
+}
+function reviewModal(pr, id){
+  var a = pr.allocs.find(function(x){ return x.id === id; }), mine = a.member === 'me';
+  openModal('<h2>Request a review</h2><p class="sub">' + esc(mine ? 'Your share' : (a.member ? nameOf(a.member) : 'Former member')) + ' · ' + esc(a.role || 'Contributor') + ' · ' + cents$(a.value) + '</p><form class="form" data-form="share-review" data-project="' + pr.id + '" data-id="' + id + '" novalidate>' +
+    field('rv-r', 'What should change, and why?', '<textarea class="in" id="rv-r" name="reason" rows="4" maxlength="2000" placeholder="e.g. They stepped away after the first milestone, so the site work they were budgeted for is being done by someone else."></textarea>') +
+    '<p class="small muted">A Cleverherd admin reviews it and decides. Until then the share stays as agreed and any payout for it waits. Everyone involved is emailed the decision and the reason for it. Money already paid out is never taken back.</p>' +
+    '<p class="err" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Request review</button></div></form>');
+}
+function decideModal(pr, rvId){
+  var v = (pr.reviews || []).find(function(x){ return x.id === rvId; }), a = pr.allocs.find(function(x){ return x.id === v.allocationId; }) || {value: v.before, role: ''}, b = budgetOf(pr);
+  var paid = pr.payouts.some(function(o){ return o.allocationId === v.allocationId && ['paid', 'processing', 'reversed'].indexOf(o.status) > -1; });
+  openModal('<h2>Decide review</h2><p class="sub">' + esc(v.member ? nameOf(v.member) : 'Former member') + ' · ' + esc(a.role || 'Contributor') + ' · currently ' + cents$(a.value) + ' · team reserve ' + cents$(b.left) + '</p>' +
+    '<div class="note" style="margin-bottom:14px"><p style="white-space:pre-line">' + esc(v.reason) + '</p><p class="small muted" style="margin-top:6px">Requested by ' + esc(v.requestedBy ? nameOf(v.requestedBy) : 'a former member') + ' · ' + esc(ago(v.at)) + '</p></div>' +
+    '<form class="form" data-form="share-decide" data-project="' + pr.id + '" data-id="' + rvId + '" novalidate>' +
+    (paid ? '<p class="small">This share has already been paid out, so it can’t be changed. Record a decision to close the review.</p>' : field('dr-a', 'New amount (USD)', '<input class="in" id="dr-a" name="amount" inputmode="decimal" placeholder="Leave blank for no change">', 'Increases come from the team reserve. A reduction goes back to it.')) +
+    field('dr-n', 'Reason for the decision', '<textarea class="in" id="dr-n" name="note" rows="3" maxlength="2000"></textarea>', 'Shown to the contributor and to the person who asked, and kept in the project’s records.') +
+    '<p class="err" role="alert"></p><div class="modal-actions"><button type="button" class="btn btn-line" data-act="close">Cancel</button><button class="btn btn-ink" type="submit">Record decision</button></div></form>');
+}
 function msModal(pr, id){
   var m = id ? pr.milestones.find(function(x){ return x.id === id; }) : {title: '', description: '', due: '', amount: 0};
   openModal('<h2>' + (id ? 'Edit milestone' : 'Add milestone') + '</h2><form class="form" data-form="milestone-p" data-project="' + pr.id + '"' + (id ? ' data-id="' + id + '"' : '') + ' novalidate>' +
@@ -3185,6 +3284,27 @@ var PFORMS = {
     if (allocPreview(proj(f.dataset.project), d) <= 0) return setErr(f, 'Enter an amount greater than zero.');
     if (f.dataset.id) delete row.project_id;
     closeModal(); act(function(){ return papi.saveAlloc(f.dataset.id, row); }, 'Share saved — they’ll be asked to accept it');
+  },
+  'share-add': function(d, f){
+    var pr = proj(f.dataset.project), amt = toCents(d.amount), left = budgetOf(pr).left;
+    if (!d.member) return setErr(f, 'Choose who you’re adding.', '[name=member]');
+    if (amt <= 0) return setErr(f, 'Enter an amount greater than zero.', '[name=amount]');
+    if (amt > left) return setErr(f, 'Only ' + cents$(left) + ' is left in the team reserve.', '[name=amount]');
+    closeModal(); act(function(){ return papi.rpc('project_add_share', {p: pr.id, m: U(d.member), r: trim(d.role), amt: amt, ms: d.milestone || null}); }, 'Share offered — they’ll be asked to accept it');
+  },
+  'share-release': function(d, f){
+    var pr = proj(f.dataset.project), a = pr.allocs.find(function(x){ return x.id === f.dataset.id; }), amt = toCents(d.amount);
+    if (amt <= 0 || amt > a.value) return setErr(f, 'Enter an amount up to ' + cents$(a.value) + '.', '[name=amount]');
+    closeModal(); act(function(){ return papi.rpc('allocation_release', {a: a.id, amt: amt, reason: trim(d.reason)}); }, cents$(amt) + ' released to the team reserve');
+  },
+  'share-review': function(d, f){
+    if (trim(d.reason).length < 10) return setErr(f, 'Explain what should change and why (at least a sentence).', '[name=reason]');
+    closeModal(); act(function(){ return papi.rpc('share_request_review', {a: f.dataset.id, reason: trim(d.reason)}); }, 'Review requested — Cleverherd will be in touch');
+  },
+  'share-decide': function(d, f){
+    if (trim(d.note).length < 10) return setErr(f, 'Record the reason for the decision.', '[name=note]');
+    var amt = d.amount !== undefined && trim(d.amount) !== '' ? toCents(d.amount) : null;
+    closeModal(); act(function(){ return papi.rpc('admin_decide_review', {rv: f.dataset.id, new_amount: amt, decision: trim(d.note)}); }, 'Decision recorded and emailed');
   },
   'milestone-p': function(d, f){
     if (!trim(d.title)) return setErr(f, 'Add a title.', '[name=title]');
