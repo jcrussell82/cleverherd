@@ -2904,7 +2904,17 @@ function nextStep(pr){
   if (pr.status === 'budget_agreed') return [lead ? 'Budget agreed. Review the proposal and send it to the client.' : 'Budget agreed. The lead will send the proposal to the client.', lead ? '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/proposal">Review & send</a>' : ''];
   if (pr.status === 'proposal_sent') return ['Proposal is with ' + esc(pr.clientName || 'the client') + ' for review.', lead ? '<button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button>' : ''];
   if (pr.status === 'approved') return ['The client approved. Work starts once the first payment is received.', '<a class="btn btn-line btn-sm" href="#/projects/' + pr.id + '/payments">View invoices</a>'];
-  if (pr.status === 'active') { var nm = pr.milestones.find(function(m){ return m.status !== 'approved'; }); return [nm ? 'Next milestone: ' + esc(nm.title) + ' (' + MS_STATUS[nm.status][0].toLowerCase() + ').' : 'All milestones approved — waiting for the final payment.', '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/milestones">Open milestones</a>']; }
+  if (pr.status === 'active') {
+    var nm = pr.milestones.find(function(m){ return m.status !== 'approved'; });
+    if (nm) return ['Next milestone: ' + esc(nm.title) + ' (' + MS_STATUS[nm.status][0].toLowerCase() + ').', '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/milestones">Open milestones</a>'];
+    var due = pr.invoices.filter(function(i){ return ['open', 'failed', 'processing'].indexOf(i.status) > -1; });
+    var payBtn = '<a class="btn btn-ink btn-sm" href="#/projects/' + pr.id + '/payments">View payments</a>';
+    if (!due.length) return ['All milestones are approved — the project completes once the last payment clears.', payBtn];
+    var amt = cents$(due.reduce(function(t, i){ return t + i.amount; }, 0));
+    if (due.every(function(i){ return i.status === 'processing'; })) return ['All milestones are approved. The client’s final payment (' + amt + ') is processing.', payBtn];
+    return ['All milestones are approved. Waiting for the client to pay ' + (due.length === 1 ? 'invoice ' + esc(due[0].number) : due.length + ' invoices') + ' (' + amt + ')' + (due.some(function(i){ return i.status === 'failed'; }) ? ' — a payment attempt failed' : '') + '.',
+      lead ? '<div class="btn-pair">' + payBtn + '<button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button></div>' : payBtn];
+  }
   if (pr.status === 'completed') return ['Completed' + (pr.payouts.some(function(o){ return o.status === 'eligible'; }) ? ' — payouts are on their way.' : '.'), '<a class="btn btn-line btn-sm" href="#/projects/' + pr.id + '/payments">Payments</a>'];
   return ['', ''];
 }
@@ -3025,7 +3035,7 @@ function projProposal(pr){
     '<button class="btn btn-ink" type="submit" style="justify-self:start">Save proposal</button></form>' : '';
   var send = lead && pr.status === 'budget_agreed' ? '<section class="card"><div class="card-h"><h3>Ready to send</h3></div><p class="small muted" style="margin-bottom:12px">The client gets a private link to review and approve — no account needed. You can send it from your own email.</p><button class="btn btn-ink" data-act="project-send" data-id="' + pr.id + '">' + icon('send') + 'Send proposal</button></section>' : '';
   var hist = pr.proposals.length ? '<section class="card"><div class="card-h"><h3>Versions sent</h3></div>' + pr.proposals.map(function(v){ return '<div class="row ver" style="align-items:flex-start"><div class="grow"><div class="ver-h"><b>Version ' + v.version + '</b><span class="pill ' + (v.status === 'approved' ? 'ok' : v.status === 'sent' ? 'sd' : 'ln') + '">' + esc(v.status.replace('_', ' ')) + '</span></div><div class="small muted">Sent ' + esc(fmtDate(v.sent_at)) + (v.responded_at ? ' · ' + (v.status === 'approved' ? 'approved by ' : 'response from ') + esc(v.responder_name || 'client') + ' on ' + esc(fmtDate(v.responded_at)) : '') + '</div>' + (v.response_note ? '<p class="small">“' + esc(v.response_note) + '”</p>' : '') + (v.agreement_text ? '<p class="small muted ver-agree">Recorded agreement: ' + esc(v.agreement_text) + '</p>' : '') + '</div></div>'; }).join('') + (lead && pr.status === 'proposal_sent' ? '<div class="share-row"><button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button></div>' : '') + '</section>' : '';
-  return '<div class="split wide-l"><div class="stack">' + (form || '') + send + hist + '</div><div class="stack"><section class="card">' + proposalPreview(pr, !editable(pr) && last ? last.snapshot : null) + '</section><p class="small muted">' + (editable(pr) ? 'Preview of what the client will see.' : 'The version the client has.') + ' Internal shares are never shown to the client.</p></div></div>';
+  return '<div class="split wide-l"><div class="stack">' + (form || '') + send + hist + coCard(pr) + '</div><div class="stack"><section class="card">' + proposalPreview(pr, !editable(pr) && last ? last.snapshot : null) + '</section><p class="small muted">' + (editable(pr) ? 'Preview of what the client will see.' : 'The version the client has.') + ' Internal shares are never shown to the client.</p></div></div>';
 }
 function projMilestones(pr){
   var lead = isProjLead(pr), ed = editable(pr) && lead, working = pr.status === 'approved' || pr.status === 'active';
@@ -3040,7 +3050,7 @@ function projMilestones(pr){
       (ed ? '<div class="share-row"><button class="link-btn" data-act="ms-edit" data-project="' + pr.id + '" data-id="' + m.id + '">Edit</button><button class="link-btn" data-act="ms-del" data-id="' + m.id + '">Remove</button></div>' : '') + '</section>';
   }).join('');
   var sum = pr.milestones.reduce(function(t, m){ return t + m.amount; }, 0);
-  return coCard(pr) + (ed ? '<div class="ph" style="margin-bottom:16px"><div><p style="margin:0">Milestones are what the client reviews and approves. ' + (pr.plan === 'milestones' ? 'With per-milestone payment, amounts must add up to the price (' + cents$(sum) + ' of ' + cents$(pr.total) + ').' : '') + '</p></div><button class="btn btn-ink btn-sm" data-act="ms-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add milestone</button></div>' : '') +
+  return (ed ? '<div class="ph" style="margin-bottom:16px"><div><p style="margin:0">Milestones are what the client reviews and approves. ' + (pr.plan === 'milestones' ? 'With per-milestone payment, amounts must add up to the price (' + cents$(sum) + ' of ' + cents$(pr.total) + ').' : '') + '</p></div><button class="btn btn-ink btn-sm" data-act="ms-edit" data-project="' + pr.id + '">' + icon('plus') + 'Add milestone</button></div>' : '') +
     (pr.milestones.length ? '<div class="stack">' + list + '</div>' : emptyBox('No milestones yet', 'Break the work into a few checkpoints the client can approve.')) +
     (working ? '<p class="note" style="margin-top:16px">Add links to delivered work, then submit the milestone. The client approves it or asks for a revision from their project page.</p>' : '');
 }
@@ -3056,8 +3066,8 @@ function coCard(pr){
       (c.status === 'declined' && c.note ? '<p class="note" style="margin-top:8px"><b>Client:</b> ' + esc(c.note) + '</p>' : '') + '</div>' +
       (lead && c.status === 'sent' ? '<div class="btn-pair"><button class="btn btn-line btn-sm" data-act="project-link" data-id="' + pr.id + '">Copy client link</button><button class="link-btn" data-act="co-withdraw" data-id="' + c.id + '">Withdraw</button></div>' : '') + '</div>';
   }).join('');
-  return '<section class="card" style="margin-bottom:16px"><div class="card-h"><h3>Change orders</h3>' + (lead && working ? '<button class="btn btn-ink btn-sm" data-act="co-new" data-project="' + pr.id + '">' + icon('plus') + 'New change order</button>' : '') + '</div>' +
-    (rows || '<p class="small muted">Client wants something extra? Send a change order: they approve the new work and price on their project page, and it becomes a new milestone.</p>') + '</section>';
+  return '<section class="card" id="changes"><div class="card-h"><h3>Project changes</h3>' + (lead && working ? '<button class="btn btn-ink btn-sm" data-act="co-new" data-project="' + pr.id + '">' + icon('plus') + 'Request a change</button>' : '') + '</div>' +
+    (lead && working ? '<p class="small muted" style="margin:-4px 0 10px">Need to adjust the scope, timeline, or price? Request a change for client approval.</p>' : '') + rows + '</section>';
 }
 // Rough effect of a change order on the team budget (same formula as the database).
 function coTeamPart(pr, amt){
@@ -3069,7 +3079,7 @@ function coTeamPart(pr, amt){
 function coModal(pr){
   var bal = pr.invoices.some(function(i){ return i.kind === 'balance' && i.status !== 'void'; });
   var when = pr.plan === 'milestones' ? 'billed when the client approves the new milestone' : pr.plan === 'upfront' || bal ? 'invoiced to the client as soon as they approve' : 'added to the balance due on completion';
-  openModal('<h2>New change order</h2><p class="sub">The client approves it on their project page. Current price ' + cents$(pr.total) + '.</p><form class="form" data-form="co-send" data-project="' + pr.id + '" novalidate>' +
+  openModal('<h2>Request a change</h2><p class="sub">The client approves it on their project page. Current price ' + cents$(pr.total) + '.</p><form class="form" data-form="co-send" data-project="' + pr.id + '" novalidate>' +
     field('co-t', 'Title', '<input class="in" id="co-t" name="title" maxlength="140" placeholder="e.g. Add an online shop">', 'Becomes a new milestone.') +
     field('co-d', 'What changes for the client', '<textarea class="in" id="co-d" name="description" rows="4" maxlength="4000" placeholder="What you’ll deliver, and anything that changes in the original scope or timeline."></textarea>') +
     '<div class="two">' + field('co-a', 'Extra price (USD)', '<input class="in" id="co-a" name="amount" inputmode="decimal" placeholder="0 for a scope-only change">', 'Includes Cleverherd’s ' + pr.feePct + '% fee, like the original price.') + field('co-due', 'Due date (optional)', '<input class="in" id="co-due" name="due" type="date">') + '</div>' +
