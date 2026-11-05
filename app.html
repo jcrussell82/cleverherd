@@ -666,7 +666,7 @@ input[type=date].in::-webkit-date-and-time-value{text-align:left;margin:0}
   .toolbar .sel.fsel.show-sm{display:block;flex:0 0 auto}
 }
 .fsel-row{display:flex;gap:10px;flex-wrap:nowrap}
-@media (max-width:900px){.fsel-row{flex:1 1 100%}.fsel-row .sel.fsel{flex:1 1 0;min-width:0;width:auto;text-overflow:ellipsis}}
+@media (max-width:900px){.fsel-row{flex:1 1 100%;min-width:0;max-width:100%}.fsel-row .sel.fsel{flex:1 1 0;min-width:0;width:auto;text-overflow:ellipsis}.fsel-row .sel.fsel:first-child{flex-grow:.8}}
 /* Profile photos */
 .av{overflow:hidden}
 .av.has-photo{background:var(--bone)}
@@ -707,6 +707,7 @@ td.share-acts .link-btn:first-child{margin-left:0}
 .kv b.num{white-space:nowrap}
 .kv div > span{min-width:0;flex:1 1 auto}
 .kv div > b.num{flex:none}
+#homeFocus > .card{scroll-margin-top:88px}
 
 /* =====================================================================
    Dark mode for the member platform (Settings → Appearance).
@@ -800,6 +801,10 @@ html[data-theme="dark"] .init-banner,html[data-theme="dark"] .init-hero,html[dat
 html[data-theme="dark"] .bar i,html[data-theme="dark"] .budget-bar i{background:linear-gradient(90deg,#4a665c,var(--sage))}
 html[data-theme="dark"] .init-banner .muted,html[data-theme="dark"] .init-hero .muted{color:var(--sage)}
 html[data-theme="dark"] .av-ink{box-shadow:inset 0 0 0 1.5px rgba(171,186,165,.45)}
+
+/* In-text links in prose cards (e.g. Invite people): the bright mint used on the website, so they read as links. */
+html[data-theme="dark"] .prose p a.link{color:#b4e6b8}
+html[data-theme="dark"] .prose p a.link:hover{color:#d4f3d6}
 
 </style>
 </head>
@@ -1576,7 +1581,7 @@ function pHome(){
       '<a class="stat" href="#/network?tab=connections"><b>' + conns + '</b><small>Connections</small></a>' +
       '<a class="stat" href="#/teams"><b>' + myTeams().length + '</b><small>Active teams</small></a>' +
       '<a class="stat" href="#/labs?view=following"><b>' + Object.keys(S.following).filter(function(k){ return S.following[k]; }).length + '</b><small>Ideas & initiatives</small></a></div>' +
-    '<div class="split"><div class="stack">' + order.join('') + '</div><div class="stack">' + newCard + teamsCard + tools + compCard + feed + '</div></div>';
+    '<div class="split"><div class="stack" id="homeFocus">' + order.join('') + '</div><div class="stack">' + newCard + teamsCard + tools + compCard + feed + '</div></div>';
 }
 
 /* =====================================================================
@@ -2279,7 +2284,12 @@ var ACT = {
   'ob-skill-add': function(d){ captureOb(); if (UI.ob.d.skills.indexOf(d.v) < 0 && UI.ob.d.skills.length < 30) UI.ob.d.skills.push(d.v); refresh(); var i = $('#skillInput'); if (i) i.focus(); },
   'ob-skill-rm': function(d){ captureOb(); UI.ob.d.skills.splice(+d.i, 1); refresh(); },
   'resend': async function(){ if (!UI.pendingEmail) { toast('Sign in again to resend.', 'error'); return; } try { var r = await SB.auth.resend({type:'signup', email:UI.pendingEmail, options:{emailRedirectTo:appUrl()}}); if (r.error) throw r.error; toast('Confirmation email sent'); } catch (e) { toast(friendly(e), 'error'); } },
-  'intent': function(d){ S.intent = d.v; act(function(){ return api.saveProfile({intent:d.v}); }); },
+  'intent': function(d){ S.intent = d.v; act(function(){ return api.saveProfile({intent:d.v}); }, null, function(){
+    refresh();
+    // On phones the reordered cards are below the fold: bring the newly focused one into view.
+    var el = document.querySelector('#homeFocus > .card');
+    if (el && window.matchMedia && matchMedia('(max-width: 900px)').matches) el.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
+  }); },
   'connect': function(d){ act(function(){ return api.connect(d.id); }, 'Connection request sent'); },
   'accept-conn': function(d){ act(function(){ return api.acceptConn(d.id); }, 'You’re now connected'); },
   'decline-conn': function(d){ act(function(){ return api.removeConn(d.id); }, 'Request ignored'); },
