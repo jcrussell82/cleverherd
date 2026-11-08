@@ -176,11 +176,11 @@ img.illus{background:#abbaa5;border-radius:50%;padding:0;height:auto;box-shadow:
 .premise-copy{padding-top:34px}
 .premise-copy p{font-size:18px;margin-bottom:20px;color:#2a4440}
 .premise-copy p strong{color:var(--ink)}
-.eq{margin-top:56px;display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1.25fr;align-items:stretch;gap:14px}
-.eq-tile{border:1.5px solid var(--ink);border-radius:var(--r);padding:24px;display:flex;flex-direction:column;gap:6px}
-.eq-tile b{font-family:var(--h);font-size:24px;letter-spacing:-.03em}
+.eq{margin-top:clamp(56px,7vw,96px);display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1.25fr;align-items:stretch;gap:14px}
+.eq-tile{border:1.5px solid var(--ink);border-radius:var(--r);padding:28px 26px;min-height:150px;display:flex;flex-direction:column;gap:6px}
+.eq-tile b{font-family:var(--h);font-size:clamp(22px,2.2vw,28px);letter-spacing:-.03em}
 .eq-tile small{font-size:13.5px;color:var(--forest);line-height:1.45}
-.eq-op{font-family:var(--h);font-size:30px;font-weight:300;color:var(--sand);align-self:center}
+.eq-op{font-family:var(--h);font-size:34px;font-weight:300;color:var(--sand);align-self:center}
 .eq-res{background:var(--ink);color:var(--bone);border-color:var(--ink)}
 .eq-res small{color:var(--sage)}
 
@@ -377,6 +377,52 @@ img.illus{background:#abbaa5;border-radius:50%;padding:0;height:auto;box-shadow:
 .mini-steps i{font-style:normal;font-family:var(--h);font-weight:800;color:var(--forest);font-size:12px;letter-spacing:.1em}
 .aud .btn{align-self:flex-start;margin-top:auto}
 .promise{font-family:var(--h);font-weight:700;font-size:15px;letter-spacing:-.01em;padding:14px 18px;border-radius:14px;background:rgba(17,43,41,.25)}
+/* Homepage: three goals */
+.goals{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.goals>*{min-width:0}
+.goal{background:var(--paper);border-radius:var(--r);padding:clamp(28px,3vw,38px);display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit;transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+.goal:hover{transform:translateY(-5px);box-shadow:0 28px 50px -30px rgba(17,43,41,.5)}
+.goal:focus-visible{outline:3px solid var(--forest);outline-offset:3px}
+.goal.ink{background:var(--ink);color:var(--bone)}
+.goal h3{font-size:clamp(28px,2.6vw,34px)}
+.goal p{font-size:16px;color:#35504a;max-width:30ch}
+.goal.ink p{color:var(--sage)}
+.goal .more{margin-top:auto;padding-top:22px;font-family:var(--h);font-weight:700;font-size:14px;letter-spacing:-.01em;display:inline-flex;gap:8px;align-items:center}
+.goal .more span{transition:transform .25s var(--ease)}
+.goal:hover .more span{transform:translateX(4px)}
+/* Homepage: photo + panel features */
+.feature{display:grid;grid-template-columns:1.05fr 1fr;border-radius:32px;overflow:hidden;min-height:540px}
+.feature>*{min-width:0}
+.feature.biz{grid-template-columns:1fr 1.05fr}
+.feature-img{margin:0;position:relative;background:var(--forest)}
+.feature-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.feature.pro .feature-img img{object-position:50% 40%}
+.feature.biz .feature-img img{object-position:30% 35%}
+.feature-body{padding:clamp(32px,4.6vw,64px);display:flex;flex-direction:column;justify-content:center;gap:22px}
+.feature.pro .feature-body{background:var(--forest);color:var(--bone)}
+.feature.pro .eyebrow{color:var(--mint)}
+.feature.biz .feature-body{background:var(--paper)}
+.feature h2{font-size:clamp(34px,3.8vw,50px)}
+.feature .lede{font-size:17px;max-width:46ch}
+.feature.pro .lede{color:var(--bone);opacity:.88}
+.feature.biz .lede{color:var(--forest)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:6px;padding-top:24px;border-top:1px solid var(--line-l)}
+.facts>*{min-width:0}
+.facts b{display:block;font-family:var(--h);font-weight:800;font-size:clamp(19px,1.7vw,23px);letter-spacing:-.025em;color:var(--mint);line-height:1.15;margin-bottom:6px}
+.facts small{display:block;font-size:13.5px;line-height:1.45;color:var(--bone);opacity:.78}
+.feature-cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;margin-top:8px}
+.feature-note{font-size:13.5px;color:var(--sage);max-width:30ch}
+.steps3{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:0;counter-reset:none}
+.steps3 li{display:grid;grid-template-columns:44px 1fr;column-gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+.steps3 li:last-child{border-bottom:1px solid var(--line)}
+.steps3 i{grid-row:span 2;font-style:normal;font-family:var(--h);font-weight:800;font-size:13px;letter-spacing:.1em;color:var(--forest);padding-top:4px}
+.steps3 b{font-family:var(--h);font-size:19px;letter-spacing:-.02em;line-height:1.3}
+.steps3 span{font-size:15px;color:#35504a}
+/* Homepage: photographic CTA */
+.cta-photo{isolation:isolate;background:var(--deep)}
+.cta-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 35%;z-index:-2;filter:saturate(.75)}
+.cta-photo::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(to bottom,rgba(22,41,39,0) 72%,rgba(22,41,39,.92) 100%),radial-gradient(ellipse 60% 70% at 50% 50%,rgba(22,41,39,.8) 0%,rgba(22,41,39,.7) 45%,rgba(22,41,39,.5) 100%)}
+.cta-photo p{color:var(--bone);opacity:.85}
 
 /* ===== Name ===== */
 .name-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:stretch}
@@ -505,7 +551,7 @@ main:focus{outline:none}
   .premise-grid,.intent,.labs-grid,.own-grid,.faq-grid,.join-grid{grid-template-columns:1fr;gap:44px}
   .premise-copy{padding-top:0}
   .premise-copy p:last-child{margin-bottom:0}
-  .eq{margin-top:32px}
+  .eq{margin-top:44px}
   .eq{grid-template-columns:1fr auto 1fr auto 1fr}
   .eq-res{grid-column:1/-1}
   .eq-op.last{display:none}
@@ -524,9 +570,20 @@ main:focus{outline:none}
   .fund-mid{max-width:none;grid-auto-flow:column;justify-content:center}
   .fund-mid .circle{transform:rotate(90deg)}
   .split{grid-template-columns:1fr}
+  .goals{gap:12px}
+  .goal{padding:24px}
+  .goal h3{font-size:24px}
+  .feature,.feature.biz{grid-template-columns:1fr;min-height:0}
+  .feature-img{aspect-ratio:16/10}
+  .feature.biz .feature-img{order:-1}
   .name-grid{grid-template-columns:1fr}
   .foot-grid{grid-template-columns:1fr 1fr}
   .foot-grid > div:first-child{grid-column:1/-1}
+}
+@media (max-width:700px){
+  .goals{grid-template-columns:1fr}
+  .goal p{max-width:none}
+  .goal h3{font-size:28px}
 }
 @media (max-width:620px){
   .wrap{width:calc(100% - 32px)}
@@ -539,7 +596,16 @@ main:focus{outline:none}
   .hero-ctas .btn{flex:1;justify-content:center}
   .eq{grid-template-columns:1fr}
   .eq-op{justify-self:center;line-height:1}
+  .eq-tile{min-height:0;padding:22px}
   .bento,.board,.contrib,.people,.mini-steps{grid-template-columns:1fr}
+  .feature{border-radius:24px}
+  .feature-img{aspect-ratio:4/3}
+  .facts{grid-template-columns:1fr;gap:14px}
+  .facts div{display:grid;grid-template-columns:minmax(0,9.5em) 1fr;gap:12px;align-items:baseline}
+  .facts b{margin:0;font-size:18px}
+  .feature-cta .btn{flex:1;justify-content:center}
+  .cta-bg{object-position:38% 40%}
+  .cta-photo::before{background:linear-gradient(to bottom,rgba(22,41,39,.72) 0%,rgba(22,41,39,.8) 50%,rgba(22,41,39,.94) 100%)}
   .stats{grid-template-columns:1fr 1fr 1fr;gap:8px}
   .stat{padding:12px}
   .stat b{font-size:21px}
@@ -599,6 +665,11 @@ main:focus{outline:none}
 .legal p+p{margin-top:12px}
 .legal ul{padding-left:20px;display:grid;gap:6px}
 .legal .muted{color:var(--forest)}
+.legal .tbl-legal{overflow-x:auto;margin:14px 0}
+.legal table{border-collapse:collapse;width:100%;font-size:14.5px}
+.legal th,.legal td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid rgba(0,0,0,.1)}
+.legal th{font-weight:700}
+.legal a{text-decoration:underline}
 .contact-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:10px}
 .contact-grid div{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:22px}
 .contact-grid b{display:block;font-family:var(--h);font-size:17px;margin-bottom:6px}
@@ -695,9 +766,8 @@ main:focus{outline:none}
         <h2 class="reveal" style="--d:.08s">Talent on the sidelines. <span>Ideas on the shelf.</span></h2>
       </div>
       <div class="premise-copy">
-        <p class="reveal">Designers who can't find work. Developers with ideas they can't sell. Salespeople who can close but have nothing to close. Marketers who can create demand but have nothing of their own to market.</p>
-        <p class="reveal" style="--d:.08s">Meanwhile, thousands of people have business ideas they can't execute alone.</p>
-        <p class="reveal" style="--d:.16s"><strong>Cleverherd connects those two problems.</strong> Instead of competing for opportunities one by one, members combine their skills, time and capital to build things none of them could build alone — and share in what they create.</p>
+        <p class="reveal">Skilled people can’t find the right work. People with good ideas can’t build them alone.</p>
+        <p class="reveal" style="--d:.08s"><strong>Cleverherd brings them together</strong> — so members can combine their skills, time and capital to build what none of them could alone, and share in what they create.</p>
       </div>
     </div>
     <div class="eq">
@@ -737,105 +807,92 @@ main:focus{outline:none}
   </div>
 </section>
 
-<!-- ============ PLATFORM ============ -->
+<!-- ============ START HERE (three goals) ============ -->
 <section class="bone" id="platform">
   <div class="wrap">
     <div class="sec-head">
       <div>
-        <span class="eyebrow reveal">The platform</span>
-        <h2 class="reveal" style="--d:.08s">One platform.<br>Five ways in.</h2>
+        <span class="eyebrow reveal">Where to start</span>
+        <h2 class="reveal" style="--d:.08s">Start with what you need.</h2>
       </div>
-      <p class="reveal" style="--d:.16s">Start wherever you are — looking for work, looking for people, or looking to build. Every part shares the same profile, the same teams and the same workspace.</p>
+      <p class="reveal" style="--d:.16s">One account covers all of it: your profile, your teams and your projects.</p>
     </div>
 
-    <div class="bento">
-      <article class="pillar reveal">
-        <div class="pillar-top"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#112b29" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="7" r="2.4"/><path d="M3 19c0-3 2.3-5 5-5s5 2 5 5M14 14.5c.9-.6 1.9-.9 3-.9 2.3 0 4 1.7 4 4.4"/></svg></span><span class="num">01</span></div>
-        <h3>Network</h3>
-        <span class="tag">Find your people.</span>
-        <p class="desc">A professional network built on skills and availability — not followers.</p>
-        <ul><li>Skill-first member profiles</li><li>Searchable talent directory</li><li>Connections &amp; direct messaging</li></ul>
-        <a class="more" href="#/how-it-works">How it works <span>→</span></a>
-      </article>
-      <article class="pillar reveal" style="--d:.08s">
-        <div class="pillar-top"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#112b29" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><path d="M17 14v6M14 17h6"/></svg></span><span class="num">02</span></div>
-        <h3>Teams</h3>
-        <span class="tag">Better work, together.</span>
-        <p class="desc">Form a team around a client project or a new venture, then run it in one place.</p>
-        <ul><li>Create, join &amp; invite</li><li>Shared leads pipeline</li><li>Tasks, milestones &amp; contribution records</li></ul>
-        <a class="more" href="#/how-it-works/journey">See the journey <span>→</span></a>
-      </article>
-      <article class="pillar reveal" style="--d:.16s">
-        <div class="pillar-top"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#112b29" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg></span><span class="num">03</span></div>
-        <h3>Labs</h3>
-        <span class="tag">Turn ideas into something real.</span>
-        <p class="desc">Share an idea, pressure-test it with the community and recruit a founding team.</p>
-        <ul><li>Idea submission &amp; discovery</li><li>Feedback &amp; expressions of interest</li><li>Progress from concept to launch</li></ul>
-        <a class="more" href="#/labs">Explore Labs <span>→</span></a>
-      </article>
-      <article class="pillar wide ink reveal">
-        <span class="badge">Connects everything</span>
-        <div class="pillar-top"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#e7e2d6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/></svg></span></div>
-        <h3>Opportunities</h3>
-        <span class="tag">One place to discover what's possible.</span>
-        <p class="desc">Not a job board, a freelance board and a startup forum — one feed of real ways to put your skills to work, each with a clear next step.</p>
-        <ul><li>Paid projects from businesses</li><li>Open roles on teams</li><li>Collaborations &amp; startup seats</li></ul>
-        <a class="more" href="#/opportunities">Browse opportunities <span>→</span></a>
-      </article>
-      <article class="pillar wide reveal" style="--d:.08s">
-        <span class="badge">Phased rollout</span>
-        <div class="pillar-top"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#112b29" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span></div>
-        <h3>Invest</h3>
-        <span class="tag">Back what's next.</span>
-        <p class="desc">Show early, non-binding support for ideas you believe in. Investment in proven ventures may come later — only through a regulated partner.</p>
-        <ul><li>Non-binding support for early projects</li><li>Updates &amp; milestones for supporters</li><li>No investments are offered today</li></ul>
-        <a class="more" href="#/invest">How funding works <span>→</span></a>
-      </article>
-    </div>
-
-    <div class="shared reveal">
-      <b>One account. Everything connected.</b>
-      <div class="chips"><span>Shared profile</span><span>Shared teams</span><span>Shared project workspace</span><span>Contribution records</span></div>
+    <div class="goals">
+      <a class="goal reveal" href="#/opportunities">
+        <div class="pillar-top"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#112b29" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/></svg></span><span class="num">01</span></div>
+        <h3>Find work</h3>
+        <p>Discover paid projects and opportunities that match your skills.</p>
+        <span class="more">Browse opportunities <span>→</span></span>
+      </a>
+      <a class="goal ink reveal" style="--d:.08s" href="#/how-it-works">
+        <div class="pillar-top"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#e7e2d6" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="7" r="2.4"/><path d="M3 19c0-3 2.3-5 5-5s5 2 5 5M14 14.5c.9-.6 1.9-.9 3-.9 2.3 0 4 1.7 4 4.4"/></svg></span><span class="num">02</span></div>
+        <h3>Build a team</h3>
+        <p>Connect with professionals who bring complementary skills, and collaborate on projects.</p>
+        <span class="more">See how teams work <span>→</span></span>
+      </a>
+      <a class="goal reveal" style="--d:.16s" href="#/labs">
+        <div class="pillar-top"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#112b29" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"/></svg></span><span class="num">03</span></div>
+        <h3>Launch an idea</h3>
+        <p>Find collaborators and turn an idea into something real.</p>
+        <span class="more">Explore Labs <span>→</span></span>
+      </a>
     </div>
   </div>
 </section>
 
-<!-- ============ AUDIENCES ============ -->
+<!-- ============ FOR PROFESSIONALS ============ -->
 <section class="bone" id="audiences">
-  <div class="wrap split">
-    <article class="aud pro reveal" id="professionals">
-      <span class="eyebrow" style="color:var(--bone)">For professionals</span>
-      <h2>Put your skills to work — and to ownership.</h2>
-      <p class="lede">Find paid projects, join teams that need exactly what you do, and earn a stake in ventures you help build.</p>
-      <ul class="checks-list">
-        <li>A profile built around skills, interests and availability</li>
-        <li>Pursue work as a team that you couldn't win alone</li>
-        <li>Paid work, equity, revenue share — or a mix</li>
-        <li>Multiple income streams, not one employer</li>
-      </ul>
-      <div class="promise">We'll never charge you just to access opportunities.</div>
-      <a class="btn btn-sand" href="app.html#/signup" data-signup>Join Cleverherd</a>
-    </article>
-    <article class="aud biz reveal" style="--d:.1s" id="businesses">
-      <span class="eyebrow">For businesses</span>
-      <h2>A ready-made team for your next project.</h2>
-      <p class="lede">Skip the agency markup and the freelancer juggling. Describe the work — a real person reviews it and helps assemble a team around it.</p>
-      <div class="mini-steps">
-        <div><i>01</i><b>Submit</b>Tell us what you need, your budget and timeline.</div>
-        <div><i>02</i><b>Match</b>Get a team with the right mix of skills.</div>
-        <div><i>03</i><b>Deliver</b>One workspace, clear milestones, terms agreed in writing.</div>
+  <div class="wrap">
+    <article class="feature pro reveal" id="professionals">
+      <figure class="feature-img">
+        <img src="img/home-professionals-1400.webp" srcset="img/home-professionals-800.webp 800w, img/home-professionals-1400.webp 1400w" sizes="(max-width:960px) 100vw, 600px" alt="A team of professionals working through a project together around a table" width="1400" height="933" loading="lazy" decoding="async">
+      </figure>
+      <div class="feature-body">
+        <span class="eyebrow">For professionals</span>
+        <h2>Put your skills to work — and to ownership.</h2>
+        <p class="lede">Find paid work, connect with complementary professionals, and take on projects you couldn’t tackle alone.</p>
+        <div class="facts">
+          <div><b>Paid projects</b><small>Your share is agreed before work begins.</small></div>
+          <div><b>Stronger teams</b><small>Win work you couldn’t win alone.</small></div>
+          <div><b>Ownership</b><small>When a venture offers it — agreed in writing.</small></div>
+        </div>
+        <div class="feature-cta">
+          <a class="btn btn-sand" href="app.html#/signup" data-signup>Join Cleverherd</a>
+          <span class="feature-note">Free to join. We never charge you just to access opportunities.</span>
+        </div>
       </div>
-      <ul class="checks-list">
-        <li>Designers, developers, marketers, sellers and project leads</li>
-        <li>As a founding client, you help shape how we work</li>
-      </ul>
-      <a class="btn btn-ink" href="#/join" data-tab="biz">Submit a project</a>
+    </article>
+  </div>
+</section>
+
+<!-- ============ FOR BUSINESSES ============ -->
+<section class="bone" id="businesses">
+  <div class="wrap">
+    <article class="feature biz reveal">
+      <div class="feature-body">
+        <span class="eyebrow">For businesses</span>
+        <h2>A ready-made team for your next project.</h2>
+        <p class="lede">Describe the work. A real person reviews it and helps put a team together around it.</p>
+        <ol class="steps3">
+          <li><i>01</i><b>Submit</b><span>Share what you need, your budget and timeline.</span></li>
+          <li><i>02</i><b>Match</b><span>We help assemble a team with the right mix of skills.</span></li>
+          <li><i>03</i><b>Deliver</b><span>Milestones and terms agreed in writing, in one workspace.</span></li>
+        </ol>
+        <div class="feature-cta">
+          <a class="btn btn-ink" href="#/join" data-tab="biz">Submit a project</a>
+        </div>
+      </div>
+      <figure class="feature-img">
+        <img src="img/home-businesses-1400.webp" srcset="img/home-businesses-800.webp 800w, img/home-businesses-1400.webp 1400w" sizes="(max-width:960px) 100vw, 600px" alt="Two colleagues discussing a project at a desk" width="1400" height="933" loading="lazy" decoding="async">
+      </figure>
     </article>
   </div>
 </section>
 
 <!-- ============ CTA ============ -->
-<section class="dark cta-band">
+<section class="dark cta-band cta-photo">
+  <img class="cta-bg" src="img/home-cta-1920.webp" srcset="img/home-cta-960.webp 960w, img/home-cta-1920.webp 1920w" sizes="100vw" alt="" aria-hidden="true" loading="lazy" decoding="async">
   <div class="wrap">
     <span class="eyebrow reveal">Ready when you are</span>
     <h2 class="reveal" style="--d:.08s">Good ideas deserve <em>good people.</em></h2>
@@ -1311,46 +1368,58 @@ main:focus{outline:none}
 </header>
 <section class="legal">
   <div class="wrap">
-    <p class="draft"><b>Draft — pending professional legal review.</b> This plain-language draft describes how the platform is built today. It must be reviewed by a qualified lawyer (including for GDPR, UK GDPR, CCPA/CPRA and other laws that may apply to your members) and completed with the operator’s legal name and address before launch.</p>
-    <h2>Who we are</h2>
-    <p>Cleverherd (“we”) operates this website and the member platform. Operator legal name and address: <i>[to be completed]</i>. Contact: <span data-contact>see the Contact page</span>.</p>
-    <h2>What we collect</h2>
-    <ul>
-      <li><b>Account data:</b> your email address and a securely hashed password, handled by our authentication provider.</li>
-      <li><b>Profile data you choose to add:</b> name, title, location, bio, skills, interests, availability and links.</li>
-      <li><b>Content you create:</b> messages, ideas, comments, opportunities, applications, team tasks, leads, contribution records and reports.</li>
-      <li><b>Business inquiries:</b> company, contact name, work email, website and project details submitted through our form.</li>
-      <li><b>Technical data:</b> basic logs kept by our hosting and database providers for security and reliability.</li>
-      <li><b>Analytics:</b> we use Google Analytics to understand how people find and use Cleverherd (pages visited, approximate location, device and browser). It uses cookies. We don’t send your name, email, messages, search terms or member IDs to Google, and advertising features are turned off.</li>
-    </ul>
-    <h2>How we use it</h2>
-    <ul>
-      <li>To run the platform: show your profile to other members, deliver messages, and power teams, Labs and opportunities.</li>
-      <li>To keep the community safe: review listings, handle reports and prevent spam and abuse.</li>
-      <li>To respond to business inquiries and support requests.</li>
-    </ul>
-    <p>We don’t sell personal data.</p>
-    <h2>Who can see what</h2>
-    <ul>
-      <li>Your email address is never shown to other members.</li>
-      <li>You can hide your location and remove yourself from the member directory in Settings.</li>
-      <li>Private messages are visible only to the sender and recipient — not to other members or admins.</li>
-      <li>Private team workspaces are visible only to that team’s members.</li>
-      <li>Admins can see account emails, business inquiries and reports in order to run and moderate the service.</li>
-    </ul>
-    <h2>Service providers</h2>
-    <p>We use Supabase (database and authentication), GitHub Pages (website hosting), Resend (account emails), ImprovMX (email forwarding) and Google Analytics (site analytics). These providers process data on our behalf. <i>[List providers, data locations and transfer safeguards — to be confirmed.]</i></p>
-    <h2>Your choices and rights</h2>
-    <ul>
-      <li>Edit your profile and privacy settings at any time.</li>
-      <li>Download a copy of your data from Settings.</li>
-      <li>Delete your account from Settings. This permanently deletes your account, profile, messages, ideas and team memberships.</li>
-      <li>Depending on where you live, you may have further rights (for example to object or to complain to a regulator). Contact us to exercise them.</li>
-    </ul>
-    <h2>Retention</h2>
-    <p>We keep your data while your account is open. Business inquiries are kept for as long as needed to respond and follow up. <i>[Retention periods to be confirmed.]</i></p>
-    <h2>Changes</h2>
-    <p>We’ll post updates here and tell members about significant changes.</p>
+<p>Effective November 3, 2026</p>
+<h2>Who we are</h2>
+<p>Cleverherd is operated by Thinkigy LLC, Coon Rapids, Minnesota. Contact: hello@cleverherd.com. This policy covers members and the clients of paid projects.</p>
+<h2>What we collect</h2>
+<ul>
+<li><strong>Account:</strong> your email address and a securely hashed password, handled by our sign-in provider.</li>
+<li><strong>Profile:</strong> what you choose to add, such as name, photo, title, location, bio, skills, interests, availability and links.</li>
+<li><strong>Content:</strong> messages, ideas, comments, opportunities, applications, team tasks, leads, contribution records and reports.</li>
+<li><strong>Paid projects:</strong> client name, company and email; proposals and change orders, including the name, email and time recorded when a client approves them; milestones and deliverable links; invoices and payment status; contributors’ shares, releases and share reviews; payout records; project messages; and client feedback.</li>
+<li><strong>Payments:</strong> we don’t receive or store card or bank details. Stripe collects them, and the identity and tax details contributors give when setting up payouts. We keep Stripe reference numbers and status (for example, whether a payout account is ready).</li>
+<li><strong>Email:</strong> a copy of each notification email we send (recipient, subject, text).</li>
+<li><strong>Business inquiries:</strong> company, contact name, work email, website and project details.</li>
+<li><strong>Technical:</strong> basic logs kept by our hosting and database providers for security and reliability.</li>
+<li><strong>Analytics:</strong> Google Analytics, using cookies, to understand how people find and use Cleverherd. Advertising features are off. We don’t send your name, email, messages or member ID to Google. For payments we send only the amount, our fee and the invoice number.</li>
+</ul>
+<h2>How we use it</h2>
+<p>To run the platform and paid projects (including collecting payments, paying contributors, issuing refunds and handling disputes), to send the emails you’ve chosen to receive, to keep the community safe, to respond to support requests, to meet legal, tax and accounting obligations, and to improve the service. We don’t sell personal data.</p>
+<h2>Who can see what</h2>
+<ul>
+<li>Your email address is never shown to other members.</li>
+<li><strong>1:1 messages</strong> are visible in the app only to the two people in the conversation.</li>
+<li><strong>Project messages</strong> are visible to the project team, the client and Cleverherd admins.</li>
+<li>Team workspaces are visible to that team’s members. Paid-project details are visible to the team and Cleverherd admins; a contributor’s payouts are visible to them and the project lead.</li>
+<li>Clients see the proposal, milestones, invoices and messages through a private link. Keep that link private.</li>
+<li>Admins can see account emails, business inquiries, reports and paid-project records to run and moderate the service. Staff with database access could technically access stored data; they do so only to run, secure and support the service.</li>
+</ul>
+<h2>Service providers</h2>
+<p>Supabase (database and sign-in), Stripe (payments and contributor payouts, under Stripe’s privacy policy: https://stripe.com/privacy), Resend (emails), GitHub Pages (website hosting), ImprovMX (email forwarding) and Google Analytics (analytics). They process data for us. Some of them process data in the United States and other countries.</p>
+<h2>Emails</h2>
+<p>We email members and clients about activity that needs them, such as invitations, messages, proposals, invoices and payouts. Members can turn each kind off in Settings. Clients can turn them off from their project page or any email. Account and security emails can’t be turned off.</p>
+<h2>Your choices and rights</h2>
+<ul>
+<li>Edit your profile and privacy settings at any time.</li>
+<li>Download a copy of your profile and content from Settings. For paid-project records, contact us.</li>
+<li>Delete your account from Settings (see below).</li>
+<li>Depending on where you live, you may have further rights, such as to access, correct or delete data, or to complain to a regulator. Contact us to use them.</li>
+</ul>
+<h2>Deleting your account</h2>
+<p>Deleting your account permanently deletes your profile, ideas, team memberships and your 1:1 messages (for both people in the conversation). We keep records of paid projects you took part in, including proposals, approvals, invoices, payout records and project messages, because they’re financial and contractual records; your name is removed from them where the system allows. Stripe keeps its own records under its policy. If you have unpaid earnings, contact us before deleting your account.</p>
+<h2>How long we keep data</h2>
+<ul>
+<li>Account data: while your account is open.</li>
+<li>Paid-project and payment records: for at least 7 years after the project ends, for tax, accounting and legal purposes.</li>
+<li>Notification email copies and technical logs: kept as part of our records; we don’t currently delete them automatically.</li>
+<li>Business inquiries: as long as needed to respond and follow up.</li>
+</ul>
+<h2>Security</h2>
+<p>Card and bank details are handled by Stripe. Access to data is limited by account permissions and database rules. No system is perfectly secure; tell us at hello@cleverherd.com if you think your account has been compromised.</p>
+<h2>Children</h2>
+<p>Cleverherd isn’t for anyone under 18.</p>
+<h2>Changes</h2>
+<p>We’ll post updates here and tell members about significant changes.</p>
   </div>
 </section>
 </div>
@@ -1364,30 +1433,55 @@ main:focus{outline:none}
 </header>
 <section class="legal">
   <div class="wrap">
-    <p class="draft"><b>Draft — pending professional legal review.</b> These draft terms describe how the platform is intended to work. They are not yet a binding agreement and must be reviewed and completed by a qualified lawyer (governing law, liability limits, dispute resolution, operator details) before launch.</p>
-    <h2>What Cleverherd is</h2>
-    <p>Cleverherd is a community platform that helps people find each other, form teams, share ideas and organize work. We are not a party to agreements between members, or between members and businesses, and we are not an employer, agency, broker, payment processor or investment platform.</p>
-    <h2>Your account</h2>
-    <ul>
-      <li>You must provide accurate information and keep your password secure.</li>
-      <li>One person per account. You’re responsible for activity on your account.</li>
-      <li>You can delete your account at any time from Settings.</li>
-    </ul>
-    <h2>Work, compensation and ownership</h2>
-    <ul>
-      <li>Every opportunity must state its compensation type accurately: guaranteed, conditional, commission, revenue share, equity or none.</li>
-      <li>Joining an initiative, workstream, team or idea does not by itself create any right to payment, commission or ownership.</li>
-      <li>Scope, payment, ownership, vesting and intellectual property must be agreed in writing by the people involved before paid or ownership-related work begins.</li>
-      <li>Contribution records and ownership records on Cleverherd are informational. They are not contracts, cap tables or proof of entitlement.</li>
-    </ul>
-    <h2>Support and investment</h2>
-    <p>“Support” on Cleverherd is a non-binding indication of interest. No money is collected and supporters receive no ownership or financial return. Cleverherd does not offer securities, equity crowdfunding or investment services.</p>
-    <h2>Acceptable use</h2>
-    <p>You agree to follow our <a href="#/guidelines">Community guidelines</a>. We may remove content, reject listings, or suspend or close accounts that break them.</p>
-    <h2>Your content</h2>
-    <p>You keep ownership of what you post. You give us permission to host and display it to the members who can see it, so the platform can work.</p>
-    <h2>Disclaimers</h2>
-    <p>The platform is provided “as is” during its founding phase. We don’t verify every member, business or claim, and we can’t guarantee outcomes of any project or collaboration. <i>[Liability limitations to be drafted by counsel.]</i></p>
+<p>Effective November 3, 2026</p>
+<h2>1. Who we are</h2>
+<p>Cleverherd is operated by Thinkigy LLC, a Minnesota limited liability company based in Coon Rapids, Minnesota (“Cleverherd”, “we”, “us”). Contact: hello@cleverherd.com.</p>
+<h2>2. Accepting these terms</h2>
+<p>By creating an account, you agree to these Terms, our <a href="#/guidelines">Community Guidelines</a> and our <a href="#/privacy">Privacy Policy</a>. You must be at least 18. If you use Cleverherd for a business, you confirm you can bind it. Our <a href="#/client-terms">Client Terms</a>, <a href="#/contributor-terms">Contributor Terms</a> and <a href="#/refunds">Refund &amp; Cancellation Policy</a> also apply to paid projects and form part of these Terms.</p>
+<h2>3. What Cleverherd is</h2>
+<p>Cleverherd is a platform where people find each other, form teams and organise work. For paid projects, it provides tools to agree a budget, send a proposal, collect payment and pay the team. Cleverherd doesn’t perform the work, isn’t an employer, staffing agency, escrow service or bank, and doesn’t guarantee any project’s outcome. Payments are processed by Stripe.</p>
+<h2>4. Your account</h2>
+<p>Give accurate information, keep your password secure, and use one account per person. You’re responsible for activity on your account. You can delete your account at any time in Settings; records of paid projects are kept as described in our Privacy Policy.</p>
+<h2>5. Acceptable use</h2>
+<p>Follow our Community Guidelines. We may remove content, reject listings, or suspend or close accounts that break them or these Terms.</p>
+<h2>6. Paid projects are independent projects</h2>
+<ul>
+<li>Each paid project is an agreement between the client and the team members who accepted a share of it. The project lead acts for the team. The agreement is made up of the approved proposal, any approved change orders, and the Client and Contributor Terms.</li>
+<li>The client and the team are responsible for what they agree to, including scope, deliverables, deadlines, quality, revisions, the information and access each provides, and resolving disagreements about performance.</li>
+<li>Cleverherd isn’t a party to that agreement, doesn’t supervise or direct the work, and doesn’t verify every member, client or claim.</li>
+</ul>
+<h2>7. Payments, fees and payment collection</h2>
+<ul>
+<li>Clients pay through Cleverherd. Contributors appoint Cleverherd as their limited agent to collect payment from the client for them (Contributor Terms §3). Once a client’s payment reaches Cleverherd, the client has paid the team for that amount, even if Cleverherd later fails to pay the team.</li>
+<li>Our fee is shown on every proposal before it’s sent: 10% of the project price on member-run projects. It’s included in the price shown to the client; clients pay no other Cleverherd fees.</li>
+<li>We pay each contributor’s accepted share once the client’s payment for that work has cleared, as set out in the Contributor Terms. We remain responsible for sending payments we’ve collected as described, and for our own errors.</li>
+<li>Stripe processes all card and bank payments. Stripe’s own terms apply to your use of Stripe.</li>
+</ul>
+<h2>8. Refunds, cancellations and chargebacks</h2>
+<p>Refunds and cancellations follow our <a href="#/refunds">Refund &amp; Cancellation Policy</a>. Cleverherd issues refunds and handles card disputes for payments it collected, using the project’s records. Nothing in these Terms removes rights you have under applicable law.</p>
+<h2>9. Holds and suspension</h2>
+<p>We may hold a payout, pause a project or suspend an account if we reasonably believe it’s needed because of suspected fraud or abuse, an open refund, dispute or share review, a breach of these Terms, or a requirement of Stripe or the law. We’ll tell the people affected unless the law prevents it.</p>
+<h2>10. Your content and intellectual property</h2>
+<p>You keep ownership of what you post. You give us permission to host, display and process it so the platform can work, for the members and clients who can see it. Ownership of paid-project deliverables is set out in the Client and Contributor Terms; Cleverherd claims no ownership of them.</p>
+<h2>11. Support and investment</h2>
+<p>“Support” on ideas is a non-binding indication of interest. No money is collected and supporters receive no ownership or return. Cleverherd doesn’t offer securities, crowdfunding or investment services.</p>
+<h2>12. Disclaimers</h2>
+<p>Cleverherd is provided “as is” and “as available”. To the extent the law allows, we disclaim implied warranties, including fitness for a particular purpose. We don’t guarantee that any member, client or project will succeed.</p>
+<h2>13. Limits on our liability</h2>
+<p>To the extent the law allows:</p>
+<ul>
+<li>we aren’t liable for the work, conduct, content or disputes of members or clients, or for indirect, incidental, special or consequential losses, or lost profits;</li>
+<li>our total liability for all claims about a paid project is limited to the platform fees Cleverherd earned on that project; for anything else, to the greater of the fees you paid us in the previous 12 months or $100.</li>
+</ul>
+<p>These limits don’t apply to amounts we’ve collected and owe to a contributor or must refund to a client under our policies, or to our fraud, gross negligence or wilful misconduct, or anything else the law doesn’t allow us to limit.</p>
+<h2>14. Indemnity</h2>
+<p>You agree to cover Cleverherd’s reasonable losses and costs, including legal fees, from third-party claims arising from your work or deliverables, your content, your breach of these Terms, or a dispute between you and another member or client. This doesn’t apply to the extent a claim is caused by Cleverherd’s own breach, negligence or misconduct.</p>
+<h2>15. Disputes and governing law</h2>
+<p>These Terms are governed by Minnesota law. If you have a dispute with Cleverherd, please email us first and give us 30 days to try to resolve it. If we can’t, either side may bring a claim in the state or federal courts in Anoka County, Minnesota, or in small-claims court where you live. Disputes between clients and teams are for them to resolve. We may help them talk, but we don’t decide those disputes except for refunds and share reviews under our policies.</p>
+<h2>16. Changes and ending</h2>
+<p>We may update these Terms. We’ll post changes here and tell members about significant ones; the version in force when a proposal or share is accepted applies to that project. You may stop using Cleverherd at any time. We may suspend or close accounts as described above. Sections on payments, refunds, intellectual property, liability, indemnity and disputes continue after an account is closed.</p>
+<h2>17. Contact</h2>
+<p>hello@cleverherd.com · Thinkigy LLC, Coon Rapids, Minnesota</p>
   </div>
 </section>
 </div>
@@ -1397,38 +1491,204 @@ main:focus{outline:none}
   <div class="wrap">
     <nav class="crumbs reveal" aria-label="Breadcrumb"><a href="#/">Home</a><span>/</span>Community guidelines</nav>
     <h1 class="reveal" style="--d:.08s">Community <em>guidelines.</em></h1>
-    <p class="lead reveal" style="--d:.16s">Cleverherd works when people can trust each other. These guidelines apply everywhere on the platform.</p>
   </div>
 </header>
 <section class="legal">
   <div class="wrap">
-    <p class="draft"><b>Draft — pending review.</b> Final wording to be reviewed alongside the Terms.</p>
-    <h2>Be honest</h2>
-    <ul>
-      <li>Describe your skills, experience and availability accurately.</li>
-      <li>State compensation precisely. Never present commission, revenue share or equity as guaranteed pay.</li>
-      <li>Don’t exaggerate traction, customers, revenue or team size for ideas and ventures.</li>
-    </ul>
-    <h2>Agree before you work</h2>
-    <ul>
-      <li>Put scope, payment, ownership and IP in writing before paid or ownership-related work starts.</li>
-      <li>Honor what you agreed, and say early if your availability changes.</li>
-    </ul>
-    <h2>Be respectful</h2>
-    <ul>
-      <li>No harassment, hate, threats or discrimination.</li>
-      <li>Disagree with ideas, not people.</li>
-    </ul>
-    <h2>Not allowed</h2>
-    <ul>
-      <li>Spam, bulk or automated messaging, and buying or scraping contact lists.</li>
-      <li>Asking anyone to pay to apply for work, buy “starter kits” or recruit others for pay (pyramid schemes).</li>
-      <li>Offering or soliciting investments, securities or loans.</li>
-      <li>Collecting other members’ personal data for purposes they didn’t agree to.</li>
-      <li>Impersonation, fake accounts or misleading listings.</li>
-    </ul>
-    <h2>Reporting</h2>
-    <p>Use the <b>Report</b> link on any profile, listing, idea, comment, team or conversation. Reports go to Cleverherd admins and are kept confidential. Admins may hide content, reject listings or suspend accounts. If you’re in danger, contact local emergency services first.</p>
+<p>Effective November 3, 2026. Cleverherd works when people can trust each other. These guidelines apply everywhere on the platform and are part of our Terms of Service.</p>
+<h2>Be honest</h2>
+<ul>
+<li>Describe your skills, experience and availability accurately.</li>
+<li>State compensation precisely. Never present commission, revenue share or equity as guaranteed pay.</li>
+<li>Don’t exaggerate traction, customers, revenue or team size for ideas and ventures.</li>
+</ul>
+<h2>Agree before you work</h2>
+<ul>
+<li>Put scope, payment, ownership and IP in writing before paid or ownership-related work starts. For paid projects, that’s the proposal.</li>
+<li>Only accept a share for work you can actually do.</li>
+<li>Honour what you agreed, and say early if your availability changes.</li>
+</ul>
+<h2>Paid projects</h2>
+<ul>
+<li>Deliver what the proposal describes, on the agreed dates, or tell the client and your team early.</li>
+<li>Respond to clients and teammates within a reasonable time.</li>
+<li>Only deliver work you have the right to use, and say which third-party materials the client needs to license.</li>
+<li>Keep clients’ non-public information confidential.</li>
+<li>If a client found you through Cleverherd, run that project through Cleverherd so everyone is covered by its records and payment handling.</li>
+<li>Raise problems through revision requests and messages first. Ask Cleverherd for a share review or refund decision only when you can’t agree.</li>
+</ul>
+<h2>Be respectful</h2>
+<ul>
+<li>No harassment, hate, threats or discrimination.</li>
+<li>Disagree with ideas, not people.</li>
+</ul>
+<h2>Not allowed</h2>
+<ul>
+<li>Spam, bulk or automated messaging, and buying or scraping contact lists.</li>
+<li>Asking anyone to pay to apply for work, buy “starter kits” or recruit others for pay.</li>
+<li>Offering or soliciting investments, securities or loans.</li>
+<li>Fake reviews or feedback, or approving your own work as a client.</li>
+<li>Collecting other members’ personal data for purposes they didn’t agree to.</li>
+<li>Impersonation, fake accounts or misleading listings.</li>
+</ul>
+<h2>Reporting</h2>
+<p>Use the Report link on any profile, listing, idea, comment, team or conversation. Reports go to Cleverherd admins and are kept confidential. Admins may hide content, reject listings, hold payouts or suspend accounts. If you’re in danger, contact local emergency services first.</p>
+  </div>
+</section>
+</div>
+
+<div class="page" data-page="client-terms">
+<header class="page-hero">
+  <div class="wrap">
+    <nav class="crumbs reveal" aria-label="Breadcrumb"><a href="#/">Home</a><span>/</span>Client terms</nav>
+    <h1 class="reveal" style="--d:.08s">Client <em>terms.</em></h1>
+  </div>
+</header>
+<section class="legal">
+  <div class="wrap">
+<p>Effective November 3, 2026. These terms apply when you approve a proposal or change order sent through Cleverherd, operated by Thinkigy LLC, Coon Rapids, Minnesota. You agree to them by ticking the box when you approve.</p>
+<h2>1. Who your agreement is with</h2>
+<p>The work is provided by the team named on the proposal: the people who accepted a share of the project, with the project lead acting for them. Your agreement for the work is with that team. It consists of the proposal version you approved, any change orders you approve, and these terms. Cleverherd provides the platform and collects your payments for the team. It isn’t a party to that agreement.</p>
+<h2>2. Responsibility for the work</h2>
+<p>You and the team are responsible for what you agree: the scope, deliverables, deadlines, quality and revisions. You’re responsible for giving the team the information, content, access and timely feedback the work needs. Disagreements about performance are between you and the team. Use revision requests and messages first. Refunds follow the Refund &amp; Cancellation Policy.</p>
+<h2>3. Paying through Cleverherd</h2>
+<ul>
+<li>You pay the price shown in the approved proposal and change orders, on the schedule shown there. The price includes Cleverherd’s platform fee; there are no other Cleverherd fees.</li>
+<li>Invoices are due 14 days after they’re issued.</li>
+<li>The team has appointed Cleverherd to collect payment for it. When your payment reaches Cleverherd, you’ve paid the team for that amount.</li>
+<li>Payments are processed by Stripe. Cleverherd never sees your card details.</li>
+</ul>
+<h2>4. Approving milestones</h2>
+<p>You review each milestone on your project page and approve it or ask for a revision. Approving confirms the milestone is complete and accepted. On some plans it issues the next invoice. Please review promptly. If you don’t respond, the team may contact Cleverherd, but milestones aren’t approved automatically.</p>
+<h2>5. Changes</h2>
+<p>Changes to scope, timeline or price need a change order that you approve. The price never changes without your approval.</p>
+<h2>6. Ownership and use of the work</h2>
+<ul>
+<li><strong>Deliverables.</strong> Once you’ve paid for a deliverable in full (for per-milestone plans, the milestone it belongs to; otherwise the whole project), the team transfers to you all rights in the deliverables made specifically for you, unless the proposal says otherwise. Until then, you may use them only to review the work.</li>
+<li><strong>Pre-existing materials.</strong> The team keeps its own tools, code libraries, templates, methods and know-how that existed before the project or weren’t made only for you. If any are built into the deliverables, you get a permanent, worldwide, royalty-free licence to use them as part of those deliverables.</li>
+<li><strong>Third-party materials.</strong> Fonts, stock images, plugins, open-source code and similar items stay under their own licences. The team will tell you about any that you need to license or pay for yourself.</li>
+<li><strong>Portfolio.</strong> The team may show the work in its portfolios unless the proposal says otherwise or you ask in writing for it to stay confidential.</li>
+<li><strong>Your materials.</strong> You keep ownership of what you provide. You confirm you have the right to provide it, and allow the team to use it for the project.</li>
+</ul>
+<h2>7. Confidentiality</h2>
+<p>The team will keep your non-public business information confidential and use it only for the project. Cleverherd uses it only to run the platform.</p>
+<h2>8. Refunds, cancellation and card disputes</h2>
+<p>These follow the Refund &amp; Cancellation Policy. Please contact the team or Cleverherd before disputing a card payment with your bank; most problems are resolved faster that way. Your legal rights, including chargeback rights, aren’t affected.</p>
+<h2>9. Records</h2>
+<p>We keep the proposal version and change orders you approved, with your typed name, email and the time, as the record of what you agreed. We also keep invoices, payment status and project messages.</p>
+<h2>10. Cleverherd’s role and limits</h2>
+<p>Cleverherd is responsible for collecting and handling your payments, issuing refunds under its policy, and its own conduct. It isn’t responsible for the work itself. Cleverherd’s Terms of Service, including its limits on liability, apply to your use of the platform and your project page, to the extent the law allows.</p>
+<h2>11. Law</h2>
+<p>These terms are governed by Minnesota law, without limiting any protection you have under the laws where you live.</p>
+  </div>
+</section>
+</div>
+
+<div class="page" data-page="contributor-terms">
+<header class="page-hero">
+  <div class="wrap">
+    <nav class="crumbs reveal" aria-label="Breadcrumb"><a href="#/">Home</a><span>/</span>Contributor terms</nav>
+    <h1 class="reveal" style="--d:.08s">Contributor <em>terms.</em></h1>
+  </div>
+</header>
+<section class="legal">
+  <div class="wrap">
+<p>Effective November 3, 2026. These terms apply when you accept a share of a paid project on Cleverherd, operated by Thinkigy LLC, Coon Rapids, Minnesota, and when a project lead sends a proposal or change order for a team. They add to Cleverherd’s Terms of Service.</p>
+<h2>1. Your responsibility for the work</h2>
+<p>You and your team are responsible to the client for the work you agree in the proposal and change orders: deliverables, deadlines, quality, revisions and resolving disagreements about performance. Do the work you accepted with reasonable care and skill. Tell your team and the client early if you can’t.</p>
+<h2>2. The team and the lead</h2>
+<p>The project lead sends proposals and change orders, and communicates with the client, on the team’s behalf. By accepting a share, you authorise the lead to do that for the project. A lead who sends a proposal or change order confirms the team has agreed to it.</p>
+<h2>3. Cleverherd collects payment for the team</h2>
+<p>You appoint Thinkigy LLC (Cleverherd) as your limited agent to invoice the client, receive the client’s payment for you, and pay you your share. When the client’s payment reaches Cleverherd, the client has paid you for that amount. Cleverherd may tell clients it accepts payment on the team’s behalf. You also authorise Cleverherd to issue refunds and respond to card disputes under the Refund &amp; Cancellation Policy.</p>
+<h2>4. Your share</h2>
+<p>You agree your share with your team and accept it yourself. When the client approves the project, your accepted share is fixed as a dollar amount. A percentage is shown for reference only. Later price changes don’t change your share; change orders add new money to the team reserve instead.</p>
+<h2>5. When you’re paid</h2>
+<p>Your share is paid only after the client has paid for the work it covers and the payment has cleared: when its milestone is approved and paid (per-milestone plans), or when the project is complete (all other plans). <strong>If a client doesn’t pay, Cleverherd doesn’t pay you,</strong> and Cleverherd doesn’t guarantee payment by any client. Cleverherd is responsible for paying you shares it has collected and cleared.</p>
+<h2>6. How you’re paid</h2>
+<p>Payouts go to your own Stripe payout account, which you set up with Stripe and which is subject to Stripe’s agreements. You must be able to receive payouts from Stripe in the United States. If a client pays outside Stripe, Cleverherd pays your share outside Stripe too.</p>
+<h2>7. Holds, refunds and reviews</h2>
+<ul>
+<li>A payout may be held while a refund, card dispute or review of your share is open, or if Stripe or the law requires it.</li>
+<li>If a refund reduces what the client pays before your share is paid, the team budget is reduced. Unpaid shares may be adjusted through a Cleverherd review.</li>
+<li>Your share can be reduced only by you, or by a Cleverherd admin after a review requested by you or your lead. A review needs a written reason. The admin records the decision and its reason and tells everyone involved.</li>
+<li>Money already paid to you isn’t taken back through a review.</li>
+</ul>
+<h2>8. Leaving a project</h2>
+<p>You can give up some or all of your unpaid share at any time; that money returns to the team reserve. Your obligations for work you’ve already delivered continue.</p>
+<h2>9. Unused team budget</h2>
+<p>Any part of the team budget not allocated to anyone is shared among the contributors at completion, in proportion to their agreed shares. Cleverherd doesn’t keep it.</p>
+<h2>10. Intellectual property</h2>
+<ul>
+<li>Once the client has paid for a deliverable in full, you assign to the client all your rights in the parts of it you made specifically for them, unless the proposal says otherwise.</li>
+<li>You keep your pre-existing tools, templates, code and know-how, and give the client a permanent, worldwide, royalty-free licence to use any that are built into the deliverables.</li>
+<li>Only deliver work you have the right to give. Use third-party materials (fonts, stock, plugins, open-source code) only under licences that allow it, and tell the client about any they must license themselves.</li>
+<li>You may show the work in your portfolio unless the proposal says otherwise or the client asks for confidentiality.</li>
+</ul>
+<h2>11. Independent contributor</h2>
+<p>You’re an independent contributor, not an employee, agent (except as in §3) or subcontractor of Cleverherd. Cleverherd doesn’t control how, when or where you work. You’re responsible for your own taxes, insurance and expenses. Cleverherd or Stripe may ask for tax information and issue tax forms as the law requires.</p>
+<h2>12. Mistaken payments</h2>
+<p>If you’re paid more than your share because of an error or fraud, you agree to repay the excess when Cleverherd asks.</p>
+<h2>13. Deleting your account</h2>
+<p>Contact us about any unpaid share before deleting your account. We can’t send payouts to a deleted account, but we’ll arrange payment of cleared amounts you’re owed if you contact us.</p>
+<h2>14. Indemnity</h2>
+<p>You agree to cover Cleverherd’s reasonable losses and costs from third-party claims arising from your work, deliverables or breach of these terms, except to the extent caused by Cleverherd’s own breach, negligence or misconduct.</p>
+  </div>
+</section>
+</div>
+
+<div class="page" data-page="refunds">
+<header class="page-hero">
+  <div class="wrap">
+    <nav class="crumbs reveal" aria-label="Breadcrumb"><a href="#/">Home</a><span>/</span>Refunds &amp; cancellation</nav>
+    <h1 class="reveal" style="--d:.08s">Refund &amp; cancellation <em>policy.</em></h1>
+  </div>
+</header>
+<section class="legal">
+  <div class="wrap">
+<p>Effective November 3, 2026. This policy applies to paid projects on Cleverherd, operated by Thinkigy LLC. Cleverherd collects payments for project teams and issues any refund from the payments it collected. If a proposal sets its own cancellation terms, those apply where they’re more generous to the client or where the law allows them.</p>
+<h2>Before you approve</h2>
+<p>Approving a proposal is free. No payment is taken until you approve, and you can simply not approve it.</p>
+<h2>Cancelling after you approve</h2>
+<p>Tell the team and email hello@cleverherd.com. What’s refunded depends on the work done:</p>
+<div class="tbl-legal"><table>
+
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No work started yet: no milestone in progress, submitted or approved, and no deliverables posted</td>
+<td>Full refund of what you paid.</td>
+</tr>
+<tr class="even">
+<td>Work started but not yet approved</td>
+<td>Refund of what you paid, minus the reasonable value of the work documented on the project (deliverables posted, milestones submitted, or work agreed in messages).</td>
+</tr>
+<tr class="odd">
+<td>Milestones you approved</td>
+<td>Treated as delivered and accepted. Not refundable, unless the team agrees or the law requires it.</td>
+</tr>
+<tr class="even">
+<td>Money paid for work that will now never be done</td>
+<td>Refunded.</td>
+</tr>
+</tbody>
+</table></div>
+<h2>If the team doesn’t deliver</h2>
+<p>If the team stops work, misses agreed deadlines without a reasonable explanation, or can’t deliver what was agreed, you’ll be refunded for work you haven’t approved, less any documented work you choose to keep.</p>
+<h2>How we decide</h2>
+<p>We ask you and the team for your side and look at the project’s records: the approved proposal, change orders, milestones, deliverables and messages. We decide what’s refunded and explain why in writing. We aim to reply within 3 business days and decide within 10 business days of hearing from both sides. Approved refunds go back to the original payment method, usually within 5–10 business days.</p>
+<h2>Fees</h2>
+<p>Cleverherd’s fee is part of the project price, so it’s refunded in proportion to any refund. We don’t deduct card-processing costs from refunds.</p>
+<h2>Change orders</h2>
+<p>Approved change orders are treated like the rest of the project.</p>
+<h2>Card disputes</h2>
+<p>Please contact us before disputing a payment with your bank. If a dispute is opened, Cleverherd responds to it using the project’s records.</p>
+<h2>Your legal rights</h2>
+<p>Nothing in this policy limits rights you have under applicable law, including chargeback rights and consumer-protection rights.</p>
   </div>
 </section>
 </div>
@@ -1471,9 +1731,9 @@ main:focus{outline:none}
       </div>
       <div><h4>Platform</h4><ul><li><a href="#/how-it-works">How it works</a></li><li><a href="#/opportunities">Opportunities</a></li><li><a href="#/labs">Labs</a></li><li><a href="#/labs/ownership">Ownership</a></li><li><a href="#/invest">Invest</a></li></ul></div>
       <div><h4>Join</h4><ul><li><a href="#/initiative">First 10 Opportunities</a></li><li><a href="#/home/professionals">For professionals</a></li><li><a href="#/home/businesses">For businesses</a></li><li><a href="app.html#/signup" data-signup>Create an account</a></li><li><a href="#/join" data-tab="biz">Submit a project</a></li></ul></div>
-      <div><h4>Company</h4><ul><li><a href="#/about">About</a></li><li><a href="#/about/faq">FAQ</a></li><li><a href="#/contact">Contact &amp; support</a></li><li><a href="#/guidelines">Community guidelines</a></li><li><a href="#/privacy">Privacy</a></li><li><a href="#/terms">Terms</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#/about">About</a></li><li><a href="#/about/faq">FAQ</a></li><li><a href="#/contact">Contact &amp; support</a></li><li><a href="#/guidelines">Community guidelines</a></li><li><a href="#/privacy">Privacy</a></li><li><a href="#/terms">Terms</a></li><li><a href="#/client-terms">Client terms</a></li><li><a href="#/contributor-terms">Contributor terms</a></li><li><a href="#/refunds">Refunds &amp; cancellation</a></li></ul></div>
     </div>
-    <div class="foot-base"><span>© <span id="yr">2026</span> Cleverherd. All rights reserved.</span><span>Investment features are not live. Nothing on this site is an offer of securities.</span><span class="foot-legal"><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a><a href="#/guidelines">Guidelines</a><a href="#/contact">Contact</a></span></div>
+    <div class="foot-base"><span>© <span id="yr">2026</span> Cleverherd. All rights reserved.</span><span>Investment features are not live. Nothing on this site is an offer of securities.</span><span class="foot-legal"><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a><a href="#/refunds">Refunds</a><a href="#/guidelines">Guidelines</a><a href="#/contact">Contact</a></span></div>
   </div>
 </footer>
 
@@ -1519,6 +1779,9 @@ main:focus{outline:none}
     'privacy': 'Privacy policy — Cleverherd',
     'terms': 'Terms of service — Cleverherd',
     'guidelines': 'Community guidelines — Cleverherd',
+    'client-terms': 'Client terms — Cleverherd',
+    'contributor-terms': 'Contributor terms — Cleverherd',
+    'refunds': 'Refund & cancellation policy — Cleverherd',
     'contact': 'Contact & support — Cleverherd'
   };
   var pages = $$('.page'), current = null;
